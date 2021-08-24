@@ -1,0 +1,9 @@
+{
+  "auth": {
+    "Required": "Required",
+    "Min x characters": "Min {x} characters",
+    "Max x characters": "Max {x} characters",
+    "Must be an email": "Must be an email",
+    "Username can only contain": "Name can only contain A-z, spaces and dots."
+  }
+}

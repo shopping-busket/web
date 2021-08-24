@@ -9,10 +9,17 @@
     >
       <v-list-item class="px-2">
         <v-list-item-avatar>
-          <v-img :src="profile.avatar"></v-img>
+          <v-img :src="auth.user.avatarURI" v-if="!!auth && auth.user.avatarURI !== null"></v-img>
+          <v-img src="@/assets/avatar-placeholder.png" v-else></v-img>
         </v-list-item-avatar>
 
-        <v-list-item-title>{{ profile.fullName }}</v-list-item-title>
+        <v-list-item-title>
+          <div v-if="!!auth">
+            {{ auth.user.fullName }}
+            <v-icon color="red" @click="logOut" title="Logout" small>mdi-logout-variant</v-icon>
+          </div>
+          <div class="skeleton" title="Loading..." aria-placeholder="Loading..." v-else></div>
+        </v-list-item-title>
 
         <v-btn
           icon
@@ -37,7 +44,7 @@
           v-for="item in items.filter((it) => !it.divide)"
           :key="item.title"
           link
-          @click="$router.push(item.to)"
+          @click="item.to === undefined ? item.click() : tryRouteTo(item.to)"
         >
           <v-list-item-icon>
             <v-icon>{{ item.icon }}</v-icon>
@@ -56,7 +63,7 @@
             v-for="item in items.filter((it) => it.divide)"
             :key="item.title"
             link
-            @click="$router.push(item.to)"
+            @click="item.to === undefined ? item.click() : tryRouteTo(item.to)"
           >
             <v-list-item-icon>
               <v-icon>{{ item.icon }}</v-icon>
@@ -96,13 +103,15 @@ import {
   Vue,
   Watch,
 } from 'vue-property-decorator';
-import { Location } from 'vue-router';
+import { RawLocation } from 'vue-router';
+import feathersClient, { AuthObject } from '@/feathers-client';
 
 export interface Item {
   title: string,
   icon: string,
-  to: string | Location
-  divide?: boolean
+  to?: RawLocation,
+  click?: () => void,
+  divide?: boolean,
 }
 
 @Component({})
@@ -113,29 +122,90 @@ export default class MainContainer extends Vue {
     { title: 'My lists', icon: 'mdi-clipboard-list-outline', to: { name: 'my lists' } },
     { title: 'About', icon: 'mdi-information-outline', to: { name: 'about' } },
     { title: 'Github', icon: 'mdi-github', to: { name: 'github' } },
-    {
-      title: 'Preferences',
-      icon: 'mdi-account-cog',
-      to: { name: 'preferences' },
-      divide: true,
-    },
   ];
-  private profile = {
-    displayName: 'justmedev',
-    fullName: 'Ilja Busch',
-    avatar: 'https://randomuser.me/api/portraits/men/49.jpg',
-  } // TODO: Fetch profile from backend user db
   private drawer = false;
   private permDrawer = false;
   private mini = false;
+  private auth: AuthObject | null = null;
+
+  async mounted (): Promise<void> {
+    setTimeout(async () => {
+      this.auth = await feathersClient.get('authentication');
+    }, 500);
+
+    console.log(this.auth);
+  }
+
+  @Watch('auth')
+  authWatcher (): void {
+    console.log('watch', this.auth, !this.auth, !!this.auth);
+    if (!this.auth) {
+      this.items.push({
+        title: 'Log in',
+        icon: 'mdi-login-variant',
+        to: { name: 'login' },
+        divide: true,
+      });
+      return;
+    }
+
+    this.items.push({
+      title: 'Preferences',
+      icon: 'mdi-account-cog',
+      to: { name: 'login' },
+      divide: true,
+    });
+  }
 
   @Watch('permDrawer')
   watchPermDrawer (): void {
     if (!this.permDrawer) this.mini = false;
   }
+
+  async logOut (): Promise<void> {
+    if (await feathersClient.get('authentication') === null) {
+      this.$toast('Can\'t log out. Not logged in.');
+      return;
+    }
+    feathersClient.authentication.logout().then(() => {
+      this.$toast('Logged out successfully.');
+      window.location.reload();
+    });
+  }
+
+  tryRouteTo (loc: RawLocation): Promise<void> | void {
+    const matchedLoc = this.$router.match(loc);
+    if (this.$route.name === matchedLoc.name || this.$route.path === matchedLoc.path) return;
+    this.$router.push(loc);
+  }
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+$dark: #cccccc;
+$white: #e8e8e8;
 
+.skeleton {
+  cursor: progress;
+  height: 20px;
+  width: 120px;
+  border-radius: 4px;
+  background: $dark;
+  animation: blink infinite 2s cubic-bezier(0.65, 0, 0.35, 1);
+  transition: all 1s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+@keyframes blink {
+  from {
+    background: $dark;
+  }
+
+  50% {
+    background: $white;
+  }
+
+  to {
+    background: $dark;
+  }
+}
 </style>
