@@ -117,7 +117,7 @@ export interface Item {
 @Component({})
 export default class MainContainer extends Vue {
   @Prop({ required: false, default: 'primary' }) private appbarColor: undefined | string;
-  private items: Item[] = [
+  protected items: Item[] = [
     { title: 'Home', icon: 'mdi-home-city', to: { name: 'home' } },
     { title: 'My lists', icon: 'mdi-clipboard-list-outline', to: { name: 'my lists' } },
     { title: 'About', icon: 'mdi-information-outline', to: { name: 'about' } },

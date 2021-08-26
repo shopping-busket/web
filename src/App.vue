@@ -8,6 +8,7 @@
   </v-app>
 </template>
 
+<!--suppress JSUnusedLocalSymbols -->
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 import { POSITION } from 'vue-toastification';

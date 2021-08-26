@@ -94,7 +94,7 @@ export default class About extends Vue {
 </script>
 
 <style scoped>
-.v-sheet {
+v-sheet {
   color: transparent !important;
   cursor: pointer;
   transition: all .35s;
@@ -103,10 +103,6 @@ export default class About extends Vue {
 .v-sheet > div {
   display: none;
   transition: all .25s;
-}
-
-.v-sheet.on-hover {
-  filter: brightness(0.7);
 }
 
 .show-btns {
