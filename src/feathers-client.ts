@@ -1,6 +1,6 @@
 import io from 'socket.io-client';
 import socketio from '@feathersjs/socketio-client';
-import feathers from '@feathersjs/feathers';
+import feathers, { Service } from '@feathersjs/feathers';
 import auth from '@feathersjs/authentication-client';
 import config from '../config';
 
@@ -34,5 +34,7 @@ export async function isLoggedIn (): Promise<boolean> {
     }
   });
 }
+
+export const listService: Service<unknown> = feathersClient.service('list');
 
 export default feathersClient;

@@ -7,6 +7,20 @@ export interface IShoppingListItem {
   done: boolean,
 }
 
+export interface IShoppingList {
+  id: number,
+  name: string,
+  description: string,
+  listid: string,
+  owner: string,
+  items: {
+    items: IShoppingListItem[],
+  },
+  additional: {
+    loading: boolean,
+  },
+}
+
 // eslint-disable-next-line max-classes-per-file
 class ItemNotFoundError extends Error {
   private searchId?: string;
@@ -32,6 +46,7 @@ class ItemNotFoundError extends Error {
 export interface AdditionalItemData {
   edit: boolean,
   editName: string,
+  focused: boolean,
 }
 
 // eslint-disable-next-line max-classes-per-file
@@ -48,7 +63,7 @@ export class ShoppingListItem {
    * @param id (optional) When id is passed, none will be created.
    * @param additional (default: { edit: false, editName: name }) Additional data (only used by frontend)
    */
-  constructor (name: string, done = false, id?: string, additional: AdditionalItemData = { edit: false, editName: name }) {
+  constructor (name: string, done = false, id?: string, additional: AdditionalItemData = { edit: false, editName: name, focused: false }) {
     this.name = name.trim();
     this.done = done;
     this.id = id ?? uuidv4();
@@ -57,19 +72,24 @@ export class ShoppingListItem {
 }
 
 export default class ShoppingList {
-  name = '';
-  description = '';
+  public name = '';
+  public description = '';
+  public listid = '';
+  public owner = '';
   public items: ShoppingListItem[] = [];
 
   /**
    * Create a new list.
    * @param name Name of the new list
    * @param description Description of the list
+   * @param owner
    * @param items (optional) Pass already existing [IShoppingListItems]{@link IShoppingListItem}.
    */
-  constructor (name: string, description: string, items?: IShoppingListItem[]) {
+  constructor (name: string, description: string, owner?: string, items?: IShoppingListItem[]) {
     this.name = name;
     this.description = description;
+    this.listid = uuidv4();
+    this.owner = owner ?? '';
 
     // Convert database shopping list item type to class type
     if (!items) return;

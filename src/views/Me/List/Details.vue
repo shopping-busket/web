@@ -1,6 +1,6 @@
 <template>
   <div style="max-width: 800px; margin: auto" class="mt-4">
-    <v-card outlined>
+    <v-card outlined v-if="!listNotFound">
       <v-card-title>
         <div v-if="shoppingList !== null">
           {{ shoppingList.name }}
@@ -45,11 +45,12 @@
       </v-card-text>
     </v-card>
 
-    <v-sheet outlined rounded class="mt-3 pa-2">
+    <v-sheet outlined rounded class="mt-3 pa-2" v-if="!listNotFound">
       <div v-if="shoppingList === null"
            class="d-flex justify-center align-items">
         Loading
-        <v-progress-circular color="primary" :size="25" :width="3" indeterminate class="ml-2"></v-progress-circular>
+        <v-progress-circular color="primary" :size="25" :width="3" indeterminate
+                             class="ml-2"></v-progress-circular>
       </div>
       <div v-else>
         <TodoList
@@ -67,6 +68,12 @@
         />
       </div>
     </v-sheet>
+    <div v-else class="text-center mt-16">
+      <div class="header">404</div>
+      <div class="text-subtitle-1">List not found.</div>
+      <p>We can't find this list in our database.</p>
+      <v-btn outlined color="primary" rounded width="300px" @click="$router.push({ name: 'my lists' })">Go to my lists</v-btn>
+    </div>
 
     <!-- TODO: Change list name   -->
     <ListLogs
@@ -85,12 +92,11 @@ import {
   Vue,
   Watch,
 } from 'vue-property-decorator';
-import { v4 as uuidv4 } from 'uuid';
 import vuedraggable from 'vuedraggable';
 import ListLogs, { LogAction } from '@/components/ListLogs.vue';
 import TodoList from '@/components/TodoList.vue';
-import feathersClient, { User } from '@/feathers-client';
-import ShoppingList from '@/ShoppingList';
+import feathersClient, { listService, User } from '@/feathers-client';
+import ShoppingList, { IShoppingList } from '@/ShoppingList';
 
 @Component({
   components: {
@@ -112,21 +118,26 @@ export default class Details extends Vue {
     (val: string) => /^ *\w+ *$/.test(val) || 'Allowed characters: A-z, spaces',
   ];
   private user: null | User = null;
+  private listNotFound = false
 
   async mounted (): Promise<void> {
-    // TODO: Get list from API
-    const items = [
-      {
-        name: 'Ham',
-        id: uuidv4(),
-        done: false,
-      },
-    ];
-    this.shoppingList = new ShoppingList('My shopping list', 'My groceries feel save here', items);
-    console.log(this.shoppingList);
+    window.addEventListener('keydown', (e) => {
+      if (e.key === '/') {
+        e.preventDefault();
+        console.log('shift+7 search open/close');
+        // TODO: Implement search
+      }
+    });
+
+    const list: IShoppingList[] | null = (await listService.find({ query: { listid: this.id } }).catch(() => {
+      this.listNotFound = true;
+    }) as { data: IShoppingList[] })?.data;
+    console.log(list);
+    if (!list || this.listNotFound) return;
+
+    this.shoppingList = new ShoppingList(list[0].name, list[0].description, list[0].owner, list[0].items.items);
 
     this.user = await feathersClient.get('authentication').user;
-    console.log('List id:', this.id);
   }
 
   // Item function wrappers
@@ -159,6 +170,7 @@ export default class Details extends Vue {
     item.additional = {
       edit: false,
       editName: item.name,
+      focused: false,
     };
 
     this.newItemName = '';
@@ -194,54 +206,13 @@ export default class Details extends Vue {
       this.suggestionLoading = false;
     }, Math.random() * 10);
   }
-
-  // checkItem (id: string, check: boolean): void {
-  //   const item = this.shoppingList.items.find((t) => t.id === id);
-  //   if (!item) {
-  //     this.$toast.error('Something went horribly wrong...');
-  //     return;
-  //   }
-  //   item.done = check;
-  //   this.pushLog(check ? LogAction.MARK_ENTRY_DONE : LogAction.MARK_ENTRY_TODO, id);
-  // }
-  //
-  // addListEntry (): void {
-  //   const itemName = this.newItemName;
-  //   console.log(this.newItemName);
-  //   itemName.trim();
-  //
-  //   const id = uuidv4();
-  //   this.shoppingList.items.push({
-  //     name: itemName,
-  //     done: false,
-  //     id,
-  //     additional: {
-  //       edit: false,
-  //       editName: itemName,
-  //     },
-  //   });
-  //   this.newItemName = '';
-  //
-  //   this.pushLog(LogAction.CREATE_ENTRY, id);
-  // }
-  //
-  // renameEntry (name: string, id: string): void {
-  //   const item = this.shoppingList.items.find((t) => t.id === id);
-  //   if (!item) return;
-  //
-  //   item.additional.edit = false;
-  //   item.name = name;
-  //   this.pushLog(LogAction.CHANGED_ENTRY_NAME, item.id);
-  // }
-  //
-  // clearDone (): void {
-  //   // TODO: Clear done items
-  //   const del = this.shoppingList.items.filter((t) => t.done);
-  //   this.shoppingList.items = this.shoppingList.items.filter((t) => !t.done);
-  //
-  //   del.forEach((t) => {
-  //     this.pushLog(LogAction.DELETE_ENTRY, t.id);
-  //   });
-  // }
 }
 </script>
+
+<style scoped>
+.header {
+  color: #3b3b3b;
+  font-size: 7rem;
+  line-height: 6rem;
+}
+</style>
