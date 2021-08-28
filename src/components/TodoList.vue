@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="hr-sect mb-1">
-      <v-btn outlined color="red" x-small @click="shoppingList.clearDone()" class="mr-2"
+      <v-btn outlined color="red" x-small @click="$emit('clearDone')" class="mr-2"
              v-if="!isTodoList">
         <v-icon small>mdi-trash-can-outline</v-icon>
       </v-btn>
@@ -11,40 +11,40 @@
     <vuedraggable v-model="shoppingList.items" :animation="0" handle=".handle"
                   ghost-class="ghost">
       <transition-group type="transition" name="flip-list">
-        <div v-for="item in shoppingList.items.filter((t) => t.done === !isTodoList)"
-             :key="item.id">
+        <div v-for="entry in shoppingList.items.filter((t) => t.done === !isTodoList)"
+             :key="entry.id">
           <v-sheet outlined
                    rounded
                    class="d-flex flex-row align-center pa-2 mt-2"
-                   :class="{'item-focus': item.additional.focused}"
-                   @click="focusItem(item.id)"
+                   :class="{'item-focus': entry.additional.focused}"
+                   @click="focusEntry(entry.id)"
           >
-            <v-checkbox dense class="ma-0 pa-0" style="height: 24px" :input-value="item.done"
-                        @click="shoppingList.checkItem(item.id, isTodoList)"
-                        @keydown.enter="shoppingList.checkItem(item.id, isTodoList)"/>
+            <v-checkbox dense class="ma-0 pa-0" style="height: 24px" :input-value="entry.done"
+                        @click="$emit('checkEntry', entry.id, isTodoList)"
+                        @keydown.enter="$emit('checkEntry', entry.id, isTodoList)"/>
             <v-text-field outlined
                           dense
                           color="primary"
                           label="Name"
-                          v-model="item.additional.editName"
-                          v-if="item.additional.edit"
+                          v-model="entry.additional.editName"
+                          v-if="entry.additional.edit"
                           hide-details
-                          @keydown.enter="renameItem(item.id)"
-                          @keydown.esc="item.additional.edit = false; item.additional.editName = item.name"
+                          @keydown.enter="renameEntry(entry.id)"
+                          @keydown.esc="entry.additional.edit = false; entry.additional.editName = entry.name"
                           autofocus/>
-            <div v-else @dblclick="item.additional.edit = true">{{ item.name }}</div>
-            <v-btn icon small @click="item.additional.edit = !item.additional.edit"
-                   v-if="item.additional.editName === item.name">
+            <div v-else @dblclick="entry.additional.edit = true">{{ entry.name }}</div>
+            <v-btn icon small @click="entry.additional.edit = !entry.additional.edit"
+                   v-if="entry.additional.editName === entry.name">
               <v-icon small>{{
-                  item.additional.edit ? 'mdi-pencil-outline' : 'mdi-pencil'
+                  entry.additional.edit ? 'mdi-pencil-outline' : 'mdi-pencil'
                 }}
               </v-icon>
             </v-btn>
             <div v-else>
               <v-btn icon
                      small
-                     @click="renameItem(item.id)"
-                     @keydown.enter="renameItem(item.id)"
+                     @click="renameEntry(entry.id)"
+                     @keydown.enter="renameEntry(entry.id)"
               >
                 <v-icon small>
                   mdi-content-save
@@ -52,7 +52,7 @@
               </v-btn>
               <v-btn icon
                      small
-                     @click="item.additional.edit = false; item.additional.editName = item.name;"
+                     @click="entry.additional.edit = false; entry.additional.editName = entry.name;"
               >
                 <v-icon small>
                   mdi-close
@@ -99,8 +99,8 @@ export default class TodoList extends Vue {
     // });
   }
 
-  renameItem (id: string): void {
-    this.$emit('rename', id);
+  renameEntry (id: string): void {
+    this.$emit('renameEntry', id);
   }
 
   getCount (done: boolean): string {
@@ -110,7 +110,7 @@ export default class TodoList extends Vue {
     return ` ― ${count}`;
   }
 
-  focusItem (/* id: string */): void {
+  focusEntry (/* id: string */): void {
     // TODO: Make focusing possible. Unfocusing is impossible atm.
     // const item = this.shoppingList?.items.find((t) => t.id === id);
     // if (!item) return;

@@ -22,8 +22,8 @@
         <v-text-field placeholder="Add item"
                       outlined
                       append-icon="mdi-basket-plus-outline"
-                      @click:append="createItem"
-                      @keydown.enter="createItem"
+                      @click:append="createEntry"
+                      @keydown.enter="createEntry"
                       dense
                       ref="newItemField"
                       v-model="newItemName"
@@ -57,14 +57,18 @@
           label="Todo"
           :shopping-list="shoppingList"
           is-todo-list
-          @rename="renameItem"
+          @clearDone="clearDone"
+          @checkEntry="checkEntry"
+          @renameEntry="renameEntry"
           class="mb-4"
         />
 
         <TodoList
           label="Done"
           :shopping-list="shoppingList"
-          @rename="renameItem"
+          @clearDone="clearDone"
+          @checkEntry="checkEntry"
+          @renameEntry="renameEntry"
         />
       </div>
     </v-sheet>
@@ -72,16 +76,18 @@
       <div class="header">404</div>
       <div class="text-subtitle-1">List not found.</div>
       <p>We can't find this list in our database.</p>
-      <v-btn outlined color="primary" rounded width="300px" @click="$router.push({ name: 'my lists' })">Go to my lists</v-btn>
+      <v-btn outlined color="primary" rounded width="300px"
+             @click="$router.push({ name: 'my lists' })">Go to my lists
+      </v-btn>
     </div>
 
     <!-- TODO: Change list name   -->
-    <ListLogs
+    <EventViewer
       v-if="shoppingList !== null"
-      :log-string="logString"
       :list-name="shoppingList.name"
+      :events="events"
       v-model="openLogDialog"
-      ref="log"/>
+    />
   </div>
 </template>
 
@@ -93,14 +99,33 @@ import {
   Watch,
 } from 'vue-property-decorator';
 import vuedraggable from 'vuedraggable';
-import ListLogs, { LogAction } from '@/components/ListLogs.vue';
+import EventViewer from '@/components/EventViewer.vue';
 import TodoList from '@/components/TodoList.vue';
 import feathersClient, { listService, User } from '@/feathers-client';
 import ShoppingList, { IShoppingList } from '@/ShoppingList';
 
+export enum EventType {
+  MOVE_ENTRY = 'MOVE_ENTRY',
+  DELETE_ENTRY = 'DELETE_ENTRY',
+  CREATE_ENTRY = 'CREATE_ENTRY',
+  CHANGED_ENTRY_NAME = 'CHANGED_ENTRY_NAME',
+  MARK_ENTRY_DONE = 'MARK_ENTRY_DONE',
+  MARK_ENTRY_TODO = 'MARK_ENTRY_TODO',
+}
+
+export interface LogEvent {
+  event: EventType,
+  entryId: string,
+  state: {
+    name: string,
+    done: boolean,
+  },
+  isoDate: string,
+}
+
 @Component({
   components: {
-    ListLogs,
+    EventViewer,
     TodoList,
     vuedraggable,
   },
@@ -119,6 +144,7 @@ export default class Details extends Vue {
   ];
   private user: null | User = null;
   private listNotFound = false
+  private events: LogEvent[] = [];
 
   async mounted (): Promise<void> {
     window.addEventListener('keydown', (e) => {
@@ -140,8 +166,26 @@ export default class Details extends Vue {
     this.user = await feathersClient.get('authentication').user;
   }
 
+  clearDone (): void {
+    if (!this.shoppingList) return;
+
+    const deleted = this.shoppingList.clearDone();
+
+    deleted.forEach((entry) => {
+      this.recordEvent({
+        event: EventType.DELETE_ENTRY,
+        entryId: entry.id,
+        isoDate: (new Date()).toISOString(),
+        state: {
+          name: entry.name,
+          done: entry.done,
+        },
+      });
+    });
+  }
+
   // Item function wrappers
-  renameItem (id: string): void {
+  renameEntry (id: string): void {
     if (!this.shoppingList) return;
 
     const item = this.shoppingList.items.find((t) => t.id === id);
@@ -150,10 +194,18 @@ export default class Details extends Vue {
     this.shoppingList.renameItem(item.id, item.additional.editName);
     item.additional.edit = false;
 
-    // TODO: Push event
+    this.recordEvent({
+      event: EventType.CHANGED_ENTRY_NAME,
+      entryId: id,
+      isoDate: (new Date()).toISOString(),
+      state: {
+        name: item.name,
+        done: item.done,
+      },
+    });
   }
 
-  createItem (): void {
+  createEntry (): void {
     const name = this.newItemName;
 
     for (let i = 0; i < this.newItemRules.length; i++) {
@@ -176,13 +228,40 @@ export default class Details extends Vue {
     this.newItemName = '';
     (this.$refs.newItemField as unknown as { resetValidation: () => void }).resetValidation();
 
-    // TODO: Push event
+    this.recordEvent({
+      event: EventType.CREATE_ENTRY,
+      entryId: item.id,
+      isoDate: (new Date()).toISOString(),
+      state: {
+        name: item.name,
+        done: item.done,
+      },
+    });
+  }
+
+  checkEntry (id: string, check = true): void {
+    if (!this.shoppingList) return;
+
+    const item = this.shoppingList?.items.find((t) => t.id === id);
+    if (!item) return;
+
+    this.shoppingList.checkItem(id, check);
+
+    this.recordEvent({
+      event: EventType.MARK_ENTRY_DONE,
+      entryId: item.id,
+      isoDate: (new Date()).toISOString(),
+      state: {
+        name: item.name,
+        done: item.done,
+      },
+    });
   }
 
   // Log wrapper
-  pushLog (action: LogAction, itemId: string): void {
-    // TODO: Change log format to something more reasonable
-    (this.$refs.log as ListLogs).pushLog(action, itemId);
+  recordEvent (event: LogEvent): void {
+    console.log('[LOG]', event);
+    this.events.push(event);
   }
 
   // Suggestion autocomplete stuff

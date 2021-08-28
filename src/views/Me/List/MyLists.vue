@@ -108,7 +108,7 @@ export default class MyLists extends Vue {
 
   @Watch('auth')
   async populateLists (): Promise<void> {
-    const lists: Array<IShoppingList> = ((await listService.find({ where: { owner: this.auth?.user.uuid } })) as { data: Array<IShoppingList> }).data;
+    const lists: Array<IShoppingList> = ((await listService.find({ query: { owner: this.auth?.user.uuid } })) as { data: Array<IShoppingList> }).data;
 
     this.lists = lists.map((l) => {
       const o = l;
