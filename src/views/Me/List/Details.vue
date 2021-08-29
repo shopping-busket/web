@@ -144,8 +144,11 @@ export default class Details extends Vue {
   private user: null | User = null;
   private listNotFound = false
   private events: LogEvent[] = [];
+  private readonly connected = feathersClient.io.connected;
 
   async mounted (): Promise<void> {
+    await this.connectionChange();
+
     window.addEventListener('keydown', (e) => {
       if (e.key === '/') {
         e.preventDefault();
@@ -154,10 +157,29 @@ export default class Details extends Vue {
       }
     });
 
+    if (!feathersClient.io.connected) {
+      const lists = localStorage.getItem('lists');
+      if (!lists) {
+        console.log('Lists not found');
+        localStorage.setItem('lists', JSON.stringify([]));
+        this.listNotFound = true;
+        return;
+      }
+
+      const list = (JSON.parse(lists) as Array<IShoppingList>).find((l) => l.listid === this.id);
+      if (!list) {
+        this.listNotFound = true;
+        return;
+      }
+
+      this.shoppingList = new ShoppingList(list.name, list.description, list.owner, list.items.items);
+      this.events = this.loadStoredEvents();
+      return;
+    }
+
     const list: IShoppingList[] | null = (await listService.find({ query: { listid: this.id } }).catch(() => {
       this.listNotFound = true;
     }) as { data: IShoppingList[] })?.data;
-    console.log(list);
     if (!list || this.listNotFound) return;
 
     this.shoppingList = new ShoppingList(list[0].name, list[0].description, list[0].owner, list[0].items.items);
@@ -165,6 +187,14 @@ export default class Details extends Vue {
     this.user = await feathersClient.get('authentication').user;
 
     this.events = this.loadStoredEvents();
+  }
+
+  @Watch('connected')
+  connectionChange (): void {
+    if (this.connected) {
+      this.sendEventsToServer();
+      console.log('Sending events to server.');
+    }
   }
 
   async clearDone (): Promise<void> {
@@ -281,7 +311,17 @@ export default class Details extends Vue {
   }
 
   async recordEvent (event: LogEvent): Promise<unknown> {
-    // Store event
+    const stored = localStorage.getItem('lists');
+    if (!stored) {
+      localStorage.setItem('lists', JSON.stringify([]));
+    }
+    const lists = JSON.parse(stored || '[]') as Array<IShoppingList>;
+    for (let i = 0; i < lists.length; i++) {
+      if (lists[i].listid === this.id && this.shoppingList) {
+        lists[i] = this.shoppingList.toInterface(lists[i].id);
+      }
+    }
+    localStorage.setItem('lists', JSON.stringify(lists));
 
     console.log('[LOG]', event);
     this.events.push(event);

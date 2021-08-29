@@ -25,6 +25,10 @@ const routes: Array<RouteConfig> = [
     component: () => import(/* webpackChunkName: "My lists" */ '@/views/Me/List/MyLists.vue'),
   },
   {
+    path: '/me/list',
+    redirect: { name: 'my lists' },
+  },
+  {
     path: '/signup',
     name: 'signup',
     meta: {
@@ -102,11 +106,15 @@ router.beforeEach(async (to, from, next) => {
   if (!feathersClient.authentication.authenticated) {
     setTimeout(() => {
       if (feathersClient.io.connected) return;
-      if (to.meta?.requiresAuth) return;
       EventBus.$emit('toast', 'Your offline.');
+      next();
     }, 800);
 
     await feathersClient.authenticate().catch((err) => {
+      if (err.code === 408) {
+        console.log('[Auth] Timeout while trying to authenticate. You are offline!');
+        return;
+      }
       console.log(`[Auth] Not authenticated. This page requires auth: ${to.meta?.requiresAuth ? 'yes' : 'no'}`);
       if (!err.data?.reason && to.meta?.requiresAuth) {
         router.replace({
@@ -117,27 +125,6 @@ router.beforeEach(async (to, from, next) => {
     });
   }
   next();
-  // // Auth
-  // if (!(to.meta as Meta).requiresAuth) {
-  //   next();
-  //   return;
-  // }
-  //
-  // // TODO: Check if logged in. If not, log in
-  // await feathersClient.authenticate().then((user) => {
-  //   console.log(user);
-  //   feathersClient.authentication.app.set('auth', user);
-  //   next();
-  // }).catch((err) => {
-  //   if (!err.data?.reason && to.meta?.requiresAuth) {
-  //     console.log(`%c[Auth]%cNot authenticated. This page requires auth: ${(to.meta as Meta).requiresAuth ? 'yes' : 'no'}`, 'color: green');
-  //     router.replace({
-  //       name: 'login',
-  //       query: { redirect: to.path },
-  //     });
-  //   }
-  // });
-  // window.location.href = `/login?redirect=${encodeURI(to.fullPath)}`;
 });
 
 export default router;

@@ -63,7 +63,11 @@ export class ShoppingListItem {
    * @param id (optional) When id is passed, none will be created.
    * @param additional (default: { edit: false, editName: name }) Additional data (only used by frontend)
    */
-  constructor (name: string, done = false, id?: string, additional: AdditionalItemData = { edit: false, editName: name, focused: false }) {
+  constructor (name: string, done = false, id?: string, additional: AdditionalItemData = {
+    edit: false,
+    editName: name,
+    focused: false,
+  }) {
     this.name = name.trim();
     this.done = done;
     this.id = id ?? uuidv4();
@@ -148,5 +152,25 @@ export default class ShoppingList {
     this.items = this.items.filter((t) => !t.done);
 
     return del;
+  }
+
+  /**
+   * Convert class instance to interface
+   * @param id database id
+   */
+  public toInterface (id: number): IShoppingList {
+    return {
+      id,
+      name: this.name,
+      description: this.description,
+      listid: this.listid,
+      owner: this.owner,
+      items: {
+        items: this.items,
+      },
+      additional: {
+        loading: false,
+      },
+    };
   }
 }

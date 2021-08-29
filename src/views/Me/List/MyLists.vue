@@ -20,7 +20,7 @@
     </div>
     <v-card outlined ripple hover
             class="d-flex justify-center flex-column align-center new-list-card"
-            @click="newListDialog = true"
+            @click="feathersClient.io.connected ? newListDialog = true : $toast('You are offline!')"
     >
       <div class="new-list-title">New List</div>
       <v-icon>mdi-plus-circle-outline</v-icon>
@@ -101,8 +101,25 @@ export default class MyLists extends Vue {
   };
   private auth: null | AuthObject = null;
   private lists: Array<IShoppingList> | null = null;
+  private feathersClient = feathersClient;
 
   async mounted (): Promise<void> {
+    if (!feathersClient.io.connected) {
+      console.log('Not connected to server! Loading lists from storage...');
+      const stored = localStorage.getItem('lists');
+      console.log(stored);
+      if (!stored) {
+        localStorage.setItem('lists', JSON.stringify([]));
+        console.log('No lists found in storage. Offline will not work!');
+        return;
+      }
+
+      this.lists = JSON.parse(stored);
+      console.log(this.lists);
+
+      return;
+    }
+
     this.auth = await feathersClient.get('authentication');
   }
 
@@ -117,6 +134,8 @@ export default class MyLists extends Vue {
       };
       return o;
     });
+
+    localStorage.setItem('lists', JSON.stringify(this.lists));
   }
 
   async deleteList (listid: string): Promise<void> {
