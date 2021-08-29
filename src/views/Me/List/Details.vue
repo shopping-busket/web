@@ -101,7 +101,7 @@ import {
 import vuedraggable from 'vuedraggable';
 import EventViewer from '@/components/EventViewer.vue';
 import TodoList from '@/components/TodoList.vue';
-import feathersClient, { listService, User } from '@/feathers-client';
+import feathersClient, { eventService, listService, User } from '@/feathers-client';
 import ShoppingList, { IShoppingList } from '@/ShoppingList';
 
 export enum EventType {
@@ -135,7 +135,6 @@ export default class Details extends Vue {
   protected suggestedItems: string[] = [];
   private suggestionSearch = '';
   private suggestionLoading = false;
-  private logString = '';
   private openLogDialog = false;
   private shoppingList: ShoppingList | null = null;
   private newItemName = '';
@@ -164,15 +163,19 @@ export default class Details extends Vue {
     this.shoppingList = new ShoppingList(list[0].name, list[0].description, list[0].owner, list[0].items.items);
 
     this.user = await feathersClient.get('authentication').user;
+
+    this.events = this.loadStoredEvents();
   }
 
-  clearDone (): void {
+  async clearDone (): Promise<void> {
     if (!this.shoppingList) return;
 
     const deleted = this.shoppingList.clearDone();
 
-    deleted.forEach((entry) => {
-      this.recordEvent({
+    // eslint-disable-next-line no-restricted-syntax
+    for (const entry of deleted) {
+      // eslint-disable-next-line no-await-in-loop
+      await this.recordEvent({
         event: EventType.DELETE_ENTRY,
         entryId: entry.id,
         isoDate: (new Date()).toISOString(),
@@ -181,11 +184,11 @@ export default class Details extends Vue {
           done: entry.done,
         },
       });
-    });
+    }
   }
 
   // Item function wrappers
-  renameEntry (id: string): void {
+  async renameEntry (id: string): Promise<void> {
     if (!this.shoppingList) return;
 
     const item = this.shoppingList.items.find((t) => t.id === id);
@@ -194,7 +197,7 @@ export default class Details extends Vue {
     this.shoppingList.renameItem(item.id, item.additional.editName);
     item.additional.edit = false;
 
-    this.recordEvent({
+    await this.recordEvent({
       event: EventType.CHANGED_ENTRY_NAME,
       entryId: id,
       isoDate: (new Date()).toISOString(),
@@ -205,7 +208,7 @@ export default class Details extends Vue {
     });
   }
 
-  createEntry (): void {
+  async createEntry (): Promise<void> {
     const name = this.newItemName;
 
     for (let i = 0; i < this.newItemRules.length; i++) {
@@ -228,7 +231,7 @@ export default class Details extends Vue {
     this.newItemName = '';
     (this.$refs.newItemField as unknown as { resetValidation: () => void }).resetValidation();
 
-    this.recordEvent({
+    await this.recordEvent({
       event: EventType.CREATE_ENTRY,
       entryId: item.id,
       isoDate: (new Date()).toISOString(),
@@ -239,7 +242,7 @@ export default class Details extends Vue {
     });
   }
 
-  checkEntry (id: string, check = true): void {
+  async checkEntry (id: string, check = true): Promise<void> {
     if (!this.shoppingList) return;
 
     const item = this.shoppingList?.items.find((t) => t.id === id);
@@ -247,7 +250,7 @@ export default class Details extends Vue {
 
     this.shoppingList.checkItem(id, check);
 
-    this.recordEvent({
+    await this.recordEvent({
       event: EventType.MARK_ENTRY_DONE,
       entryId: item.id,
       isoDate: (new Date()).toISOString(),
@@ -259,9 +262,33 @@ export default class Details extends Vue {
   }
 
   // Log wrapper
-  recordEvent (event: LogEvent): void {
+  loadStoredEvents (): Array<LogEvent> {
+    let ls: string | null = localStorage.getItem(`events-${this.id}`);
+    if (!ls) return [];
+
+    ls = JSON.parse(ls || '');
+
+    return ls as unknown as Array<LogEvent>;
+  }
+
+  async sendEventsToServer (): Promise<unknown> {
+    return eventService.create(this.events).then((d) => {
+      this.events.splice(0, (d as Array<LogEvent>).length);
+      localStorage.setItem(`events-${this.id}`, JSON.stringify(this.events));
+    }).catch(() => {
+      console.log('[LOG] Can\'t send events to server! no-connection');
+    });
+  }
+
+  async recordEvent (event: LogEvent): Promise<unknown> {
+    // Store event
+
     console.log('[LOG]', event);
     this.events.push(event);
+
+    localStorage.setItem(`events-${this.id}`, JSON.stringify(this.events));
+
+    return this.sendEventsToServer();
   }
 
   // Suggestion autocomplete stuff
