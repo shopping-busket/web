@@ -10,6 +10,10 @@
         <v-btn icon small color="primary" @click="openLogDialog = true">
           <v-icon small>mdi-text-box</v-icon>
         </v-btn>
+
+        <v-btn icon small color="primary" @click="downloadList">
+          <v-icon small>mdi-download</v-icon>
+        </v-btn>
       </v-card-title>
       <v-card-subtitle>
         <div v-if="shoppingList !== null">
@@ -289,6 +293,24 @@ export default class Details extends Vue {
         done: item.done,
       },
     });
+  }
+
+  downloadList (): void {
+    if (!this.shoppingList) return;
+    let { name } = this.shoppingList;
+    const obj = this.shoppingList;
+    const fileType = 'json';
+
+    name.trim().replaceAll(' ', '_');
+    name += '-export';
+
+    const dataStr = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(obj))}`;
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute('href', dataStr);
+    downloadAnchorNode.setAttribute('download', `${name}.${fileType}`);
+    document.body.appendChild(downloadAnchorNode); // required for firefox
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
   }
 
   // Log wrapper

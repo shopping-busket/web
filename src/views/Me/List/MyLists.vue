@@ -29,7 +29,7 @@
     <v-dialog v-model="newListDialog" max-width="550px">
       <v-card>
         <v-card-title>
-          Create a new list.
+          Create a new list or <a @click="importDialog = true" class="mx-1">import</a> one.
         </v-card-title>
         <v-card-subtitle>
           Name and title can be edited later.
@@ -74,6 +74,43 @@
         </v-card-text>
       </v-card>
     </v-dialog>
+
+    <v-dialog v-model="importDialog" max-width="550px">
+      <v-card>
+        <v-card-title>
+          Import a list.
+        </v-card-title>
+        <v-card-subtitle>
+          You can import downloaded lists by uploading the JSON file.
+        </v-card-subtitle>
+
+        <v-card-text class="mt-1">
+          <v-file-input ref="fileUpload" @change="uploadList"></v-file-input>
+
+          <div class="d-flex flex-row">
+            <v-btn
+              color="red"
+              text
+              @click="importDialog = false"
+            >
+              Cancel
+            </v-btn>
+
+            <v-spacer></v-spacer>
+
+            <v-btn
+              color="primary"
+              outlined
+              rounded
+              width="200px"
+              @click="importDialog = false"
+            >
+              Import
+            </v-btn>
+          </div>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -94,6 +131,7 @@ export default class MyLists extends Vue {
   private descriptionRules: InputValidationRules = [
     (val) => val.length <= 300 || 'Description length shouldn\'t exceed 300 characters.',
   ];
+  private importDialog = false;
   private newListDialog = false;
   private newList = {
     name: '',
@@ -152,6 +190,26 @@ export default class MyLists extends Vue {
     });
 
     await listService.remove(id);
+  }
+
+  uploadList (file: File): void {
+    console.log(file);
+    if (!file) return;
+    if (file.type !== 'application/json') {
+      console.log('Wrong file type');
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      const obj = JSON.parse(content);
+
+      // TODO: Send list to server
+    };
+
+    reader.readAsText(file);
   }
 
   async createList (): Promise<void> {
