@@ -119,7 +119,7 @@ import { Component, Vue, Watch } from 'vue-property-decorator';
 import { v4 as uuidv4 } from 'uuid';
 import { InputValidationRules } from 'vuetify';
 import feathersClient, { AuthObject, listService } from '@/feathers-client';
-import { IShoppingList } from '@/ShoppingList';
+import { IShoppingList } from '@/shoppinglist/ShoppingList';
 
 @Component
 export default class MyLists extends Vue {

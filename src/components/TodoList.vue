@@ -72,7 +72,7 @@
 
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import vuedraggable from 'vuedraggable';
-import ShoppingList from '@/ShoppingList';
+import ShoppingList from '@/shoppinglist/ShoppingList';
 
 @Component({
   components: {

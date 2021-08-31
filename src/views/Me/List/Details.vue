@@ -106,7 +106,7 @@ import vuedraggable from 'vuedraggable';
 import EventViewer from '@/components/EventViewer.vue';
 import TodoList from '@/components/TodoList.vue';
 import feathersClient, { eventService, listService, User } from '@/feathers-client';
-import ShoppingList, { IShoppingList } from '@/ShoppingList';
+import ShoppingList, { IShoppingList } from '@/shoppinglist/ShoppingList';
 
 export enum EventType {
   MOVE_ENTRY = 'MOVE_ENTRY',
