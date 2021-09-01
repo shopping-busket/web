@@ -2,6 +2,7 @@
   <v-app>
     <v-main>
       <MainContainer>
+        <BetaDialog />
         <router-view/>
       </MainContainer>
     </v-main>
@@ -15,9 +16,10 @@ import { POSITION } from 'vue-toastification';
 import MainContainer from '@/components/MainContainer.vue';
 import feathersClient from '@/feathers-client';
 import EventBus from '@/eventbus';
+import BetaDialog from '@/components/BetaDialog.vue';
 
 @Component({
-  components: { MainContainer },
+  components: { BetaDialog, MainContainer },
 })
 export default class App extends Vue {
   private feathersClient = feathersClient;

@@ -13,11 +13,12 @@
       <transition-group type="transition" name="flip-list">
         <div v-for="entry in shoppingList.entries.filter((t) => t.done === !isTodoList)"
              :key="entry.id">
-          <v-sheet outlined
-                   rounded
-                   class="d-flex flex-row align-center pa-2 mt-2"
-                   :class="{'item-focus': entry.additional.focused}"
-                   @click="focusEntry(entry.id)"
+          <v-card outlined
+                  rounded
+                  class="d-flex flex-row align-center pa-2 mt-2"
+                  :class="{'item-focus': entry.additional.focused}"
+                  v-click-outside="unFocusEntry"
+                  @click="focusEntry(entry.id)"
           >
             <v-checkbox dense class="ma-0 pa-0" style="height: 24px" :input-value="entry.done"
                         @click="$emit('checkEntry', entry.id, isTodoList)"
@@ -61,7 +62,7 @@
             </div>
             <v-spacer></v-spacer>
             <v-icon small class="handle cursor-move" v-if="isTodoList">mdi-menu</v-icon>
-          </v-sheet>
+          </v-card>
         </div>
       </transition-group>
     </vuedraggable>
@@ -73,6 +74,7 @@
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import vuedraggable from 'vuedraggable';
 import ShoppingList from '@/shoppinglist/ShoppingList';
+import config from '../../config';
 
 @Component({
   components: {
@@ -110,15 +112,31 @@ export default class TodoList extends Vue {
     return ` ― ${count}`;
   }
 
-  focusEntry (/* id: string */): void {
+  focusEntry (id: string): void {
     // TODO: Make focusing possible. Unfocusing is impossible atm.
-    // const item = this.shoppingList?.items.find((t) => t.id === id);
-    // if (!item) return;
-    //
-    // console.log(id);
-    //
-    // item.additional.focused = true;
-    // console.log('focus');
+    if (!config.supportFocus) return;
+
+    const entry = this.shoppingList?.entries.find((t) => t.id === id);
+    if (!entry) return;
+
+    console.log(id);
+
+    entry.additional.focused = true;
+    console.log('focus');
+  }
+
+  unFocusEntry (): void {
+    if (!config.supportFocus) return;
+
+    console.log('unfocus');
+    const entries = this.shoppingList?.entries.forEach((t, i: number) => {
+      if (t.additional.focused) {
+        console.log(t.name);
+        if (!this.shoppingList) return;
+        this.shoppingList.entries[i].additional.focused = false;
+      }
+    });
+    console.log(entries);
   }
 }
 </script>
