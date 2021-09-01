@@ -13,7 +13,7 @@ export interface IShoppingList {
   description: string,
   listid: string,
   owner: string,
-  items: {
+  entries: {
     items: IShoppingListItem[],
   },
   additional: {
@@ -80,25 +80,25 @@ export default class ShoppingList {
   public description = '';
   public listid = '';
   public owner = '';
-  public items: ShoppingListItem[] = [];
+  public entries: ShoppingListItem[] = [];
 
   /**
    * Create a new list.
    * @param name Name of the new list
    * @param description Description of the list
    * @param owner
-   * @param items (optional) Pass already existing [IShoppingListItems]{@link IShoppingListItem}.
+   * @param entries (optional) Pass already existing [IShoppingListItems]{@link IShoppingListItem}.
    */
-  constructor (name: string, description: string, owner?: string, items?: IShoppingListItem[]) {
+  constructor (name: string, description: string, owner?: string, entries?: IShoppingListItem[]) {
     this.name = name;
     this.description = description;
     this.listid = uuidv4();
     this.owner = owner ?? '';
 
     // Convert database shopping list item type to class type
-    if (!items) return;
-    items.forEach((t) => {
-      this.items.push(new ShoppingListItem(t.name, t.done, t.id));
+    if (!entries) return;
+    entries.forEach((t) => {
+      this.entries.push(new ShoppingListItem(t.name, t.done, t.id));
     });
   }
 
@@ -108,7 +108,7 @@ export default class ShoppingList {
    * @param check If true, will be marked as done, if not: will be marked as todo.
    */
   public checkItem (id: string, check: boolean): void {
-    const item = this.items.find((t) => t.id === id);
+    const item = this.entries.find((t) => t.id === id);
     if (!item) throw new ItemNotFoundError(id);
 
     item.done = check;
@@ -122,9 +122,9 @@ export default class ShoppingList {
    */
   public createItem (name: string): ShoppingListItem {
     const id = uuidv4();
-    this.items.push(new ShoppingListItem(name, undefined, id));
+    this.entries.push(new ShoppingListItem(name, undefined, id));
 
-    const item = this.items.find((t) => t.id === id);
+    const item = this.entries.find((t) => t.id === id);
 
     if (!item) throw new ItemNotFoundError(id);
     return item;
@@ -137,7 +137,7 @@ export default class ShoppingList {
    * @param name New name
    */
   public renameItem (id: string, name: string): void {
-    const item = this.items.find((t) => t.id === id);
+    const item = this.entries.find((t) => t.id === id);
     if (!item) return;
 
     item.name = name;
@@ -148,8 +148,8 @@ export default class ShoppingList {
    * @return {IShoppingListItem[]} All the items marked as done before deletion, to, for example: push the values to log.
    */
   public clearDone (): IShoppingListItem[] {
-    const del = this.items.filter((t) => t.done);
-    this.items = this.items.filter((t) => !t.done);
+    const del = this.entries.filter((t) => t.done);
+    this.entries = this.entries.filter((t) => !t.done);
 
     return del;
   }
@@ -165,8 +165,8 @@ export default class ShoppingList {
       description: this.description,
       listid: this.listid,
       owner: this.owner,
-      items: {
-        items: this.items,
+      entries: {
+        items: this.entries,
       },
       additional: {
         loading: false,

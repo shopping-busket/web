@@ -143,7 +143,8 @@ export default class Details extends Vue {
   private shoppingList: ShoppingList | null = null;
   private newItemName = '';
   private newItemRules = [
-    (val: string) => /^ *\w+ *$/.test(val) || 'Allowed characters: A-z, spaces',
+    (val: string) => val.trim().length >= 1 || 'Must at least have one character that isn\'t a space',
+    (val: string) => /^[*\w+ ]*$/.test(val) || 'Allowed characters: A-z, spaces',
   ];
   private user: null | User = null;
   private listNotFound = false
@@ -176,7 +177,7 @@ export default class Details extends Vue {
         return;
       }
 
-      this.shoppingList = new ShoppingList(list.name, list.description, list.owner, list.items.items);
+      this.shoppingList = new ShoppingList(list.name, list.description, list.owner, list.entries.items);
       this.events = this.loadStoredEvents();
       return;
     }
@@ -185,8 +186,9 @@ export default class Details extends Vue {
       this.listNotFound = true;
     }) as { data: IShoppingList[] })?.data;
     if (!list || this.listNotFound) return;
+    console.log(list[0].entries);
 
-    this.shoppingList = new ShoppingList(list[0].name, list[0].description, list[0].owner, list[0].items.items);
+    this.shoppingList = new ShoppingList(list[0].name, list[0].description, list[0].owner, list[0].entries.items);
 
     this.user = await feathersClient.get('authentication').user;
 
@@ -225,7 +227,7 @@ export default class Details extends Vue {
   async renameEntry (id: string): Promise<void> {
     if (!this.shoppingList) return;
 
-    const item = this.shoppingList.items.find((t) => t.id === id);
+    const item = this.shoppingList.entries.find((t) => t.id === id);
     if (!item) return;
 
     this.shoppingList.renameItem(item.id, item.additional.editName);
@@ -279,7 +281,7 @@ export default class Details extends Vue {
   async checkEntry (id: string, check = true): Promise<void> {
     if (!this.shoppingList) return;
 
-    const item = this.shoppingList?.items.find((t) => t.id === id);
+    const item = this.shoppingList?.entries.find((t) => t.id === id);
     if (!item) return;
 
     this.shoppingList.checkItem(id, check);
@@ -324,11 +326,33 @@ export default class Details extends Vue {
   }
 
   async sendEventsToServer (): Promise<unknown> {
-    return eventService.create(this.events).then((d) => {
+    interface ServerEventData {
+      listid: string,
+      eventData: {
+        event: EventType,
+        entryId: string,
+        state: {
+          name: string,
+          done: boolean,
+        },
+        isoDate: string,
+      },
+    }
+
+    console.log('Sending events to server.');
+
+    const data: ServerEventData[] = this.events.map((e) => ({
+      listid: this.id,
+      eventData: e,
+    } as ServerEventData));
+
+    return eventService.create(data).then((d) => {
       this.events.splice(0, (d as Array<LogEvent>).length);
       localStorage.setItem(`events-${this.id}`, JSON.stringify(this.events));
-    }).catch(() => {
+    }).catch((e) => {
       console.log('[LOG] Can\'t send events to server! no-connection');
+      console.log(e);
+      console.log(e.data);
     });
   }
 
@@ -337,6 +361,7 @@ export default class Details extends Vue {
     if (!stored) {
       localStorage.setItem('lists', JSON.stringify([]));
     }
+
     const lists = JSON.parse(stored || '[]') as Array<IShoppingList>;
     for (let i = 0; i < lists.length; i++) {
       if (lists[i].listid === this.id && this.shoppingList) {

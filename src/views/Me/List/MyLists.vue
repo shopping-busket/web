@@ -204,6 +204,7 @@ export default class MyLists extends Vue {
 
     reader.onload = (e) => {
       const content = e.target?.result as string;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const obj = JSON.parse(content);
 
       // TODO: Send list to server
@@ -221,7 +222,7 @@ export default class MyLists extends Vue {
       name,
       description,
       owner: this.auth?.user.uuid,
-      items: {},
+      entries: {},
     };
 
     this.newList.name = '';

@@ -8,10 +8,10 @@
       {{ label }} {{ getCount(!isTodoList) }}
     </div>
 
-    <vuedraggable v-model="shoppingList.items" :animation="0" handle=".handle"
+    <vuedraggable v-model="shoppingList.entries" :animation="0" handle=".handle"
                   ghost-class="ghost">
       <transition-group type="transition" name="flip-list">
-        <div v-for="entry in shoppingList.items.filter((t) => t.done === !isTodoList)"
+        <div v-for="entry in shoppingList.entries.filter((t) => t.done === !isTodoList)"
              :key="entry.id">
           <v-sheet outlined
                    rounded
@@ -104,7 +104,7 @@ export default class TodoList extends Vue {
   }
 
   getCount (done: boolean): string {
-    const count = this.shoppingList?.items.filter((t) => t.done === done).length;
+    const count = this.shoppingList?.entries.filter((t) => t.done === done).length;
 
     if (count === 0) return '';
     return ` ― ${count}`;
