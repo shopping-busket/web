@@ -34,8 +34,7 @@
                       :rules="newItemRules"
                       @blur="newItemName.length === 0 ? $refs.newItemField.resetValidation() : null"
         />
-        <!--    TODO: Actually make this work good    -->
-        <!--        <v-autocomplete :items="suggestedItems"-->
+        <!--        TODO: <v-autocomplete :items="suggestedItems"-->
         <!--                        outlined-->
         <!--                        placeholder="Add item"-->
         <!--                        :search-input.sync="suggestionSearch"-->
@@ -43,9 +42,9 @@
         <!--                        hide-no-data-->
         <!--                        hide-selected-->
         <!--                        append-icon="mdi-basket-plus-outline"-->
-        <!--                        @click:append="addListEntry()"-->
+        <!--                        @click:append="createEntry()"-->
         <!--                        dense-->
-        <!--        /> -->
+        <!--        />-->
       </v-card-text>
     </v-card>
 
@@ -383,6 +382,9 @@ export default class Details extends Vue {
   @Watch('suggestionSearch')
   suggestionAPICall (val: string): void {
     this.suggestionLoading = true;
+    this.suggestedItems = [];
+    if (val) this.suggestedItems.push(val);
+
     setTimeout(() => {
       const names = [
         'ham',
