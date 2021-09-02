@@ -7,7 +7,7 @@ interface Config {
 }
 
 const config: Config = {
-  backend: 'http://192.168.4.48:3030',
+  backend: process.env.BACKEND_URL,
   isBeta: true,
   version: 'beta-2.0',
   stableURI: 'https://busket.bux.at/',
