@@ -40,6 +40,7 @@
             <v-text-field label="Name" outlined dense
                           v-model="newList.name"
                           :rules="nameRules"
+                          counter="32"
                           autofocus
             />
             <v-textarea label="Description"
@@ -126,7 +127,7 @@ export default class MyLists extends Vue {
   private incorrectEntries = false;
   private nameRules: InputValidationRules = [
     (val) => val.length >= 3 || 'Name has to have at least 3 characters.',
-    (val) => /^ *\w+ *$/.test(val) || 'Name can only include A-z, spaces and 0-9.',
+    (val) => val.length <= 32 || 'Name mustn\'t exceed the 32 character limit!',
   ];
   private descriptionRules: InputValidationRules = [
     (val) => val.length <= 300 || 'Description length shouldn\'t exceed 300 characters.',

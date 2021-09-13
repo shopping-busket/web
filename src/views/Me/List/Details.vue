@@ -143,7 +143,8 @@ export default class Details extends Vue {
   private newItemName = '';
   private newItemRules = [
     (val: string) => val.trim().length >= 1 || 'Must at least have one character that isn\'t a space',
-    (val: string) => /^[*\w+ ]*$/.test(val) || 'Allowed characters: A-z, spaces',
+    // Old regex: (val: string) => /^[*\w+ ]*$/.test(val) || 'Allowed characters: A-z, spaces',
+    (val: string) => val.trim().length <= 256 || 'Can\'t exceed 256 character limit!',
   ];
   private user: null | User = null;
   private listNotFound = false
@@ -244,12 +245,14 @@ export default class Details extends Vue {
   }
 
   async createEntry (): Promise<void> {
-    const name = this.newItemName;
+    // Filters hidden characters
+    // eslint-disable-next-line no-control-regex
+    const name = this.newItemName.trim().replaceAll(/[^\x00-\x7F(?:\u00c4,.\-\\/ \u00e4\u00d6\u00f6\u00dc\u00fc\u00df)]/g, '');
 
     for (let i = 0; i < this.newItemRules.length; i++) {
       const rule = this.newItemRules[i];
       if (typeof rule(name) === 'string') {
-        this.$toast('Name needs at least 1 character; Can include A-z, space');
+        this.$toast('Name needs at least 1 character!');
         return;
       }
     }
