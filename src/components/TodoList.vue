@@ -9,7 +9,7 @@
     </div>
 
     <vuedraggable v-model="shoppingList.entries" :animation="0" handle=".handle"
-                  ghost-class="ghost">
+                  ghost-class="ghost" @end="moveEntry">
       <transition-group type="transition" name="flip-list">
         <div v-for="entry in shoppingList.entries.filter((t) => t.done === !isTodoList)"
              :key="entry.id">
@@ -99,6 +99,14 @@ export default class TodoList extends Vue {
     //
     //   }
     // });
+  }
+
+  moveEntry (e: { newDraggableIndex: number, oldDraggableIndex: number }): void {
+    if (e.newDraggableIndex === e.oldDraggableIndex) {
+      return;
+    } // Item didnt get moved; Return
+
+    this.$emit('moveEntry', e.newDraggableIndex, e.oldDraggableIndex);
   }
 
   renameEntry (id: string): void {

@@ -63,6 +63,7 @@
           @clearDone="clearDone"
           @checkEntry="checkEntry"
           @renameEntry="renameEntry"
+          @moveEntry="moveEntry"
           class="mb-4"
         />
 
@@ -72,6 +73,7 @@
           @clearDone="clearDone"
           @checkEntry="checkEntry"
           @renameEntry="renameEntry"
+          @moveEntry="moveEntry"
         />
       </div>
     </v-sheet>
@@ -122,6 +124,10 @@ export interface LogEvent {
   state: {
     name: string,
     done: boolean,
+    aboveEntry?: string,
+    belowEntry?: string,
+    oldIndex?: number,
+    newIndex?: number,
   },
   isoDate: string,
 }
@@ -244,6 +250,27 @@ export default class Details extends Vue {
     });
   }
 
+  async moveEntry (index: number, oldIndex: number): Promise<void> {
+    if (!this.shoppingList) return;
+    const aboveEntry = index === 0 ? null : this.shoppingList.entries[index - 1];
+    const belowEntry = this.shoppingList.entries.length - 1 === index ? null : this.shoppingList.entries[index + 1];
+    const entry = this.shoppingList.entries[index];
+
+    await this.recordEvent({
+      event: EventType.MOVE_ENTRY,
+      entryId: entry.id,
+      isoDate: (new Date()).toISOString(),
+      state: {
+        name: entry.name,
+        done: entry.done,
+        aboveEntry: aboveEntry?.id,
+        belowEntry: belowEntry?.id,
+        oldIndex,
+        newIndex: index,
+      },
+    });
+  }
+
   async createEntry (): Promise<void> {
     // Filters hidden characters
     // eslint-disable-next-line no-control-regex
@@ -283,18 +310,18 @@ export default class Details extends Vue {
   async checkEntry (id: string, check = true): Promise<void> {
     if (!this.shoppingList) return;
 
-    const item = this.shoppingList?.entries.find((t) => t.id === id);
-    if (!item) return;
+    const entry = this.shoppingList?.entries.find((t) => t.id === id);
+    if (!entry) return;
 
     this.shoppingList.checkItem(id, check);
 
     await this.recordEvent({
-      event: EventType.MARK_ENTRY_DONE,
-      entryId: item.id,
+      event: check ? EventType.MARK_ENTRY_DONE : EventType.MARK_ENTRY_TODO,
+      entryId: entry.id,
       isoDate: (new Date()).toISOString(),
       state: {
-        name: item.name,
-        done: item.done,
+        name: entry.name,
+        done: check,
       },
     });
   }
@@ -349,12 +376,12 @@ export default class Details extends Vue {
     } as ServerEventData));
 
     return eventService.create(data).then((d) => {
+      console.log('[LOG] Sent event to server');
       this.events.splice(0, (d as Array<LogEvent>).length);
       localStorage.setItem(`events-${this.id}`, JSON.stringify(this.events));
     }).catch((e) => {
       console.log('[LOG] Can\'t send events to server! no-connection');
-      console.log(e);
-      console.log(e.data);
+      throw e;
     });
   }
 
