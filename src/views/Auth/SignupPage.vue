@@ -131,6 +131,10 @@ export default class SignupPage extends Vue {
       password: this.password,
       fullName: this.username,
       avatarURL: null,
+
+      prefersMiniDrawer: false,
+      prefersDarkMode: false,
+      preferredLanguage: 'en',
     }).then(() => {
       this.btnLoading = false;
       this.$toast.info(`Created account '${this.username}'. Logging you in...`);
