@@ -18,6 +18,11 @@ export interface User {
   uuid: string;
   email: string;
   fullName: string;
+
+  prefersDarkMode: boolean;
+  prefersMiniDrawer: boolean;
+  preferredLanguage: string;
+
   avatarURI: string | null;
   githubId: number | null;
   googleId: number | null;
@@ -37,5 +42,6 @@ export async function isLoggedIn (): Promise<boolean> {
 
 export const eventService: Service<unknown> = feathersClient.service('event');
 export const listService: Service<unknown> = feathersClient.service('list');
+export const usersService: Service<unknown> = feathersClient.service('users');
 
 export default feathersClient;

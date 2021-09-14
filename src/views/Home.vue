@@ -1,6 +1,8 @@
 <template>
   <div class="d-flex align-center justify-center flex-column"
-       style="width: 800px; height: calc(100% - 110px); margin: auto; font-family: 'Poppins', sans-serif; font-weight: 400; color: #4d4d4d">
+       style="width: 800px; height: calc(100% - 110px); margin: auto; font-family: 'Poppins', sans-serif; font-weight: 400;"
+  :style="{ color: $vuetify.theme.dark ? '#f6f6f6' : '#4d4d4d' }"
+  >
     <h1 v-if="!!auth">Hello, {{ auth.user.fullName }}!</h1>
     <h1 v-else>Hello!</h1>
     Welcome to Busket.

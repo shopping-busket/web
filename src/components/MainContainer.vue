@@ -132,8 +132,6 @@ export default class MainContainer extends Vue {
     setTimeout(async () => {
       this.auth = await feathersClient.get('authentication');
     }, 500);
-
-    console.log(this.auth);
   }
 
   @Watch('auth')
@@ -148,11 +146,15 @@ export default class MainContainer extends Vue {
       });
       return;
     }
+    if (this.auth.user.prefersMiniDrawer) {
+      this.permDrawer = true;
+      this.mini = true;
+    }
 
     this.items.push({
       title: 'Preferences',
       icon: 'mdi-account-cog',
-      to: { name: 'login' },
+      to: { name: 'preferences' },
       divide: true,
     });
   }
