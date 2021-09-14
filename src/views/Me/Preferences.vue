@@ -66,7 +66,7 @@ import feathersClient, { AuthObject, usersService } from '@/feathers-client';
 
 @Component
 export default class Preferences extends Vue {
-  private settings = [];
+  private settings: number[] = [];
   private backendNames = ['prefersDarkMode', 'prefersMiniDrawer', 'preferredLanguage'];
   private auth: AuthObject | null = null;
 
@@ -74,9 +74,11 @@ export default class Preferences extends Vue {
     setTimeout(async () => {
       this.auth = await feathersClient.get('authentication');
 
+      if (!this.auth) return;
       const usr = this.auth.user;
+      type Name = 'prefersDarkMode' | 'prefersMiniDrawer' | 'preferredLanguage';
       this.backendNames.forEach((name, i) => {
-        if (usr[name]) this.settings.push(i);
+        if (usr[name as unknown as Name]) this.settings.push(i);
       });
     }, 500);
   }

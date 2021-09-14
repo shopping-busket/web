@@ -22,9 +22,9 @@ import BetaDialog from '@/components/BetaDialog.vue';
 })
 export default class App extends Vue {
   private feathersClient = feathersClient;
-  private auth: AuthObject | null;
+  private auth: AuthObject | null = null;
 
-  async mounted (): void {
+  async mounted (): Promise<void> {
     Vue.config.errorHandler = (e) => {
       console.error(e);
       this.$toast.error('Something unexpected just happened!');
@@ -34,6 +34,7 @@ export default class App extends Vue {
 
     setTimeout(async () => {
       this.auth = await feathersClient.get('authentication');
+      if (!this.auth) return;
       const usr = this.auth.user;
 
       this.$vuetify.theme.dark = usr.prefersDarkMode;
