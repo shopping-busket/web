@@ -30,6 +30,7 @@ export default class BetaDialog extends Vue {
   private config = config;
 
   mounted (): void {
+    console.log(process.env.BACKEND_URL);
     let storage = localStorage.getItem('betaNotice');
     if (!storage) {
       localStorage.setItem('betaNotice', (+true).toString());

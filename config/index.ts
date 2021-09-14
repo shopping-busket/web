@@ -1,3 +1,5 @@
+import localConfig from './local';
+
 interface Config {
   backend: string,
   isBeta: boolean,
@@ -6,12 +8,10 @@ interface Config {
   supportFocus: boolean,
 }
 
-const config: Config = {
-  backend: process.env.BACKEND_URL || 'https://busket-beta.bux.at/',
+export default {
+  ...localConfig,
   isBeta: true,
   version: 'beta-2.0',
   stableURI: 'https://busket.bux.at/',
   supportFocus: false,
-};
-
-export default config;
+} as Config;

@@ -3,8 +3,7 @@ node_modules
 /dist
 
 # local env files
-.env.local
-.env.*.local
+/config/local.ts
 
 # Log files
 npm-debug.log*
