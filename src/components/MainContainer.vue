@@ -45,7 +45,7 @@
           v-for="item in items.filter((it) => !it.divide)"
           :key="item.title"
           link
-          @click="item.to === undefined ? item.click() : tryRouteTo(item.to)"
+          @click.stop="item.to === undefined ? item.click() : tryRouteTo(item.to)"
         >
           <v-list-item-icon>
             <v-icon>{{ item.icon }}</v-icon>
@@ -72,7 +72,7 @@
             v-for="item in items.filter((it) => it.divide)"
             :key="item.title"
             link
-            @click="item.to === undefined ? item.click() : tryRouteTo(item.to)"
+            @click.stop="item.to === undefined ? item.click() : tryRouteTo(item.to)"
           >
             <v-list-item-icon>
               <v-icon>{{ item.icon }}</v-icon>
