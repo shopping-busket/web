@@ -141,12 +141,13 @@ export interface Item {
 @Component({})
 export default class MainContainer extends Vue {
   @Prop({ required: false, default: 'primary' }) private appbarColor: undefined | string;
-  protected items: Item[] = [
+  protected baseItems: Item[] = [
     { title: 'Home', icon: 'mdi-home-city', to: { name: 'home' } },
     { title: 'My lists', icon: 'mdi-clipboard-list-outline', to: { name: 'my lists' } },
     { title: 'About', icon: 'mdi-information-outline', to: { name: 'about' } },
     { title: 'Github', icon: 'mdi-github', to: { name: 'github' } },
   ];
+  protected items: Item[] = [];
   private drawer = false;
   private permDrawer = false;
   private mini = false;
@@ -165,6 +166,14 @@ export default class MainContainer extends Vue {
     setTimeout(async () => {
       this.auth = await feathersClient.get('authentication');
     }, 500);
+
+    this.items.push(...this.baseItems);
+    this.items.push({
+      title: 'Log in',
+      icon: 'mdi-login-variant',
+      to: { name: 'login' },
+      divide: true,
+    });
   }
 
   async installApp (): Promise<void> {
@@ -185,6 +194,10 @@ export default class MainContainer extends Vue {
   @Watch('auth')
   authWatcher (): void {
     console.log('watch', this.auth, !this.auth, !!this.auth);
+
+    this.items = [];
+    this.items.push(...this.baseItems);
+
     if (!this.auth) {
       this.items.push({
         title: 'Log in',
