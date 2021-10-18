@@ -86,7 +86,8 @@
         </v-card-subtitle>
 
         <v-card-text class="mt-1">
-          <v-file-input ref="fileUpload" @change="uploadList"></v-file-input>
+          <v-file-input ref="fileUpload" @change="setImportFile"
+                        accept="application/json"></v-file-input>
 
           <div class="d-flex flex-row">
             <v-btn
@@ -104,7 +105,7 @@
               outlined
               rounded
               width="200px"
-              @click="importDialog = false"
+              @click="importDialog = false; uploadImportedList()"
             >
               Import
             </v-btn>
@@ -141,6 +142,7 @@ export default class MyLists extends Vue {
   private auth: null | AuthObject = null;
   private lists: Array<IShoppingList> | null = null;
   private feathersClient = feathersClient;
+  private importFile: File | null = null;
 
   async mounted (): Promise<void> {
     if (!feathersClient.io.connected) {
@@ -160,6 +162,10 @@ export default class MyLists extends Vue {
     }
 
     this.auth = await feathersClient.get('authentication');
+  }
+
+  setImportFile (file: File): void {
+    this.importFile = file;
   }
 
   @Watch('auth')
@@ -193,9 +199,11 @@ export default class MyLists extends Vue {
     await listService.remove(id);
   }
 
-  uploadList (file: File): void {
+  async uploadImportedList (): Promise<void> {
+    if (!this.importFile) return;
+    const file = this.importFile;
+
     console.log(file);
-    if (!file) return;
     if (file.type !== 'application/json') {
       console.log('Wrong file type');
       return;
@@ -203,12 +211,37 @@ export default class MyLists extends Vue {
 
     const reader = new FileReader();
 
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       const content = e.target?.result as string;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const obj = JSON.parse(content);
+      const list = JSON.parse(content);
+      console.log(list);
 
-      // TODO: Send list to server
+      const newList = /* ['listid', 'name', 'description', 'owner', 'entries'] */{
+        listid: list.listid ?? uuidv4(),
+        name: list.name ?? 'placeholder name',
+        description: list.description ?? '',
+        owner: this.auth.user?.uuid,
+        entries: list.entries ?? {},
+      };
+
+      /* props.forEach((key) => {
+        if (Object.prototype.hasOwnProperty.call(list, key)) {
+          propCount++;
+        }
+      });
+
+      if (propCount !== props.length) {
+        this.$toast.warning('File can\'t be loaded: Wrong syntax.');
+      } */
+
+      this.newListDialog = false;
+
+      await listService.create(newList);
+      await this.populateLists();
+      console.log('created list', newList.name);
+
+      this.openList(newList.listid);
     };
 
     reader.readAsText(file);
@@ -232,11 +265,7 @@ export default class MyLists extends Vue {
     await listService.create(list);
     await this.populateLists();
 
-    const found: IShoppingList | undefined = this.lists?.find((l) => l.listid === list.listid);
-    if (!found) return;
-
-    found.additional.loading = true;
-    await this.$router.push(`/me/list/${found.listid}`);
+    this.openList(list.listid);
   }
 
   openList (id: string): void {

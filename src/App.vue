@@ -38,7 +38,7 @@ export default class App extends Vue {
   private showUpdateUI = false;
 
   async mounted (): Promise<void> {
-    if (!this.$wb) {
+    if (this.$wb) {
       (this.$wb as Workbox).addEventListener('waiting', () => {
         this.showUpdateUI = true;
       });

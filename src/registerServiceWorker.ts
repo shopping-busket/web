@@ -1,18 +1,22 @@
 import { Workbox } from 'workbox-window';
 
 // eslint-disable-next-line import/no-mutable-exports
-let wb: Workbox | null;
+let wb: Workbox | null = null;
 
 console.log('loading sw');
 
 if ('serviceWorker' in navigator) {
-  wb = new Workbox(`${process.env.BASE_URL}service-worker.js`);
+  if (process.env.NODE_ENV === 'production') {
+    wb = new Workbox(`${process.env.BASE_URL}service-worker.js`);
 
-  wb.addEventListener('controlling', () => {
-    window.location.reload();
-  });
+    wb.addEventListener('controlling', () => {
+      window.location.reload();
+    });
 
-  wb.register();
+    wb.register();
+  } else {
+    console.log('not registering sw in developement mode!');
+  }
 } else {
   wb = null;
 }
