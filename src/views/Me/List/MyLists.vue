@@ -2,8 +2,8 @@
   <div class="ma-auto mt-4" style="max-width: 70rem">
     <div v-for="item in lists" :key="item.listid">
       <v-card outlined ripple @click="openList(item.listid)" :loading="item.additional.loading"
-              class="mb-3 d-flex flex-row justify-space-between align-center" hover>
-        <div>
+              class="mb-3" hover>
+        <span class="d-flex flex-row justify-space-between align-center">
           <v-card-title class="title-dense">
             {{ item.name }}
           </v-card-title>
@@ -11,11 +11,11 @@
               item.description
             }}
           </v-card-subtitle>
-        </div>
 
-        <v-icon color="red" @click.stop="deleteList(item.listid)" class="mr-6 icon-height">
-          mdi-trash-can-outline
-        </v-icon>
+          <v-icon color="red" @click.stop="deleteList(item.listid)" class="mr-6 icon-height">
+            mdi-trash-can-outline
+          </v-icon>
+        </span>
       </v-card>
     </div>
     <v-card outlined ripple hover
