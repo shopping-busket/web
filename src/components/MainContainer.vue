@@ -9,7 +9,8 @@
     >
       <v-list-item class="px-2">
         <v-list-item-avatar>
-          <v-img :src="auth.user.avatarURI" v-if="!!auth && auth.user.avatarURI !== null"></v-img>
+          <v-img :src="gravatar(auth.user.email)"
+                 v-if="auth && auth.user && auth.user.email"></v-img>
           <v-img src="@/assets/avatar-placeholder.png" v-else></v-img>
         </v-list-item-avatar>
 
@@ -118,6 +119,7 @@ import {
   Watch,
 } from 'vue-property-decorator';
 import { RawLocation } from 'vue-router';
+import { Md5 } from 'ts-md5';
 import feathersClient, { AuthObject } from '@/feathers-client';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -174,6 +176,13 @@ export default class MainContainer extends Vue {
       to: { name: 'login' },
       divide: true,
     });
+  }
+
+  gravatar (email: string): string {
+    console.log('gravatar', email);
+
+    const defaultImg = window.location.origin.includes('localhost') ? 'identicon' : encodeURIComponent(`${window.location.origin}/avatar-placeholder.png`);
+    return `https://www.gravatar.com/avatar/${Md5.hashStr(email.toLowerCase().trim())}?d=${defaultImg}`;
   }
 
   async installApp (): Promise<void> {
