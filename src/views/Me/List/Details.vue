@@ -205,7 +205,7 @@ export default class Details extends Vue {
           if (!foundEntry) return;
           if (foundEntry.name === data.eventData.state.name) return;
 
-          this.renameEntry(event.entryId, false);
+          this.renameEntry(event.entryId, data.eventData.state.name, false);
           break;
 
         case EventType.DELETE_ENTRY:
@@ -299,14 +299,15 @@ export default class Details extends Vue {
   }
 
   // Item function wrappers
-  async renameEntry (id: string, recordEvent = true): Promise<void> {
+  async renameEntry (id: string, name: string | null = null, recordEvent = true): Promise<void> {
     if (!this.shoppingList) return;
 
-    const item = this.shoppingList.entries.find((t) => t.id === id);
-    if (!item) return;
+    const entry = this.shoppingList.entries.find((t) => t.id === id);
+    if (!entry) return;
 
-    this.shoppingList.renameItem(item.id, item.additional.editName);
-    item.additional.edit = false;
+    if (name) entry.additional.editName = name;
+
+    this.shoppingList.renameItem(entry.id, entry.additional.editName);
 
     if (!recordEvent) return;
     await this.recordEvent({
@@ -314,8 +315,8 @@ export default class Details extends Vue {
       entryId: id,
       isoDate: (new Date()).toISOString(),
       state: {
-        name: item.name,
-        done: item.done,
+        name: entry.name,
+        done: entry.done,
       },
     });
   }
