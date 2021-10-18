@@ -58,8 +58,10 @@
 
       <div class="primary pa-2 white--text" v-show="showInstallable">
         <span class="pb-4">You want to use Busket when you are offline without having to open your Browser?</span>
-        <v-btn outlined color="white" small rounded block @click="installApp" class="mt-2">Sure!</v-btn>
-        <span class="white--text opacity text-decoration-underline cursor-pointer" @click="showInstallable = false">Don't show me this again!</span>
+        <v-btn outlined color="white" small rounded block @click="installApp" class="mt-2">Sure!
+        </v-btn>
+        <span class="white--text opacity text-decoration-underline cursor-pointer"
+              @click="showInstallable = false">Don't show me this again!</span>
       </div>
 
       <template v-slot:append>
@@ -96,6 +98,12 @@
       </div>
 
       <v-toolbar-title>Busket</v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-fade-transition>
+        <div v-show="!feathersClient.io.connected" class="mr-3">
+          <div class="fake-btn">(Offline)</div>
+        </div>
+      </v-fade-transition>
     </v-app-bar>
 
     <slot></slot>
@@ -145,6 +153,7 @@ export default class MainContainer extends Vue {
   private auth: AuthObject | null = null;
   private installPrompt: BeforeInstallPromptEvent | null = null;
   private showInstallable = false;
+  private feathersClient = feathersClient;
 
   async mounted (): Promise<void> {
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -256,5 +265,15 @@ $white: #e8e8e8;
 
 .opacity {
   opacity: 60%;
+}
+
+.fake-btn {
+  font-weight: 500;
+  letter-spacing: 0.0892857143em;
+  text-indent: 0.0892857143em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 45%;
+  user-select: none;
 }
 </style>
