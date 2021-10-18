@@ -21,6 +21,7 @@ module.exports = {
     'lines-between-class-members': 'off',
     'no-plusplus': 'off',
     'no-shadow': 'off',
-    '@typescript-eslint/no-shadow': 'error'
+    'import/extensions': 'off',
+    '@typescript-eslint/no-shadow': 'error',
   },
 };

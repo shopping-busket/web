@@ -1,6 +1,5 @@
 <template>
-  <div class="d-flex align-center justify-center flex-column"
-       style="width: 800px; height: calc(100% - 110px); margin: auto; font-family: 'Poppins', sans-serif; font-weight: 400;"
+  <div class="d-flex align-center justify-center flex-column ma-auto text-block"
   :style="{ color: $vuetify.theme.dark ? '#f6f6f6' : '#4d4d4d' }"
   >
     <h1 v-if="!!auth">Hello, {{ auth.user.fullName }}!</h1>
@@ -35,3 +34,14 @@ export default class Home extends Vue {
   }
 }
 </script>
+
+<style scoped>
+.text-block {
+  padding-left: 10px;
+  padding-right: 10px;
+  max-width: 800px;
+  height: calc(100% - 110px);
+  font-family: 'Poppins', sans-serif;
+  font-weight: 400;
+}
+</style>

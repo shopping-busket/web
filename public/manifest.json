@@ -1,0 +1,59 @@
+{
+  "name": "Busket",
+  "short_name": "Busket",
+  "start_url": "/",
+  "theme_color": "#01916D",
+  "background_color": "black",
+  "display": "standalone",
+  "shortcuts": [
+    {
+      "name": "View my lists",
+      "short_name": "My lists",
+      "url": "/me/lists",
+      "icons": [
+        {
+          "src": "/pwa/list-icon-96x96.png",
+          "sizes": "96x96"
+        },
+        {
+          "src": "/pwa/list-icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "description": "A free and reliable digital shopping list",
+  "icons": [
+    {
+      "src": "/pwa/icon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/pwa/icon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/pwa/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "/pwa/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png"
+    },
+    {
+      "src": "/pwa/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/pwa/icon-512x512.png",
+      "purpose": "maskable",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

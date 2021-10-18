@@ -106,7 +106,7 @@ router.beforeEach(async (to, from, next) => {
   if (!feathersClient.authentication.authenticated) {
     setTimeout(() => {
       if (feathersClient.io.connected) return;
-      EventBus.$emit('toast', 'Your offline.');
+      // EventBus.$emit('toast', 'Your offline.');
       next();
     }, 800);
 

@@ -56,6 +56,12 @@
         </v-list-item>
       </v-list>
 
+      <div class="primary pa-2 white--text" v-show="showInstallable">
+        <span class="pb-4">You want to use Busket when you are offline without having to open your Browser?</span>
+        <v-btn outlined color="white" small rounded block @click="installApp" class="mt-2">Sure!</v-btn>
+        <span class="white--text opacity text-decoration-underline cursor-pointer" @click="showInstallable = false">Don't show me this again!</span>
+      </div>
+
       <template v-slot:append>
         <v-divider/>
         <v-list nav>
@@ -106,6 +112,16 @@ import {
 import { RawLocation } from 'vue-router';
 import feathersClient, { AuthObject } from '@/feathers-client';
 
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed';
+    platform: string;
+  }>;
+
+  prompt (): Promise<void>;
+}
+
 export interface Item {
   title: string,
   icon: string,
@@ -127,11 +143,34 @@ export default class MainContainer extends Vue {
   private permDrawer = false;
   private mini = false;
   private auth: AuthObject | null = null;
+  private installPrompt: BeforeInstallPromptEvent | null = null;
+  private showInstallable = false;
 
   async mounted (): Promise<void> {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      this.installPrompt = e as unknown as BeforeInstallPromptEvent;
+      this.showInstallable = true;
+    });
+
     setTimeout(async () => {
       this.auth = await feathersClient.get('authentication');
     }, 500);
+  }
+
+  async installApp (): Promise<void> {
+    if (!this.installPrompt) return;
+
+    await this.installPrompt.prompt();
+    const { outcome } = await this.installPrompt.userChoice;
+
+    this.installPrompt = null;
+    this.showInstallable = false;
+
+    console.log('User choice: ', outcome);
+    if (outcome) {
+      this.$toast('Thanks for installing Busket!');
+    }
   }
 
   @Watch('auth')
@@ -209,5 +248,13 @@ $white: #e8e8e8;
   to {
     background: $dark;
   }
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.opacity {
+  opacity: 60%;
 }
 </style>

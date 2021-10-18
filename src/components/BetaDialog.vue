@@ -8,7 +8,7 @@
         many things that don't work/aren't available yet on this release.
         You don't wanna try the beta? <a :href="config.stableURI">Bring me to Busket v1</a>
         <div class="font-weight-bold">
-          Note: You may loose lists with updates. We encourage you to download your lists every few weeks if you don't wanna loose them.
+          Note: You may loose lists with updates. We encourage you to download your lists every few weeks if you don't want to lose them.
         </div>
       </v-card-text>
       <v-card-actions>

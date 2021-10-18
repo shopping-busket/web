@@ -27,7 +27,13 @@
     "vue-router": "^3.2.0",
     "vue-toastification": "^1.7.11",
     "vuedraggable": "^2.24.3",
-    "vuetify": "^2.4.0"
+    "vuetify": "^2.4.0",
+    "workbox-cacheable-response": "^6.3.0",
+    "workbox-expiration": "^6.3.0",
+    "workbox-routing": "^6.3.0",
+    "workbox-webpack-plugin": "^6.3.0",
+    "workbox-window": "^6.3.0",
+    "workbox-strategies": "^6.3.0"
   },
   "devDependencies": {
     "@types/uuid": "^8.3.1",
