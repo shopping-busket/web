@@ -107,7 +107,7 @@ import vuedraggable from 'vuedraggable';
 import EventViewer from '@/components/EventViewer.vue';
 import TodoList from '@/components/TodoList.vue';
 import feathersClient, { eventService, listService, User } from '@/feathers-client';
-import ShoppingList, { IShoppingList } from '@/shoppinglist/ShoppingList';
+import ShoppingList, { IShoppingList, IShoppingListItem } from '@/shoppinglist/ShoppingList';
 
 export enum EventType {
   MOVE_ENTRY = 'MOVE_ENTRY',
@@ -132,6 +132,11 @@ export interface LogEvent {
   isoDate: string,
 }
 
+export interface LogEventListenerData {
+  listid: string,
+  eventData: LogEvent,
+}
+
 @Component({
   components: {
     EventViewer,
@@ -149,7 +154,6 @@ export default class Details extends Vue {
   private newItemName = '';
   private newItemRules = [
     (val: string) => val.trim().length >= 1 || 'Must at least have one character that isn\'t a space',
-    // Old regex: (val: string) => /^[*\w+ ]*$/.test(val) || 'Allowed characters: A-z, spaces',
     (val: string) => val.trim().length <= 256 || 'Can\'t exceed 256 character limit!',
   ];
   private user: null | User = null;
@@ -159,6 +163,71 @@ export default class Details extends Vue {
 
   async mounted (): Promise<void> {
     await this.connectionChange();
+
+    feathersClient.service('event').on('created', (data: LogEventListenerData) => {
+      console.log('event shared', data);
+      const event = data.eventData;
+
+      if (!this.shoppingList) return;
+
+      let foundEntry: IShoppingListItem;
+      let foundEntryIndex = -1;
+      this.shoppingList.entries.forEach((entry, i) => {
+        if (entry.id === event.entryId) {
+          foundEntry = entry;
+          foundEntryIndex = i;
+        }
+      });
+
+      switch (data.eventData.event) {
+        case EventType.CREATE_ENTRY:
+          if (foundEntry) return;
+
+          this.newItemName = event.state.name;
+          this.createEntry(false);
+          break;
+
+        case EventType.MARK_ENTRY_TODO:
+          if (!foundEntry) return;
+          if (foundEntry.done) return;
+
+          this.checkEntry(event.entryId, false, false);
+          break;
+
+        case EventType.MARK_ENTRY_DONE:
+          if (!foundEntry) return;
+          if (!foundEntry.done) return;
+
+          this.checkEntry(event.entryId, true, false);
+          break;
+
+        case EventType.CHANGED_ENTRY_NAME:
+          if (!foundEntry) return;
+          if (foundEntry.name === data.eventData.state.name) return;
+
+          this.renameEntry(event.entryId, false);
+          break;
+
+        case EventType.DELETE_ENTRY:
+          if (!foundEntry) return;
+
+          if (!this.shoppingList) return;
+          this.shoppingList.clearDone();
+          break;
+
+        case EventType.MOVE_ENTRY:
+          if (!foundEntry) return;
+          if (foundEntryIndex === event.state.newIndex) return;
+
+          this.moveEntry(event.state.newIndex, event.state.oldIndex, false);
+          break;
+
+        default:
+          console.log('Couldn\'t create/edit entry. Reloading...');
+          window.location.reload();
+          break;
+      }
+    });
 
     window.addEventListener('keydown', (e) => {
       if (e.key === '/') {
@@ -230,7 +299,7 @@ export default class Details extends Vue {
   }
 
   // Item function wrappers
-  async renameEntry (id: string): Promise<void> {
+  async renameEntry (id: string, recordEvent = true): Promise<void> {
     if (!this.shoppingList) return;
 
     const item = this.shoppingList.entries.find((t) => t.id === id);
@@ -239,6 +308,7 @@ export default class Details extends Vue {
     this.shoppingList.renameItem(item.id, item.additional.editName);
     item.additional.edit = false;
 
+    if (!recordEvent) return;
     await this.recordEvent({
       event: EventType.CHANGED_ENTRY_NAME,
       entryId: id,
@@ -250,12 +320,13 @@ export default class Details extends Vue {
     });
   }
 
-  async moveEntry (index: number, oldIndex: number): Promise<void> {
+  async moveEntry (index: number, oldIndex: number, recordEvent = true): Promise<void> {
     if (!this.shoppingList) return;
     const aboveEntry = index === 0 ? null : this.shoppingList.entries[index - 1];
     const belowEntry = this.shoppingList.entries.length - 1 === index ? null : this.shoppingList.entries[index + 1];
     const entry = this.shoppingList.entries[index];
 
+    if (!recordEvent) return;
     await this.recordEvent({
       event: EventType.MOVE_ENTRY,
       entryId: entry.id,
@@ -271,7 +342,7 @@ export default class Details extends Vue {
     });
   }
 
-  async createEntry (): Promise<void> {
+  async createEntry (recordEvent = true): Promise<void> {
     // Filters hidden characters
     // eslint-disable-next-line no-control-regex
     const name = this.newItemName.trim().replaceAll(/[^\x00-\x7F(?:\u00c4,.\-\\/ \u00e4\u00d6\u00f6\u00dc\u00fc\u00df)]/g, '');
@@ -296,6 +367,7 @@ export default class Details extends Vue {
     this.newItemName = '';
     (this.$refs.newItemField as unknown as { resetValidation: () => void }).resetValidation();
 
+    if (!recordEvent) return;
     await this.recordEvent({
       event: EventType.CREATE_ENTRY,
       entryId: item.id,
@@ -307,7 +379,7 @@ export default class Details extends Vue {
     });
   }
 
-  async checkEntry (id: string, check = true): Promise<void> {
+  async checkEntry (id: string, check = true, recordEvent = true): Promise<void> {
     if (!this.shoppingList) return;
 
     const entry = this.shoppingList?.entries.find((t) => t.id === id);
@@ -315,6 +387,7 @@ export default class Details extends Vue {
 
     this.shoppingList.checkItem(id, check);
 
+    if (!recordEvent) return;
     await this.recordEvent({
       event: check ? EventType.MARK_ENTRY_DONE : EventType.MARK_ENTRY_TODO,
       entryId: entry.id,
