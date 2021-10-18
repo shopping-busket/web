@@ -189,14 +189,14 @@ export default class Details extends Vue {
 
         case EventType.MARK_ENTRY_TODO:
           if (!foundEntry) return;
-          if (foundEntry.done) return;
+          if (!foundEntry.done) return;
 
           this.checkEntry(event.entryId, false, false);
           break;
 
         case EventType.MARK_ENTRY_DONE:
           if (!foundEntry) return;
-          if (!foundEntry.done) return;
+          if (foundEntry.done) return;
 
           this.checkEntry(event.entryId, true, false);
           break;
