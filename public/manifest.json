@@ -1,7 +1,7 @@
 {
   "name": "Busket",
   "short_name": "Busket",
-  "start_url": "/",
+  "start_url": "/me/lists",
   "theme_color": "#01916D",
   "background_color": "black",
   "display": "standalone",

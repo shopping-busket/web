@@ -122,7 +122,7 @@ export default class ShoppingList {
    */
   public createItem (name: string): ShoppingListItem {
     const id = uuidv4();
-    this.entries.push(new ShoppingListItem(name, undefined, id));
+    this.entries.unshift(new ShoppingListItem(name, undefined, id));
 
     const item = this.entries.find((t) => t.id === id);
 
