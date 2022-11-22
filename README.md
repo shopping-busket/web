@@ -12,7 +12,7 @@ export default {
 ```
 
 ### Compiles and hot-reloads for development
-
+⚠️When running with Node 17+ you will get an error on build. You have to run `$env:NODE_OPTIONS="--openssl-legacy-provider"`(pwsl) or `export NODE_OPTIONS=--openssl-legacy-provider`(bash) (source: https://bobbyhadz.com/blog/react-error-digital-envelope-routines-unsupported)
 ```
 npm run serve
 ```
