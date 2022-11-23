@@ -15,7 +15,7 @@ module.exports = {
     'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
     'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
     quotes: ['error', 'single'],
-    'space-before-function-paren': ['error', 'always'],
+    'space-before-function-paren': 'off',
     'max-len': ['error', 200],
     'class-methods-use-this': 'off',
     'lines-between-class-members': 'off',
@@ -23,5 +23,6 @@ module.exports = {
     'no-shadow': 'off',
     'import/extensions': 'off',
     '@typescript-eslint/no-shadow': 'error',
+    "linebreak-style": "off"
   },
 };
