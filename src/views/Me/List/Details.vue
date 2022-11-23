@@ -59,7 +59,7 @@
         <TodoList
           label="Todo"
           :shopping-list="shoppingList"
-          is-todo-list
+          :only-show-done="false"
           @clearDone="clearDone"
           @checkEntry="checkEntry"
           @renameEntry="renameEntry"
@@ -70,6 +70,7 @@
         <TodoList
           label="Done"
           :shopping-list="shoppingList"
+          :only-show-done="true"
           @clearDone="clearDone"
           @checkEntry="checkEntry"
           @renameEntry="renameEntry"
@@ -88,9 +89,10 @@
 
     <!-- TODO: Change list name   -->
     <EventViewer
+      id="eventViewer"
       v-if="shoppingList !== null"
       :list-name="shoppingList.name"
-      :events="events"
+      :events="historicalEvents"
       v-model="openLogDialog"
     />
   </div>
@@ -107,7 +109,11 @@ import vuedraggable from 'vuedraggable';
 import EventViewer from '@/components/EventViewer.vue';
 import TodoList from '@/components/TodoList.vue';
 import feathersClient, { eventService, listService, User } from '@/feathers-client';
-import ShoppingList, { IShoppingList, IShoppingListItem } from '@/shoppinglist/ShoppingList';
+import ShoppingList, {
+  IShoppingList,
+  IShoppingListItem,
+  ShoppingListItem,
+} from '@/shoppinglist/ShoppingList';
 
 export enum EventType {
   MOVE_ENTRY = 'MOVE_ENTRY',
@@ -123,7 +129,10 @@ export interface LogEvent {
   entryId: string,
   state: {
     name: string,
-    done: boolean,
+    /**
+     * @deprecated done is deprecated since 23.11.2022. Just emit with {@link EventType} set to {@link EventType.MARK_ENTRY_DONE} or {@link EventType.MARK_ENTRY_TODO}
+     */
+    done?: boolean,
     aboveEntry?: string,
     belowEntry?: string,
     oldIndex?: number,
@@ -157,77 +166,81 @@ export default class Details extends Vue {
     (val: string) => val.trim().length <= 256 || 'Can\'t exceed 256 character limit!',
   ];
   private user: null | User = null;
-  private listNotFound = false
+  private listNotFound = false;
   private events: LogEvent[] = [];
+  private historicalEvents: LogEvent[] = [];
   private readonly connected = feathersClient.io.connected;
 
-  async mounted (): Promise<void> {
+  async mounted(): Promise<void> {
     await this.connectionChange();
 
-    feathersClient.service('event').on('created', (data: LogEventListenerData) => {
-      console.log('event shared', data);
-      const event = data.eventData;
+    feathersClient.service('event')
+      .on('created', (data: LogEventListenerData) => {
+        console.log('event shared', data);
+        const event = data.eventData;
 
-      if (!this.shoppingList) return;
+        if (!this.shoppingList) return;
 
-      let foundEntry: IShoppingListItem;
-      let foundEntryIndex = -1;
-      this.shoppingList.entries.forEach((entry, i) => {
-        if (entry.id === event.entryId) {
-          foundEntry = entry;
-          foundEntryIndex = i;
+        let foundEntry: IShoppingListItem | null = null;
+        let foundEntryIndex = -1;
+        this.shoppingList.entries.forEach((entry, i) => {
+          if (entry.id === event.entryId) {
+            foundEntry = entry as ShoppingListItem;
+            foundEntryIndex = i;
+          }
+        });
+
+        foundEntry = foundEntry as unknown as IShoppingListItem;
+
+        switch (data.eventData.event) {
+          case EventType.CREATE_ENTRY:
+            if (foundEntry) return;
+
+            this.newItemName = event.state.name;
+            this.createEntry(false);
+            break;
+
+          case EventType.MARK_ENTRY_TODO:
+            if (!foundEntry) return;
+            if (!foundEntry.done) return;
+
+            this.checkEntry(event.entryId, false, false);
+            break;
+
+          case EventType.MARK_ENTRY_DONE:
+            if (!foundEntry) return;
+            if (foundEntry.done) return;
+
+            this.checkEntry(event.entryId, true, false);
+            break;
+
+          case EventType.CHANGED_ENTRY_NAME:
+            if (!foundEntry) return;
+            if (foundEntry.name === data.eventData.state.name) return;
+
+            this.renameEntry(event.entryId, data.eventData.state.name, false);
+            break;
+
+          case EventType.DELETE_ENTRY:
+            if (!foundEntry) return;
+
+            if (!this.shoppingList) return;
+            this.shoppingList.clearDone();
+            break;
+
+          case EventType.MOVE_ENTRY:
+            if (!foundEntry) return;
+            if (foundEntryIndex === event.state.newIndex) return;
+
+            this.moveEntry(event.state.newIndex || 0, event.state.oldIndex || 0, false);
+            break;
+
+          default:
+            console.log('Couldn\'t create/edit entry. Reloading...');
+            window.location.reload();
+            break;
         }
       });
-
-      switch (data.eventData.event) {
-        case EventType.CREATE_ENTRY:
-          if (foundEntry) return;
-
-          this.newItemName = event.state.name;
-          this.createEntry(false);
-          break;
-
-        case EventType.MARK_ENTRY_TODO:
-          if (!foundEntry) return;
-          if (!foundEntry.done) return;
-
-          this.checkEntry(event.entryId, false, false);
-          break;
-
-        case EventType.MARK_ENTRY_DONE:
-          if (!foundEntry) return;
-          if (foundEntry.done) return;
-
-          this.checkEntry(event.entryId, true, false);
-          break;
-
-        case EventType.CHANGED_ENTRY_NAME:
-          if (!foundEntry) return;
-          if (foundEntry.name === data.eventData.state.name) return;
-
-          this.renameEntry(event.entryId, data.eventData.state.name, false);
-          break;
-
-        case EventType.DELETE_ENTRY:
-          if (!foundEntry) return;
-
-          if (!this.shoppingList) return;
-          this.shoppingList.clearDone();
-          break;
-
-        case EventType.MOVE_ENTRY:
-          if (!foundEntry) return;
-          if (foundEntryIndex === event.state.newIndex) return;
-
-          this.moveEntry(event.state.newIndex, event.state.oldIndex, false);
-          break;
-
-        default:
-          console.log('Couldn\'t create/edit entry. Reloading...');
-          window.location.reload();
-          break;
-      }
-    });
 
     window.addEventListener('keydown', (e) => {
       if (e.key === '/') {
@@ -257,9 +270,10 @@ export default class Details extends Vue {
       return;
     }
 
-    const list: IShoppingList[] | null = (await listService.find({ query: { listid: this.id } }).catch(() => {
-      this.listNotFound = true;
-    }) as { data: IShoppingList[] })?.data;
+    const list: IShoppingList[] | null = (await listService.find({ query: { listid: this.id } })
+      .catch(() => {
+        this.listNotFound = true;
+      }) as { data: IShoppingList[] })?.data;
     if (!list || this.listNotFound) return;
     console.log(list[0].entries);
 
@@ -271,14 +285,14 @@ export default class Details extends Vue {
   }
 
   @Watch('connected')
-  connectionChange (): void {
+  connectionChange(): void {
     if (this.connected) {
       this.sendEventsToServer();
       console.log('Sending events to server.');
     }
   }
 
-  async clearDone (): Promise<void> {
+  async clearDone(): Promise<void> {
     if (!this.shoppingList) return;
 
     const deleted = this.shoppingList.clearDone();
@@ -292,14 +306,14 @@ export default class Details extends Vue {
         isoDate: (new Date()).toISOString(),
         state: {
           name: entry.name,
-          done: entry.done,
+          done: true,
         },
       });
     }
   }
 
   // Item function wrappers
-  async renameEntry (id: string, name: string | null = null, recordEvent = true): Promise<void> {
+  async renameEntry(id: string, name: string | null = null, recordEvent = true): Promise<void> {
     if (!this.shoppingList) return;
 
     const entry = this.shoppingList.entries.find((t) => t.id === id);
@@ -321,11 +335,17 @@ export default class Details extends Vue {
     });
   }
 
-  async moveEntry (index: number, oldIndex: number, recordEvent = true): Promise<void> {
+  async moveEntry(index: number, oldIndex: number, recordEvent = true): Promise<void> {
     if (!this.shoppingList) return;
     const aboveEntry = index === 0 ? null : this.shoppingList.entries[index - 1];
     const belowEntry = this.shoppingList.entries.length - 1 === index ? null : this.shoppingList.entries[index + 1];
     const entry = this.shoppingList.entries[index];
+
+    console.log(this.shoppingList.entries);
+    console.log(index, oldIndex);
+    console.log('aboveEntry: ', aboveEntry);
+    console.log('entry: ', entry?.name);
+    console.log('belowEntry: ', belowEntry);
 
     if (!recordEvent) return;
     await this.recordEvent({
@@ -343,7 +363,7 @@ export default class Details extends Vue {
     });
   }
 
-  async createEntry (recordEvent = true): Promise<void> {
+  async createEntry(recordEvent = true): Promise<void> {
     // Filters hidden characters
     // eslint-disable-next-line no-control-regex
     const name = this.newItemName.trim().replaceAll(/[^\x00-\x7F(?:\u00c4,.\-\\/ \u00e4\u00d6\u00f6\u00dc\u00fc\u00df)]/g, '');
@@ -380,10 +400,11 @@ export default class Details extends Vue {
     });
   }
 
-  async checkEntry (id: string, check = true, recordEvent = true): Promise<void> {
+  async checkEntry(id: string, check = true, recordEvent = true): Promise<void> {
     if (!this.shoppingList) return;
 
-    const entry = this.shoppingList?.entries.find((t) => t.id === id);
+    const entry = this.shoppingList?.findEntryGlobal((t) => t.id === id);
+    console.log(entry);
     if (!entry) return;
 
     this.shoppingList.checkItem(id, check);
@@ -395,12 +416,11 @@ export default class Details extends Vue {
       isoDate: (new Date()).toISOString(),
       state: {
         name: entry.name,
-        done: check,
       },
     });
   }
 
-  downloadList (): void {
+  downloadList(): void {
     if (!this.shoppingList) return;
     let { name } = this.shoppingList;
     const obj = this.shoppingList;
@@ -419,7 +439,7 @@ export default class Details extends Vue {
   }
 
   // Log wrapper
-  loadStoredEvents (): Array<LogEvent> {
+  loadStoredEvents(): Array<LogEvent> {
     let ls: string | null = localStorage.getItem(`events-${this.id}`);
     if (!ls) return [];
 
@@ -428,7 +448,7 @@ export default class Details extends Vue {
     return ls as unknown as Array<LogEvent>;
   }
 
-  async sendEventsToServer (): Promise<unknown> {
+  async sendEventsToServer(): Promise<unknown> {
     interface ServerEventData {
       listid: string,
       eventData: {
@@ -449,17 +469,19 @@ export default class Details extends Vue {
       eventData: e,
     } as ServerEventData));
 
-    return eventService.create(data).then((d) => {
-      console.log('[LOG] Sent event to server');
-      this.events.splice(0, (d as Array<LogEvent>).length);
-      localStorage.setItem(`events-${this.id}`, JSON.stringify(this.events));
-    }).catch((e) => {
-      console.log('[LOG] Can\'t send events to server! no-connection');
-      throw e;
-    });
+    return eventService.create(data)
+      .then((d) => {
+        console.log('[LOG] Sent event to server');
+        this.events.splice(0, (d as Array<LogEvent>).length);
+        localStorage.setItem(`events-${this.id}`, JSON.stringify(this.events));
+      })
+      .catch((e) => {
+        console.log('[LOG] Can\'t send events to server! no-connection');
+        throw e;
+      });
   }
 
-  async recordEvent (event: LogEvent): Promise<unknown> {
+  async recordEvent(event: LogEvent): Promise<unknown> {
     const stored = localStorage.getItem('lists');
     if (!stored) {
       localStorage.setItem('lists', JSON.stringify([]));
@@ -475,6 +497,7 @@ export default class Details extends Vue {
 
     console.log('[LOG]', event);
     this.events.push(event);
+    this.historicalEvents.push(event);
 
     localStorage.setItem(`events-${this.id}`, JSON.stringify(this.events));
 
@@ -484,7 +507,7 @@ export default class Details extends Vue {
   // Suggestion autocomplete stuff
   // TODO: Make actual API call
   @Watch('suggestionSearch')
-  suggestionAPICall (val: string): void {
+  suggestionAPICall(val: string): void {
     this.suggestionLoading = true;
     this.suggestedItems = [];
     if (val) this.suggestedItems.push(val);

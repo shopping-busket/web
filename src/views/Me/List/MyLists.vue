@@ -36,7 +36,7 @@
         </v-card-subtitle>
 
         <v-card-text class="mt-1">
-          <v-form v-model="incorrectEntries" ref="newListForm">
+          <v-form v-model="incorrectEntries" ref="newListForm" @submit.prevent @keydown.enter="createList()">
             <v-text-field label="Name" outlined dense
                           v-model="newList.name"
                           :rules="nameRules"
@@ -221,7 +221,7 @@ export default class MyLists extends Vue {
         listid: list.listid ?? uuidv4(),
         name: list.name ?? 'placeholder name',
         description: list.description ?? '',
-        owner: this.auth.user?.uuid,
+        owner: this.auth?.user?.uuid,
         entries: list.entries ?? {},
       };
 
@@ -248,7 +248,9 @@ export default class MyLists extends Vue {
   }
 
   async createList (): Promise<void> {
+    if (!this.incorrectEntries) return;
     if (!this.auth) return;
+    this.newListDialog = false;
 
     const { name, description } = this.newList;
     const list = {
@@ -256,7 +258,12 @@ export default class MyLists extends Vue {
       name,
       description,
       owner: this.auth?.user.uuid,
-      entries: {},
+      entries: {
+        items: [],
+      },
+      checkedEntries: {
+        items: [],
+      },
     };
 
     this.newList.name = '';

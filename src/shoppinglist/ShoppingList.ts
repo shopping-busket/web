@@ -16,6 +16,9 @@ export interface IShoppingList {
   entries: {
     items: IShoppingListItem[],
   },
+  checkedEntries: {
+    items: IShoppingListItem[],
+  },
   additional: {
     loading: boolean,
   },
@@ -31,7 +34,7 @@ class ItemNotFoundError extends Error {
    * @param searchId (can be null) Given uuid
    * @param message (default: "Unable to find item!")
    */
-  constructor (searchId?: string, message = 'Unable to find item!') {
+  constructor(searchId?: string, message = 'Unable to find item!') {
     super(message);
 
     if (Error.captureStackTrace) {
@@ -49,6 +52,11 @@ export interface AdditionalItemData {
   focused: boolean,
 }
 
+// eslint-disable-next-line no-use-before-define
+export interface ShoppingListItemWithIndex extends ShoppingListItem {
+  index: number,
+}
+
 // eslint-disable-next-line max-classes-per-file
 export class ShoppingListItem {
   public name: string;
@@ -63,7 +71,7 @@ export class ShoppingListItem {
    * @param id (optional) When id is passed, none will be created.
    * @param additional (default: { edit: false, editName: name }) Additional data (only used by frontend)
    */
-  constructor (name: string, done = false, id?: string, additional: AdditionalItemData = {
+  constructor(name: string, done = false, id?: string, additional: AdditionalItemData = {
     edit: false,
     editName: name,
     focused: false,
@@ -81,6 +89,7 @@ export default class ShoppingList {
   public listid = '';
   public owner = '';
   public entries: ShoppingListItem[] = [];
+  public checkedEntries: ShoppingListItem[] = [];
 
   /**
    * Create a new list.
@@ -89,7 +98,7 @@ export default class ShoppingList {
    * @param owner
    * @param entries (optional) Pass already existing [IShoppingListItems]{@link IShoppingListItem}.
    */
-  constructor (name: string, description: string, owner?: string, entries?: IShoppingListItem[]) {
+  constructor(name: string, description: string, owner?: string, entries?: IShoppingListItem[]) {
     this.name = name;
     this.description = description;
     this.listid = uuidv4();
@@ -103,15 +112,62 @@ export default class ShoppingList {
   }
 
   /**
+   * Find entry from both {@link entries} and {@link checkedEntries}
+   * @param predicate condition
+   */
+  public findEntryGlobal(predicate: (value: ShoppingListItem, index: number, obj: ShoppingListItem[]) => unknown): ShoppingListItemWithIndex | undefined {
+    let index = -1;
+    let entry;
+
+    ['entries', 'checkedEntries'].every((k) => {
+      console.log(k);
+
+      entry = this[k as 'entries'].find((_v, _i, _obj) => {
+        console.log(_v);
+        const condition = predicate(_v, _i, _obj);
+        if (condition) index = _i;
+
+        return condition;
+      }) as ShoppingListItemWithIndex;
+
+      console.log(entry);
+      if (entry === undefined) return true;
+      entry.index = index;
+      return false;
+    });
+
+    return entry;
+  }
+
+  /**
    * Mark item as done
    * @param id item id
    * @param check If true, will be marked as done, if not: will be marked as todo.
    */
-  public checkItem (id: string, check: boolean): void {
-    const item = this.entries.find((t) => t.id === id);
-    if (!item) throw new ItemNotFoundError(id);
+  public checkItem(id: string, check: boolean): void {
+    let i = -1;
+    let item = this.entries.find((t, idx) => {
+      i = idx;
+      return t.id === id;
+    });
+    if (!item) {
+      item = this.checkedEntries.find((t, idx) => {
+        i = idx;
+        return t.id === id;
+      });
+      if (!item) throw new ItemNotFoundError();
+    }
 
-    item.done = check;
+    if (check) {
+      console.log('condition 1');
+      this.checkedEntries.push(item);
+      this.entries.splice(i, 1);
+    } else {
+      console.log('condition 2');
+
+      this.checkedEntries.splice(i, 1);
+      this.entries.push(item);
+    }
   }
 
   /**
@@ -120,7 +176,7 @@ export default class ShoppingList {
    * @param name The name of the item.
    * @returns {ShoppingListItem} Shopping list item
    */
-  public createItem (name: string): ShoppingListItem {
+  public createItem(name: string): ShoppingListItem {
     const id = uuidv4();
     this.entries.unshift(new ShoppingListItem(name, undefined, id));
 
@@ -136,7 +192,7 @@ export default class ShoppingList {
    * @param id Item id
    * @param name New name
    */
-  public renameItem (id: string, name: string): void {
+  public renameItem(id: string, name: string): void {
     const item = this.entries.find((t) => t.id === id);
     if (!item) return;
 
@@ -147,7 +203,7 @@ export default class ShoppingList {
    * Clear list of items that are marked as done.
    * @return {IShoppingListItem[]} All the items marked as done before deletion, to, for example: push the values to log.
    */
-  public clearDone (): IShoppingListItem[] {
+  public clearDone(): IShoppingListItem[] {
     const del = this.entries.filter((t) => t.done);
     this.entries = this.entries.filter((t) => !t.done);
 
@@ -158,7 +214,7 @@ export default class ShoppingList {
    * Convert class instance to interface
    * @param id database id
    */
-  public toInterface (id: number): IShoppingList {
+  public toInterface(id: number): IShoppingList {
     return {
       id,
       name: this.name,
@@ -167,6 +223,9 @@ export default class ShoppingList {
       owner: this.owner,
       entries: {
         items: this.entries,
+      },
+      checkedEntries: {
+        items: this.checkedEntries,
       },
       additional: {
         loading: false,

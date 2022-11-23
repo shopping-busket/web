@@ -2,7 +2,7 @@
   <v-dialog max-width="850px" class="pa-2" v-model="openDialog">
     <v-card>
       <v-card-title>{{ listName }} Log</v-card-title>
-      <v-card-subtitle>View the log of this list.</v-card-subtitle>
+      <v-card-subtitle>Inspect the session events.</v-card-subtitle>
       <v-card-text>
         <div class="mb-1 d-flex flex-row">
           <v-checkbox label="Show ISO string" v-model="showISO"></v-checkbox>
