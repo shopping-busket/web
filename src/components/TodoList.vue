@@ -61,7 +61,7 @@
               </v-btn>
             </div>
             <v-spacer></v-spacer>
-            <v-icon small class="handle cursor-move" v-if="onlyShowDone">mdi-menu</v-icon>
+            <v-icon small class="handle cursor-move" v-if="!onlyShowDone">mdi-menu</v-icon>
           </v-card>
         </div>
       </transition-group>
