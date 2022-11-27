@@ -204,8 +204,8 @@ export default class ShoppingList {
    * @return {IShoppingListItem[]} All the items marked as done before deletion, to, for example: push the values to log.
    */
   public clearDone(): IShoppingListItem[] {
-    const del = this.entries.filter((t) => t.done);
-    this.entries = this.entries.filter((t) => !t.done);
+    const del = this.checkedEntries.filter((t) => t.done);
+    this.checkedEntries = this.checkedEntries.filter((t) => !t.done);
 
     return del;
   }

@@ -456,22 +456,21 @@ export default class Details extends Vue {
         entryId: string,
         state: {
           name: string,
-          done: boolean,
+          done?: boolean,
         },
         isoDate: string,
       },
     }
 
-    console.log('Sending events to server.');
-
     const data: ServerEventData[] = this.events.map((e) => ({
       listid: this.id,
       eventData: e,
     } as ServerEventData));
+    console.log('Sending events to server.', data);
 
     return eventService.create(data)
       .then((d) => {
-        console.log('[LOG] Sent event to server');
+        console.log('[LOG] Sent event to server: ', d);
         this.events.splice(0, (d as Array<LogEvent>).length);
         localStorage.setItem(`events-${this.id}`, JSON.stringify(this.events));
       })
