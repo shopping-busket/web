@@ -17,6 +17,7 @@ router.isReady().then(() => {
 });
 
 /* app.use(vuetify);
+app.use(vuetify);
 app.use(router);
 app.use(i18n);
 app.use(Toast, {
