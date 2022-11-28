@@ -1,20 +1,21 @@
-import Vue from 'vue';
-import VueRouter, { RouteConfig } from 'vue-router';
-import Home from '@/views/Home.vue';
+import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import feathersClient from '@/feathers-client';
-import EventBus from '@/eventbus';
 
-Vue.use(VueRouter);
+type RouteRecordRawWithMeta = RouteRecordRaw & {
+  meta?: {
+    requiresAuth?: boolean,
+  },
+}
 
-const routes: Array<RouteConfig> = [
-  {
+const routes: Array<RouteRecordRawWithMeta> = [
+  /* {
     path: '/me/list/:id',
     name: 'list details',
     props: true,
     meta: {
       requiresAuth: true,
     },
-    component: () => import(/* webpackChunkName: "List details" */ '@/views/Me/List/Details.vue'),
+    component: () => import(/!* webpackChunkName: "List details" *!/ '@/views/Me/List/Details.vue'),
   },
   {
     path: '/me/lists',
@@ -22,7 +23,7 @@ const routes: Array<RouteConfig> = [
     meta: {
       requiresAuth: true,
     },
-    component: () => import(/* webpackChunkName: "My lists" */ '@/views/Me/List/MyLists.vue'),
+    component: () => import(/!* webpackChunkName: "My lists" *!/ '@/views/Me/List/MyLists.vue'),
   },
   {
     path: '/me/list',
@@ -34,7 +35,7 @@ const routes: Array<RouteConfig> = [
     meta: {
       requiresAuth: false,
     },
-    component: () => import(/* webpackChunkName: "SignupPage" */ '@/views/Auth/SignupPage.vue'),
+    component: () => import(/!* webpackChunkName: "SignupPage" *!/ '@/views/Auth/SignupPage.vue'),
   },
   {
     path: '/login',
@@ -42,7 +43,7 @@ const routes: Array<RouteConfig> = [
     meta: {
       requiresAuth: false,
     },
-    component: () => import(/* webpackChunkName: "ColorPalette" */ '@/views/Auth/LoginPage.vue'),
+    component: () => import(/!* webpackChunkName: "ColorPalette" *!/ '@/views/Auth/LoginPage.vue'),
   },
   {
     path: '/me/preferences',
@@ -50,7 +51,7 @@ const routes: Array<RouteConfig> = [
     meta: {
       requiresAuth: false,
     },
-    component: () => import(/* webpackChunkName: "Preferences" */ '@/views/Me/Preferences.vue'), // TODO: Actually make prefs
+    component: () => import(/!* webpackChunkName: "Preferences" *!/ '@/views/Me/Preferences.vue'), // TODO: Actually make prefs
   },
   {
     path: '/about',
@@ -58,7 +59,7 @@ const routes: Array<RouteConfig> = [
     meta: {
       requiresAuth: false,
     },
-    component: () => import(/* webpackChunkName: "ColorPalette" */ '@/views/About.vue'), // TODO: Actually make about
+    component: () => import(/!* webpackChunkName: "ColorPalette" *!/ '@/views/About.vue'), // TODO: Actually make about
   },
   {
     path: '/palettes',
@@ -66,7 +67,7 @@ const routes: Array<RouteConfig> = [
     meta: {
       requiresAuth: false,
     },
-    component: () => import(/* webpackChunkName: "ColorPalette" */ '@/views/ColorPalette.vue'),
+    component: () => import(/!* webpackChunkName: "ColorPalette" *!/ '@/views/ColorPalette.vue'),
   },
   {
     path: '/github',
@@ -74,9 +75,10 @@ const routes: Array<RouteConfig> = [
     meta: {
       requiresAuth: false,
     },
-    beforeEnter (): void {
+    beforeEnter(): void {
       window.open('https://github.com/shopping-busket/');
     },
+    redirect: '',
   },
   {
     path: '/',
@@ -87,15 +89,22 @@ const routes: Array<RouteConfig> = [
     component: Home,
   },
   {
-    path: '*',
+    path: '/:pathMatch(.*)*',
     name: '404',
-    component: () => import(/* webpackChunkName: "404" */ '@/views/NotFound.vue'),
+    component: () => import(/!* webpackChunkName: "404" *!/ '@/views/NotFound.vue'),
+  }, */
+  {
+    path: '/',
+    name: 'home',
+    meta: {
+      requiresAuth: false,
+    },
+    component: () => import(/* webpackChunkName: "home" */ '@/App.vue'),
   },
 ];
 
-const router = new VueRouter({
-  mode: 'history',
-  base: process.env.BASE_URL,
+const router = createRouter({
+  history: createWebHistory(process.env.BASE_URL),
   routes,
 });
 
@@ -110,19 +119,20 @@ router.beforeEach(async (to, from, next) => {
       next();
     }, 800);
 
-    await feathersClient.authenticate().catch((err) => {
-      if (err.code === 408) {
-        console.log('[Auth] Timeout while trying to authenticate. You are offline!');
-        return;
-      }
-      console.log(`[Auth] Not authenticated. This page requires auth: ${to.meta?.requiresAuth ? 'yes' : 'no'}`);
-      if (!err.data?.reason && to.meta?.requiresAuth) {
-        router.replace({
-          name: 'login',
-          query: { redirect: to.path },
-        });
-      }
-    });
+    await feathersClient.authenticate()
+      .catch((err) => {
+        if (err.code === 408) {
+          console.log('[Auth] Timeout while trying to authenticate. You are offline!');
+          return;
+        }
+        console.log(`[Auth] Not authenticated. This page requires auth: ${to.meta?.requiresAuth ? 'yes' : 'no'}`);
+        if (!err.data?.reason && to.meta?.requiresAuth) {
+          router.replace({
+            name: 'login',
+            query: { redirect: to.path },
+          });
+        }
+      });
   }
   next();
 });
