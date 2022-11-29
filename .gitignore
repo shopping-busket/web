@@ -3,6 +3,7 @@ node_modules
 /dist
 
 #yarn
+.yarn
 ./.yarn/
 !.yarn/cache
 !.yarn/patches
