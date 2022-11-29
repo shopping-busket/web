@@ -12,7 +12,7 @@ if ('serviceWorker' in navigator) {
       window.location.reload();
     });
 
-    wb.register();
+    await wb.register();
   } else {
     console.log('not registering sw in developement mode!');
   }
