@@ -1,11 +1,20 @@
 module.exports = {
   root: true,
   env: {
+    browser: true,
+    es2021: true,
     node: true,
   },
   extends: [
-    'plugin:vue/essential',
+    /* 'plugin:vue/vu3-essential',
+    'plugin:vue/vue3-recommended',
     '@vue/airbnb',
+    '@vue/typescript/recommended', */
+    // '@vue/eslint-config-airbnb',
+    // '@vue/typescript/recommended',
+
+    'plugin:vue/vue3-recommended',
+    'eslint:recommended',
     '@vue/typescript/recommended',
   ],
   parserOptions: {
@@ -23,7 +32,17 @@ module.exports = {
     'no-plusplus': 'off',
     'no-shadow': 'off',
     'import/extensions': 'off',
-    '@typescript-eslint/no-shadow': 'error',
-    "linebreak-style": "off"
+    'linebreak-style': 'off',
+    '@typescript-eslint/no-shadow': 'off',
+  },
+  settings: {
+    'import/resolver': {
+      alias: {
+        map: [
+          ['@', './src'],
+        ],
+        extensions: ['.ts', '.vue'],
+      },
+    },
   },
 };

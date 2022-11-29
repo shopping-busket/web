@@ -6,25 +6,23 @@ import router from './router';
 import vuetify from './plugins/vuetify';
 import 'roboto-fontface/css/roboto/roboto-fontface.css';
 import '@mdi/font/css/materialdesignicons.css';
-import i18n from './i18n';
+// import i18n from './i18n';
 import wb from './registerServiceWorker';
 
 const app = createApp(App);
 app.use(router);
 
-router.isReady().then(() => {
-  app.mount('#app');
-});
-
-/* app.use(vuetify);
+// app.use(i18n);
 app.use(vuetify);
-app.use(router);
-app.use(i18n);
 app.use(Toast, {
   transition: 'Vue-Toastification__bounce',
   maxToasts: 20,
   timeout: 1800,
   newestOnTop: true,
-}); */
+});
 
-// app.config.globalProperties.$wb = wb;
+router.isReady().then(() => {
+  app.mount('#app');
+});
+
+app.config.globalProperties.$wb = wb;
