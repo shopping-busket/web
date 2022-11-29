@@ -2,7 +2,7 @@ import { createI18n, I18n } from 'vue-i18n';
 import { nextTick } from 'vue';
 
 export async function loadLocaleMessages(i18n: I18n, locale: string) {
-  const messages = await import(`./locales/${locale}.json`);
+  const messages = await import(`./lang/${locale}.json`);
   i18n.global.setLocaleMessage(locale, messages.default);
   return nextTick();
 }
