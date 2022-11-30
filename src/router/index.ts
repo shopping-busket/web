@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
-import feathersClient from '@/feathers-client';
+import feathersClient, { FeathersError } from '@/feathers-client';
 
 type RouteRecordRawWithMeta = RouteRecordRaw & {
   meta?: {
@@ -35,7 +35,7 @@ router.beforeEach(async (to, from, next) => {
     }, 800);
 
     await feathersClient.authenticate()
-      .catch((err) => {
+      .catch((err: FeathersError) => {
         if (err.code === 408) {
           console.log('[Auth] Timeout while trying to authenticate. You are offline!');
           return;

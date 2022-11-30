@@ -1,6 +1,6 @@
 import io from 'socket.io-client';
 import socketio from '@feathersjs/socketio-client';
-import feathers, { Service } from '@feathersjs/feathers';
+import { feathers, Service } from '@feathersjs/feathers';
 import auth from '@feathersjs/authentication-client';
 import config from '../config';
 
@@ -32,10 +32,17 @@ export interface AuthObject {
   user: User;
 }
 
-export async function isLoggedIn (): Promise<boolean> {
+export interface FeathersError {
+  code: number,
+  data: Record<string, unknown>,
+}
+
+export async function isLoggedIn(): Promise<boolean> {
   return new Promise<boolean>((resolve) => {
     if (!feathersClient.authentication.authenticated) {
-      feathersClient.authenticate().then(() => resolve(true)).catch(() => resolve(false));
+      feathersClient.authenticate()
+        .then(() => resolve(true))
+        .catch(() => resolve(false));
     }
   });
 }
