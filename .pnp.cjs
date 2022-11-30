@@ -36,7 +36,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@typescript-eslint/eslint-plugin", "virtual:5f667c73984ed00ed0af2d2ee5bb7487501bcb7981faa0f3174f6b4e10779d128272858d90e1bd616db7bd20b70e6922af9582ba35aeace0a368e003ee8b65c2#npm:5.45.0"],\
             ["@typescript-eslint/parser", "virtual:5f667c73984ed00ed0af2d2ee5bb7487501bcb7981faa0f3174f6b4e10779d128272858d90e1bd616db7bd20b70e6922af9582ba35aeace0a368e003ee8b65c2#npm:5.45.0"],\
             ["@vitejs/plugin-vue", "virtual:5f667c73984ed00ed0af2d2ee5bb7487501bcb7981faa0f3174f6b4e10779d128272858d90e1bd616db7bd20b70e6922af9582ba35aeace0a368e003ee8b65c2#npm:3.2.0"],\
-            ["@vue/compat", "virtual:5f667c73984ed00ed0af2d2ee5bb7487501bcb7981faa0f3174f6b4e10779d128272858d90e1bd616db7bd20b70e6922af9582ba35aeace0a368e003ee8b65c2#npm:3.2.45"],\
             ["@vue/compiler-sfc", "npm:3.2.45"],\
             ["@vue/eslint-config-airbnb", "virtual:5f667c73984ed00ed0af2d2ee5bb7487501bcb7981faa0f3174f6b4e10779d128272858d90e1bd616db7bd20b70e6922af9582ba35aeace0a368e003ee8b65c2#npm:7.0.0"],\
             ["@vue/eslint-config-typescript", "virtual:5f667c73984ed00ed0af2d2ee5bb7487501bcb7981faa0f3174f6b4e10779d128272858d90e1bd616db7bd20b70e6922af9582ba35aeace0a368e003ee8b65c2#npm:11.0.2"],\
@@ -3068,31 +3067,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             "@types/vite",\
             "@types/vue",\
             "vite",\
-            "vue"\
-          ],\
-          "linkType": "HARD"\
-        }]\
-      ]],\
-      ["@vue/compat", [\
-        ["npm:3.2.45", {\
-          "packageLocation": "./.yarn/cache/@vue-compat-npm-3.2.45-d8aa0e41ec-9fd33c1575.zip/node_modules/@vue/compat/",\
-          "packageDependencies": [\
-            ["@vue/compat", "npm:3.2.45"]\
-          ],\
-          "linkType": "SOFT"\
-        }],\
-        ["virtual:5f667c73984ed00ed0af2d2ee5bb7487501bcb7981faa0f3174f6b4e10779d128272858d90e1bd616db7bd20b70e6922af9582ba35aeace0a368e003ee8b65c2#npm:3.2.45", {\
-          "packageLocation": "./.yarn/__virtual__/@vue-compat-virtual-8677775320/0/cache/@vue-compat-npm-3.2.45-d8aa0e41ec-9fd33c1575.zip/node_modules/@vue/compat/",\
-          "packageDependencies": [\
-            ["@vue/compat", "virtual:5f667c73984ed00ed0af2d2ee5bb7487501bcb7981faa0f3174f6b4e10779d128272858d90e1bd616db7bd20b70e6922af9582ba35aeace0a368e003ee8b65c2#npm:3.2.45"],\
-            ["@babel/parser", "npm:7.20.5"],\
-            ["@types/vue", null],\
-            ["estree-walker", "npm:2.0.2"],\
-            ["source-map", "npm:0.6.1"],\
-            ["vue", "npm:3.2.45"]\
-          ],\
-          "packagePeers": [\
-            "@types/vue",\
             "vue"\
           ],\
           "linkType": "HARD"\
@@ -8778,7 +8752,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@typescript-eslint/eslint-plugin", "virtual:5f667c73984ed00ed0af2d2ee5bb7487501bcb7981faa0f3174f6b4e10779d128272858d90e1bd616db7bd20b70e6922af9582ba35aeace0a368e003ee8b65c2#npm:5.45.0"],\
             ["@typescript-eslint/parser", "virtual:5f667c73984ed00ed0af2d2ee5bb7487501bcb7981faa0f3174f6b4e10779d128272858d90e1bd616db7bd20b70e6922af9582ba35aeace0a368e003ee8b65c2#npm:5.45.0"],\
             ["@vitejs/plugin-vue", "virtual:5f667c73984ed00ed0af2d2ee5bb7487501bcb7981faa0f3174f6b4e10779d128272858d90e1bd616db7bd20b70e6922af9582ba35aeace0a368e003ee8b65c2#npm:3.2.0"],\
-            ["@vue/compat", "virtual:5f667c73984ed00ed0af2d2ee5bb7487501bcb7981faa0f3174f6b4e10779d128272858d90e1bd616db7bd20b70e6922af9582ba35aeace0a368e003ee8b65c2#npm:3.2.45"],\
             ["@vue/compiler-sfc", "npm:3.2.45"],\
             ["@vue/eslint-config-airbnb", "virtual:5f667c73984ed00ed0af2d2ee5bb7487501bcb7981faa0f3174f6b4e10779d128272858d90e1bd616db7bd20b70e6922af9582ba35aeace0a368e003ee8b65c2#npm:7.0.0"],\
             ["@vue/eslint-config-typescript", "virtual:5f667c73984ed00ed0af2d2ee5bb7487501bcb7981faa0f3174f6b4e10779d128272858d90e1bd616db7bd20b70e6922af9582ba35aeace0a368e003ee8b65c2#npm:11.0.2"],\
