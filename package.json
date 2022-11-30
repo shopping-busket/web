@@ -30,12 +30,12 @@
     "vue-toastification": "^2.0.0-rc.5",
     "vuedraggable": "^2.24.3",
     "vuetify": "^3.0.2",
-    "workbox-cacheable-response": "^6.3.0",
-    "workbox-expiration": "^6.3.0",
-    "workbox-routing": "^6.3.0",
-    "workbox-strategies": "^6.3.0",
-    "workbox-webpack-plugin": "^6.3.0",
-    "workbox-window": "^6.3.0"
+    "workbox-cacheable-response": "^6.5.4",
+    "workbox-expiration": "^6.5.4",
+    "workbox-routing": "^6.5.4",
+    "workbox-strategies": "^6.5.4",
+    "workbox-webpack-plugin": "^6.5.4",
+    "workbox-window": "^6.5.4"
   },
   "devDependencies": {
     "@types/uuid": "^8.3.1",
