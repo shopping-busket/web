@@ -4,6 +4,7 @@ import 'vue-toastification/dist/index.css';
 import App from './App.vue';
 import router from './router';
 import vuetify from './plugins/vuetify';
+import 'vuetify/styles'
 import 'roboto-fontface/css/roboto/roboto-fontface.css';
 import '@mdi/font/css/materialdesignicons.css';
 import i18n from './i18n';
@@ -25,4 +26,6 @@ router.isReady().then(() => {
   app.mount('#app');
 });
 
-app.config.globalProperties.$wb = wb;
+app.provide('wb', wb);
+
+export default app;
