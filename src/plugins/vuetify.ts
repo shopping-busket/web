@@ -3,6 +3,7 @@ import { createVuetify, ThemeDefinition } from 'vuetify';
 const lightTheme: ThemeDefinition = {
   dark: false,
   colors: {
+    primary: '#01916d',
     secondary: '#20A879',
     accent: '#11A697',
     error: '#FF5252',

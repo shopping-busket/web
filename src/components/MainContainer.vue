@@ -79,6 +79,7 @@
     </v-navigation-drawer>
 
     <v-app-bar
+      class="pl-3"
       :color="props.appbarColor"
       dark
     >

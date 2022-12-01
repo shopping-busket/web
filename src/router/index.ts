@@ -16,6 +16,11 @@ const routes: Array<RouteRecordRawWithMeta> = [
     },
     component: () => import('@/views/WelcomePage.vue'),
   },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'not found',
+    component: () => import('@/views/NotFound.vue'),
+  }
 ];
 
 const router = createRouter({
