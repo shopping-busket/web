@@ -14,7 +14,7 @@ const routes: Array<RouteRecordRawWithMeta> = [
     meta: {
       requiresAuth: false,
     },
-    component: () => import(/* webpackChunkName: "home" */ '@/App.vue'),
+    component: () => import('@/views/WelcomePage.vue'),
   },
 ];
 
