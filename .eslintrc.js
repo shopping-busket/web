@@ -34,6 +34,7 @@ module.exports = {
     'import/extensions': 'off',
     'linebreak-style': 'off',
     '@typescript-eslint/no-shadow': 'off',
+    'vue/max-attributes-per-line': 'off',
   },
   settings: {
     'import/resolver': {
