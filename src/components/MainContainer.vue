@@ -66,7 +66,7 @@
             v-for="item in menuItems.filter((it) => it.divide)"
             :key="item.title"
             link
-            @click.stop="item.to === undefined ? item.click() : tryRouteTo(item.to)"
+            @click.stop="item.to == null ? clickItemAsync(item) : tryRouteTo(item.to)"
           >
             <template #prepend>
               <v-icon :icon="item.icon" />
@@ -145,11 +145,11 @@ interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
 }
 
-export interface Item {
+export interface MenuItem {
   title: string,
   icon: string,
   to?: LocationQueryRaw,
-  click?: () => void,
+  click?: () => void | Promise<void>,
   divide?: boolean,
 }
 
@@ -175,7 +175,7 @@ const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 
-const menuItems: Item[] = [];
+const menuItems: MenuItem[] = [];
 const drawer = ref(false);
 const permDrawer = ref(false);
 const mini = ref(false);
@@ -238,6 +238,10 @@ function tryRouteTo(loc: LocationQueryRaw): Promise<void> | void {
   router.push(loc);
 }
 
+async function clickItemAsync(item: MenuItem) {
+  if (item.click) await item.click();
+}
+
 watch(auth, () => {
   console.log('watch', auth, !auth.value, !!auth.value);
 
@@ -262,6 +266,11 @@ watch(auth, () => {
     title: 'Preferences',
     icon: 'mdi-account-cog',
     to: { name: 'preferences' },
+    divide: true,
+  }, {
+    title: 'Logout',
+    icon: 'mdi-logout-variant',
+    click: logOut,
     divide: true,
   });
 });
