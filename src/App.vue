@@ -57,7 +57,7 @@ onMounted(() => {
     if (!auth) return;
     const usr = auth.user;
 
-    theme.global.name.value = usr.prefersDarkMode ? 'dark' : 'light';
+    theme.global.name.value = usr.prefersDarkMode ? 'darkTheme' : 'lightTheme';
   }, 500);
 });
 

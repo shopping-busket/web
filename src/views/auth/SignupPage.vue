@@ -131,9 +131,9 @@ async function submit(): Promise<void> {
 
   await feathersClient.service('users').create({
     uuid: uuidv4(),
-    email: email,
-    password: password,
-    fullName: username,
+    email: email.value,
+    password: password.value,
+    fullName: username.value,
     avatarURL: null,
 
     prefersMiniDrawer: false,
@@ -152,8 +152,8 @@ async function submit(): Promise<void> {
 async function login(): Promise<void> {
   feathersClient.authentication.authenticate({
     strategy: 'local',
-    email: email,
-    password: password,
+    email: email.value,
+    password: password.value,
   }).then(() => {
     btnLoading.value = false;
     toast('Logged in successfully!');

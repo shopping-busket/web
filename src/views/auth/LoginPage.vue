@@ -117,8 +117,8 @@ async function submit(): Promise<void> {
 
   feathersClient.authentication.authenticate({
     strategy: 'local',
-    email: email,
-    password: password,
+    email: email.value,
+    password: password.value,
   }).then(() => {
     btnLoading.value = false;
     toast('Logged in successfully!');
