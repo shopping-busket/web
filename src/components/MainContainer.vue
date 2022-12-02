@@ -165,11 +165,6 @@ const baseMenuItems = [
     to: { name: 'my lists' }
   },
   {
-    title: 'About',
-    icon: 'mdi-information-outline',
-    to: { name: 'about' }
-  },
-  {
     title: 'Github',
     icon: 'mdi-github',
     to: { name: 'github' }

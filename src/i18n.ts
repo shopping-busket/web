@@ -8,8 +8,9 @@ export async function loadLocaleMessages(i18n: I18n, locale: string) {
 }
 
 const i18n = createI18n({
+  legacy: false,
   locale: import.meta.env.VUE_APP_I18N_LOCALE || 'en',
   fallbackLocale: import.meta.env.VUE_APP_I18N_FALLBACK_LOCALE || 'en',
 });
-await loadLocaleMessages(i18n, i18n.global.locale);
+await loadLocaleMessages(i18n, i18n.global.locale.value);
 export default i18n;

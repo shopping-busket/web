@@ -14,12 +14,30 @@ const routes: Array<RouteRecordRawWithMeta> = [
     meta: {
       requiresAuth: false,
     },
-    component: () => import('@/views/WelcomePage.vue'),
+    component: () => import('../views/WelcomePage.vue'),
   },
+  //region authentication
+  {
+    path: '/signup',
+    name: 'signup',
+    meta: {
+      requiresAuth: false,
+    },
+    component: () => import('../views/Auth/SignupPage.vue'),
+  },
+  {
+    path: '/login',
+    name: 'login',
+    meta: {
+      requiresAuth: false,
+    },
+    component: () => import('../views/Auth/LoginPage.vue'),
+  },
+  //endregion authentication
   {
     path: '/:pathMatch(.*)*',
     name: 'not found',
-    component: () => import('@/views/NotFound.vue'),
+    component: () => import('../views/NotFound.vue'),
   }
 ];
 
@@ -30,6 +48,7 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
   console.log('[Router]', to, from);
+  next();
 
   // Authentication
   if (!feathersClient.authentication.authenticated) {
