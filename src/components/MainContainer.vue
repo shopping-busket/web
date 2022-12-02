@@ -2,26 +2,20 @@
   <div style="height: 100%">
     <v-navigation-drawer
       v-model="drawer"
-      v-model:mini-variant="mini"
       app
+      expand-on-hover
+      :rail="mini"
       :temporary="!permDrawer"
-      :permanent="permDrawer"
     >
       <v-list-item
         :prepend-avatar="auth != null ? gravatar(auth.user.email) : img"
         :title="auth == null ? 'Not logged in' : auth?.user?.fullName"
         nav
+        class="{'my-1': drawerdsaduhasdhuashudashu}"
       >
         <template #append>
           <v-btn
-            v-if="permDrawer"
-            icon
-            @click.stop="mini = !mini"
-          >
-            <v-icon icon="mdi-chevron-left" />
-          </v-btn>
-          <v-btn
-            v-else
+            v-if="!permDrawer"
             variant="text"
             icon="mdi-chevron-left"
             @click.stop="drawer = !drawer"
@@ -83,11 +77,7 @@
       :color="props.appbarColor"
       dark
     >
-      <div v-if="permDrawer">
-        <v-icon v-if="mini" icon="mdi-chevron-right" class="mr-2" @click="mini = false" />
-        <v-icon v-else icon="mdi-chevron-left" class="mr-2" @click="mini = true" />
-      </div>
-      <div v-else>
+      <div v-if="!permDrawer">
         <v-app-bar-nav-icon class="mr-1" @click="drawer = true" />
       </div>
 
@@ -145,7 +135,7 @@ interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
 }
 
-export interface MenuItem {
+interface MenuItem {
   title: string,
   icon: string,
   to?: LocationQueryRaw,
@@ -206,7 +196,8 @@ onMounted(() => {
 
 function gravatar(email: string): string {
   const defaultImg = window.location.origin.includes('localhost') ? 'identicon' : encodeURIComponent(`${window.location.origin}/avatar-placeholder.png`);
-  return `https://www.gravatar.com/avatar/${Md5.hashStr(email.toLowerCase().trim())}?d=${defaultImg}`;
+  return `https://www.gravatar.com/avatar/${Md5.hashStr(email.toLowerCase()
+    .trim())}?d=${defaultImg}`;
 }
 
 async function installApp(): Promise<void> {
@@ -226,10 +217,11 @@ async function logOut(): Promise<void> {
     toast('Can\'t log out. Not logged in.');
     return;
   }
-  feathersClient.authentication.logout().then(() => {
-    toast('Logged out successfully.');
-    window.location.reload();
-  });
+  feathersClient.authentication.logout()
+    .then(() => {
+      toast('Logged out successfully.');
+      window.location.reload();
+    });
 }
 
 function tryRouteTo(loc: LocationQueryRaw): Promise<void> | void {
