@@ -10,6 +10,7 @@ type RouteRecordRawWithMeta = RouteRecordRaw & {
 export enum ROUTE {
   SIGNUP = 'signup',
   LOGIN = 'login',
+  MY_LISTS = 'my lists',
   PREFERENCES = 'preferences',
   HOME = 'home',
   NOT_FOUND = 'not found',
@@ -34,6 +35,21 @@ const routes: Array<RouteRecordRawWithMeta> = [
     component: () => import('../views/auth/LoginPage.vue'),
   },
   //endregion authentication
+
+  //region lists
+  {
+    path: '/me/lists',
+    name: ROUTE.MY_LISTS,
+    meta: {
+      requiresAuth: true,
+    },
+    component: () => import('../views/me/list/MyLists.vue'),
+  },
+  {
+    path: '/me/list',
+    redirect: { name: ROUTE.MY_LISTS },
+  },
+  //endregion
 
   //region user
   {
