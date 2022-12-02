@@ -23,7 +23,7 @@ const routes: Array<RouteRecordRawWithMeta> = [
     meta: {
       requiresAuth: false,
     },
-    component: () => import('../views/Auth/SignupPage.vue'),
+    component: () => import('../views/auth/SignupPage.vue'),
   },
   {
     path: '/login',
@@ -31,7 +31,7 @@ const routes: Array<RouteRecordRawWithMeta> = [
     meta: {
       requiresAuth: false,
     },
-    component: () => import('../views/Auth/LoginPage.vue'),
+    component: () => import('../views/auth/LoginPage.vue'),
   },
   //endregion authentication
 
