@@ -3,15 +3,15 @@
     class="d-flex align-center justify-center flex-column ma-auto text-block"
     :style="{ color: $vuetify.theme.dark ? '#f6f6f6' : '#4d4d4d' }"
   >
-    <div class="text-grey-darken-2">
-      <div :class="{'text-grey': $vuetify.theme.name.value === 'darkTheme'}">
-        <h1 v-if="!!auth">
+    <div :class="{'text-grey-darken-1': $vuetify.theme.global.current.dark}">
+      <h1 :class="{'text-grey': $vuetify.theme.global.current.dark}">
+        <span v-if="!auth">
+          Welcome!
+        </span>
+        <span v-else>
           Hello, {{ auth.user.fullName }}!
-        </h1>
-        <h1 v-else>
-          Hello!
-        </h1>
-      </div>
+        </span>
+      </h1>
 
       Busket is a fast, simple web app that was made because of my frustration with digital
       shopping lists. It is fast, works on- and offline, supports sharing and is updated

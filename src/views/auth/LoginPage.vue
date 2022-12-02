@@ -28,9 +28,9 @@
           label="Password"
           hide-details="auto"
           :rules="passwordRules"
-          :append-icon="showPsw ? 'mdi-eye-outline' : 'mdi-eye-off-outline'"
+          :append-inner-icon="showPsw ? 'mdi-eye-outline' : 'mdi-eye-off-outline'"
           :type="showPsw ? 'text' : 'password'"
-          @click:append="showPsw = !showPsw"
+          @click:append-inner="showPsw = !showPsw"
           @keypress.enter="submit"
           @blur="passwordBlur"
         />

@@ -7,19 +7,19 @@ type RouteRecordRawWithMeta = RouteRecordRaw & {
   },
 }
 
+export enum ROUTE {
+  SIGNUP = 'signup',
+  LOGIN = 'login',
+  PREFERENCES = 'preferences',
+  HOME = 'home',
+  NOT_FOUND = 'not found',
+}
+
 const routes: Array<RouteRecordRawWithMeta> = [
-  {
-    path: '/',
-    name: 'home',
-    meta: {
-      requiresAuth: false,
-    },
-    component: () => import('../views/WelcomePage.vue'),
-  },
   //region authentication
   {
     path: '/signup',
-    name: 'signup',
+    name: ROUTE.SIGNUP,
     meta: {
       requiresAuth: false,
     },
@@ -27,16 +27,40 @@ const routes: Array<RouteRecordRawWithMeta> = [
   },
   {
     path: '/login',
-    name: 'login',
+    name: ROUTE.LOGIN,
     meta: {
       requiresAuth: false,
     },
     component: () => import('../views/Auth/LoginPage.vue'),
   },
   //endregion authentication
+
+  //region user
+  {
+    path: '/me/settings',
+    redirect: { name: ROUTE.PREFERENCES },
+  },
+  {
+    path: '/me/preferences',
+    name: ROUTE.PREFERENCES,
+    meta: {
+      requiresAuth: false,
+    },
+    component: () => import('../views/me/UserPreferences.vue'),
+  },
+  //endregion
+
+  {
+    path: '/',
+    name: ROUTE.HOME,
+    meta: {
+      requiresAuth: false,
+    },
+    component: () => import('../views/WelcomePage.vue'),
+  },
   {
     path: '/:pathMatch(.*)*',
-    name: 'not found',
+    name: ROUTE.NOT_FOUND,
     component: () => import('../views/NotFound.vue'),
   }
 ];
@@ -48,7 +72,6 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
   console.log('[Router]', to, from);
-  next();
 
   // Authentication
   if (!feathersClient.authentication.authenticated) {
