@@ -1,13 +1,8 @@
 <template>
   <div style="max-width: 500px" class="mt-16 ma-auto">
-    <v-alert v-if="route.query.redirect && route.query.redirect.length > 0" variant="tonal"
-             type="info" class="mb-4"
-    >
-      After logging in you will be redirected to {{ route.query.redirect }}
-    </v-alert>
-
-    <v-card variant="outlined"
-            :style="isDarkTheme ? 'border-color: #393939' : 'border-color: #e0e0e0'" title="Login"
+    <v-card
+      variant="outlined"
+      :style="isDarkTheme ? 'border-color: #393939' : 'border-color: #e0e0e0'" title="Login"
     >
       <v-card-subtitle style="margin-top: -12px">
         Login using your Busket account. Don't have one?
@@ -59,6 +54,15 @@
         </v-btn>
       </v-card-actions>
     </v-card>
+
+    <v-alert
+      v-if="route.query.redirect && route.query.redirect.length > 0"
+      variant="tonal"
+      type="info"
+      class="mt-4"
+    >
+      After logging in you will be redirected to {{ route.query.redirect }}
+    </v-alert>
   </div>
 </template>
 
