@@ -1,13 +1,18 @@
 <template>
   <div>
-    <v-card width="500px" class="mt-16 ma-auto" variant="outlined">
-      <v-card-title>Signup</v-card-title>
-      <v-card-subtitle>
+    <v-card width="500px"
+            variant="outlined"
+            :style="isDarkTheme ? 'border-color: #393939' : 'border-color: #e0e0e0'"
+            class="mt-16 ma-auto"
+            title="Signup"
+    >
+      <v-card-subtitle style="margin-top: -12px">
         Create a new Busket account. Already have one?
         <router-link to="login">
           Login
         </router-link>
       </v-card-subtitle>
+
       <v-card-text>
         <v-text-field
           v-model="username"
@@ -47,8 +52,9 @@
           Forgot your password? Contact me at <a href="mailto:busket@bux.at">busket@bux.at</a>!
         </span>
       </v-card-text>
+
       <v-card-actions class="flex flex-column">
-        <v-btn color="primary" variant="outlined" rounded block @click="submit">
+        <v-btn color="primary" variant="tonal" class="btn-with-outline" block @click="submit">
           Signup
         </v-btn>
       </v-card-actions>
@@ -59,7 +65,6 @@
 <script lang="ts" setup>
 import {
   VCard,
-  VCardTitle,
   VCardSubtitle,
   VCardText,
   VTextField,
@@ -72,10 +77,14 @@ import { useI18n } from 'vue-i18n';
 import { useToast } from 'vue-toastification';
 import { useRoute } from 'vue-router';
 import { onMounted, ref, watch } from 'vue';
+import { useTheme } from 'vuetify';
 
 const i18n = useI18n();
 const toast = useToast();
 const route = useRoute();
+const theme = useTheme();
+const primaryColor = theme.global.current.value.colors.primary;
+const isDarkTheme = ref(false);
 
 const passwordRules = [
   (value: string) => !!value || `${i18n.t('auth.Required')}.`,
@@ -104,9 +113,16 @@ const btnLoading = ref(false);
 
 onMounted(() => {
   validateInfo();
+  themeWatcher();
 });
-watch([email, password], validateInfo);
 
+watch(theme.global.name, themeWatcher);
+
+function themeWatcher() {
+  isDarkTheme.value = theme.global.name.value === 'darkTheme';
+}
+
+watch([email, password], validateInfo);
 function validateInfo(): void {
   emailRules.some((r) => {
     const c = r(email.value) !== true;
@@ -129,24 +145,27 @@ function passwordBlur(): void {
 async function submit(): Promise<void> {
   btnLoading.value = true;
 
-  await feathersClient.service('users').create({
-    uuid: uuidv4(),
-    email: email.value,
-    password: password.value,
-    fullName: username.value,
-    avatarURL: null,
+  await feathersClient.service('users')
+    .create({
+      uuid: uuidv4(),
+      email: email.value,
+      password: password.value,
+      fullName: username.value,
+      avatarURL: null,
 
-    prefersMiniDrawer: false,
-    prefersDarkMode: false,
-    preferredLanguage: 'en',
-  }).then(() => {
-    btnLoading.value = false;
-    toast.info('Created account \'{username}\'. Logging you in...');
-    login();
-  }).catch((err: Error) => {
-    console.warn('[ERROR] Error while trying to signup:', err);
-    toast.error('Something went wrong!');
-  });
+      prefersMiniDrawer: false,
+      prefersDarkMode: false,
+      preferredLanguage: 'en',
+    })
+    .then(() => {
+      btnLoading.value = false;
+      toast.info('Created account \'{username}\'. Logging you in...');
+      login();
+    })
+    .catch((err: Error) => {
+      console.warn('[ERROR] Error while trying to signup:', err);
+      toast.error('Something went wrong!');
+    });
 }
 
 async function login(): Promise<void> {
@@ -154,19 +173,27 @@ async function login(): Promise<void> {
     strategy: 'local',
     email: email.value,
     password: password.value,
-  }).then(() => {
-    btnLoading.value = false;
-    toast('Logged in successfully!');
-    console.log('%c[Auth]%cLogged in', 'color: green');
+  })
+    .then(() => {
+      btnLoading.value = false;
+      toast('Logged in successfully!');
+      console.log('%c[Auth]%cLogged in', 'color: green');
 
-    if (!route.query.redirect) {
-      window.location.href = '/';
-      return;
-    }
-    window.location.href = decodeURI(route.query.redirect as string || '/');
-  }).catch((err) => {
-    console.warn('[ERROR] Error while trying to authenticate/login:', err);
-    toast.error('Something went wrong trying to log you in.\nPlease try again later!');
-  });
+      if (!route.query.redirect) {
+        window.location.href = '/';
+        return;
+      }
+      window.location.href = decodeURI(route.query.redirect as string || '/');
+    })
+    .catch((err) => {
+      console.warn('[ERROR] Error while trying to authenticate/login:', err);
+      toast.error('Something went wrong trying to log you in.\nPlease try again later!');
+    });
 }
 </script>
+
+<style lang="scss" scoped>
+.btn-with-outline {
+  border: 1px solid v-bind(primaryColor);
+}
+</style>
