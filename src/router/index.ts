@@ -7,7 +7,7 @@ type RouteRecordRawWithMeta = RouteRecordRaw & {
   },
 }
 
-export enum ROUTE {
+export enum Route {
   SIGNUP = 'signup',
   LOGIN = 'login',
   MY_LISTS = 'my lists',
@@ -22,7 +22,7 @@ const routes: Array<RouteRecordRawWithMeta> = [
   //region authentication
   {
     path: '/signup',
-    name: ROUTE.SIGNUP,
+    name: Route.SIGNUP,
     meta: {
       requiresAuth: false,
     },
@@ -30,7 +30,7 @@ const routes: Array<RouteRecordRawWithMeta> = [
   },
   {
     path: '/login',
-    name: ROUTE.LOGIN,
+    name: Route.LOGIN,
     meta: {
       requiresAuth: false,
     },
@@ -41,7 +41,7 @@ const routes: Array<RouteRecordRawWithMeta> = [
   //region lists
   {
     path: '/me/list/:id',
-    name: ROUTE.DISPLAY_LIST,
+    name: Route.DISPLAY_LIST,
     props: true,
     meta: {
       requiresAuth: true,
@@ -49,8 +49,15 @@ const routes: Array<RouteRecordRawWithMeta> = [
     component: () => import('@/views/Me/List/DisplayList.vue'),
   },
   {
+    path: '/me/lists/:id',
+    redirect: (to) => ({
+      name: Route.DISPLAY_LIST,
+      params: to.params,
+    }),
+  },
+  {
     path: '/me/lists',
-    name: ROUTE.MY_LISTS,
+    name: Route.MY_LISTS,
     meta: {
       requiresAuth: true,
     },
@@ -58,18 +65,24 @@ const routes: Array<RouteRecordRawWithMeta> = [
   },
   {
     path: '/me/list',
-    redirect: { name: ROUTE.MY_LISTS },
+    redirect: { name: Route.MY_LISTS },
+  },
+  {
+    path: '/me/list/:id/not-found',
+    name: Route.LIST_NOT_FOUND,
+    props: true,
+    component: () => import('@/views/me/list/ListNotFound.vue'),
   },
   //endregion
 
   //region user
   {
     path: '/me/settings',
-    redirect: { name: ROUTE.PREFERENCES },
+    redirect: { name: Route.PREFERENCES },
   },
   {
     path: '/me/preferences',
-    name: ROUTE.PREFERENCES,
+    name: Route.PREFERENCES,
     meta: {
       requiresAuth: true,
     },
@@ -79,7 +92,7 @@ const routes: Array<RouteRecordRawWithMeta> = [
 
   {
     path: '/',
-    name: ROUTE.HOME,
+    name: Route.HOME,
     meta: {
       requiresAuth: false,
     },
@@ -87,7 +100,7 @@ const routes: Array<RouteRecordRawWithMeta> = [
   },
   {
     path: '/:pathMatch(.*)*',
-    name: ROUTE.NOT_FOUND,
+    name: Route.NOT_FOUND,
     component: () => import('../views/NotFound.vue'),
   }
 ];

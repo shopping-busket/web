@@ -41,7 +41,7 @@
           :rules="newItemRules"
           @click:append="createEntry"
           @keydown.enter="createEntry"
-          @blur="newItemName.length === 0 ? $refs.newItemField.resetValidation() : null"
+          @blur="newItemName.length === 0 && newItemField && newItemField.resetValidation()"
         />
         <!--        TODO: <v-autocomplete :items="suggestedItems"-->
         <!--                        outlined-->
@@ -90,21 +90,6 @@
         />
       </div>
     </v-sheet>
-    <div v-else class="text-center mt-16">
-      <div class="header">
-        404
-      </div>
-      <div class="text-subtitle-1">
-        List not found.
-      </div>
-      <p>We can't find this list in our database.</p>
-      <v-btn
-        outlined color="primary" rounded width="300px"
-        @click="$router.push({ name: 'my lists' })"
-      >
-        Go to my lists
-      </v-btn>
-    </div>
 
     <!-- TODO: Change list name   -->
     <EventViewer
@@ -126,6 +111,7 @@ import {
   VIcon,
   VSheet,
   VTextField,
+  VProgressCircular,
 } from 'vuetify/components';
 import EventViewer from '@/components/EventViewer.vue';
 import TodoList from '@/components/TodoList.vue';
@@ -133,7 +119,7 @@ import feathersClient, { eventService, listService, User } from '@/feathers-clie
 import ShoppingList, { IShoppingList, IShoppingListItem } from '@/shoppinglist/ShoppingList';
 import { onMounted, Ref, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { ROUTE } from '@/router';
+import { Route } from '@/router';
 import { useToast } from 'vue-toastification';
 import { EventType, LogEvent, LogEventListenerData } from '@/shoppinglist/events';
 
@@ -288,7 +274,7 @@ async function loadListFromCache(): Promise<ShoppingList> {
 }
 
 async function listNotFound() {
-  await router.push({ name: ROUTE.LIST_NOT_FOUND });
+  await router.push({ name: Route.LIST_NOT_FOUND });
 }
 
 //endregion

@@ -199,7 +199,7 @@ async function populateLists(): Promise<void> {
     return o;
   });
 
-  localStorage.setItem('lists', JSON.stringify(lists));
+  localStorage.setItem('lists', JSON.stringify(lists.value));
 }
 
 watch(auth, populateLists);
