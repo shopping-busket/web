@@ -71,7 +71,7 @@ const routes: Array<RouteRecordRawWithMeta> = [
     path: '/me/preferences',
     name: ROUTE.PREFERENCES,
     meta: {
-      requiresAuth: false,
+      requiresAuth: true,
     },
     component: () => import('../views/me/UserPreferences.vue'),
   },
