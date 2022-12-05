@@ -11,6 +11,8 @@ export enum ROUTE {
   SIGNUP = 'signup',
   LOGIN = 'login',
   MY_LISTS = 'my lists',
+  LIST_NOT_FOUND = 'not found',
+  DISPLAY_LIST = 'display list',
   PREFERENCES = 'preferences',
   HOME = 'home',
   NOT_FOUND = 'not found',
@@ -37,6 +39,15 @@ const routes: Array<RouteRecordRawWithMeta> = [
   //endregion authentication
 
   //region lists
+  {
+    path: '/me/list/:id',
+    name: ROUTE.DISPLAY_LIST,
+    props: true,
+    meta: {
+      requiresAuth: true,
+    },
+    component: () => import('@/views/Me/List/DisplayList.vue'),
+  },
   {
     path: '/me/lists',
     name: ROUTE.MY_LISTS,
