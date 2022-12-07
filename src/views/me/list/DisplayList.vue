@@ -1,6 +1,6 @@
 <template>
   <div style="max-width: 800px; margin: auto" class="mt-4">
-    <v-card v-if="!listNotFound" outlined>
+    <v-card outlined>
       <v-card-title>
         <div v-if="shoppingList !== null">
           {{ shoppingList.name }}
@@ -41,7 +41,7 @@
           :rules="newItemRules"
           @click:append="createEntry"
           @keydown.enter="createEntry"
-          @blur="newItemName.length === 0 && newItemField && newItemField.resetValidation()"
+          @blur="newItemName.length === 0 ? newItemField?.resetValidation() : null"
         />
         <!--        TODO: <v-autocomplete :items="suggestedItems"-->
         <!--                        outlined-->
@@ -72,7 +72,7 @@
         <TodoList
           label="Todo"
           :shopping-list="shoppingList"
-          is-todo-list
+          :only-show-done="false"
           class="mb-4"
           @clear-done="clearDone"
           @check-entry="checkEntry"
@@ -83,6 +83,7 @@
         <TodoList
           label="Done"
           :shopping-list="shoppingList"
+          :only-show-done="true"
           @clear-done="clearDone"
           @check-entry="checkEntry"
           @rename-entry="renameEntry"
@@ -94,9 +95,10 @@
     <!-- TODO: Change list name   -->
     <EventViewer
       v-if="shoppingList !== null"
+      id="eventViewer"
       v-model="openLogDialog"
       :list-name="shoppingList.name"
-      :events="events"
+      :events="historicalEvents"
     />
   </div>
 </template>
@@ -141,8 +143,9 @@ const newItemRules = [
   (val: string) => val.trim().length <= 256 || 'Can\'t exceed 256 character limit!',
 ];
 const user: Ref<null | User> = ref(null);
-const events: Ref<LogEvent[]> = ref([]);
 const connected = ref(feathersClient.io.connected);
+const events: Ref<LogEvent[]> = ref([]);
+const historicalEvents: Ref<LogEvent[]> = ref([]);
 
 onMounted(async () => {
   await connectionWatcher();
@@ -154,11 +157,11 @@ onMounted(async () => {
   if (!feathersClient.io.connected.value) shoppingList.value = await loadListFromCache();
   shoppingList.value = await loadListFromRemote();
 
-  user.value = await feathersClient.get('authentication').user.value;
+  user.value = await feathersClient.get('authentication').user;
 });
 
 //region register listeners
-watch(connected.value, connectionWatcher);
+watch(connected, connectionWatcher);
 
 function connectionWatcher() {
   if (feathersClient.io.connected.value) {
@@ -279,7 +282,7 @@ async function listNotFound() {
 
 //endregion
 
-//region entry functions
+//region entry event emitters
 async function clearDone(): Promise<void> {
   if (!shoppingList.value) return;
 
@@ -294,6 +297,7 @@ async function clearDone(): Promise<void> {
       isoDate: (new Date()).toISOString(),
       state: {
         name: entry.name,
+        done: true,
       },
     });
   }
@@ -323,8 +327,6 @@ async function renameEntry(id: string, name: string | null = null, _recordEvent 
 
 async function moveEntry(index: number, oldIndex: number, _recordEvent = true): Promise<void> {
   if (!shoppingList.value) return;
-  const aboveEntry = index === 0 ? null : shoppingList.value.entries[index - 1];
-  const belowEntry = shoppingList.value.entries.length - 1 === index ? null : shoppingList.value.entries[index + 1];
   const entry = shoppingList.value.entries[index];
 
   if (!_recordEvent) return;
@@ -334,8 +336,7 @@ async function moveEntry(index: number, oldIndex: number, _recordEvent = true): 
     isoDate: (new Date()).toISOString(),
     state: {
       name: entry.name,
-      aboveEntry: aboveEntry?.id,
-      belowEntry: belowEntry?.id,
+      done: entry.done,
       oldIndex,
       newIndex: index,
     },
@@ -382,7 +383,8 @@ async function createEntry(_recordEvent = true): Promise<void> {
 async function checkEntry(id: string, check = true, _recordEvent = true): Promise<void> {
   if (!shoppingList.value) return;
 
-  const entry = shoppingList.value?.entries.find((t) => t.id === id);
+  const entry = shoppingList.value?.findEntryGlobal((t) => t.id === id);
+  console.log(entry);
   if (!entry) return;
 
   shoppingList.value.checkItem(id, check);
@@ -394,7 +396,6 @@ async function checkEntry(id: string, check = true, _recordEvent = true): Promis
     isoDate: (new Date()).toISOString(),
     state: {
       name: entry.name,
-      done: check,
     },
   });
 }
@@ -425,6 +426,7 @@ async function recordEvent(event: LogEvent): Promise<unknown> {
 
   console.log('[LOG]', event);
   events.value.push(event);
+  historicalEvents.value.push(event);
 
   localStorage.setItem(`events.value-${props.id}`, JSON.stringify(events.value));
 
@@ -439,7 +441,7 @@ async function sendEventsToServer(): Promise<unknown> {
       entryId: string,
       state: {
         name: string,
-        done: boolean,
+        done?: boolean,
       },
       isoDate: string,
     },
@@ -470,13 +472,12 @@ async function sendEventsToServer(): Promise<unknown> {
 function downloadList(): void {
   if (!shoppingList.value) return;
   let { name } = shoppingList.value;
-  const obj = shoppingList.value;
   const fileType = 'json';
 
   name.trim().replaceAll(' ', '_');
   name += '-export';
 
-  const dataStr = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(obj))}`;
+  const dataStr = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(shoppingList.value))}`;
   const downloadAnchorNode = document.createElement('a');
   downloadAnchorNode.setAttribute('href', dataStr);
   downloadAnchorNode.setAttribute('download', `${name}.${fileType}`);

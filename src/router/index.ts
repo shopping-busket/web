@@ -11,7 +11,7 @@ export enum Route {
   SIGNUP = 'signup',
   LOGIN = 'login',
   MY_LISTS = 'my lists',
-  LIST_NOT_FOUND = 'not found',
+  LIST_NOT_FOUND = 'list not found',
   DISPLAY_LIST = 'display list',
   PREFERENCES = 'preferences',
   HOME = 'home',
@@ -40,6 +40,12 @@ const routes: Array<RouteRecordRawWithMeta> = [
 
   //region lists
   {
+    path: '/me/list/:id/not-found',
+    name: Route.LIST_NOT_FOUND,
+    props: true,
+    component: () => import('../views/me/list/ListNotFound.vue'),
+  },
+  {
     path: '/me/list/:id',
     name: Route.DISPLAY_LIST,
     props: true,
@@ -66,12 +72,6 @@ const routes: Array<RouteRecordRawWithMeta> = [
   {
     path: '/me/list',
     redirect: { name: Route.MY_LISTS },
-  },
-  {
-    path: '/me/list/:id/not-found',
-    name: Route.LIST_NOT_FOUND,
-    props: true,
-    component: () => import('@/views/me/list/ListNotFound.vue'),
   },
   //endregion
 
@@ -133,6 +133,7 @@ router.beforeEach(async (to, from, next) => {
             name: 'login',
             query: { redirect: to.path },
           });
+          return;
         }
       });
   }

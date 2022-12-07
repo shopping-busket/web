@@ -2,25 +2,25 @@
   <div>
     <div class="hr-sect mb-1">
       <v-btn
-        v-if="!isTodoList" outlined color="red" x-small class="mr-2"
+        v-if="!onlyShowTodo" outlined color="red" x-small class="mr-2"
         @click="emit('clear-done')"
       >
         <v-icon small>
           mdi-trash-can-outline
         </v-icon>
       </v-btn>
-      {{ label }} {{ getCountString(!isTodoList) }}
+      {{ label }} {{ getCountString(!onlyShowTodo) }}
     </div>
 
     <draggable
       :is="draggable"
-      v-model="/* eslint-disable vue/no-mutating-props */props.shoppingList.entries" :animation="0"
+      v-model="/* eslint-disable vue/no-mutating-props */shoppingList[onlyShowTodo ? 'entries':'checkedEntries']" :animation="0"
       handle=".handle"
       ghost-class="ghost" @end="moveEntry"
     >
       <transition-group type="transition" name="flip-list">
         <div
-          v-for="entry in shoppingList.entries.filter((t) => t.done === !isTodoList)"
+          v-for="entry in shoppingList[onlyShowTodo ? 'entries' : 'checkedEntries']"
           :key="entry.id"
         >
           <v-card
@@ -32,9 +32,9 @@
             @click="focusEntry(entry.id)"
           >
             <v-checkbox
-              dense class="ma-0 pa-0" style="height: 24px" :input-value="entry.done"
-              @click="emit('check-entry', entry.id, isTodoList)"
-              @keydown.enter="emit('check-entry', entry.id, isTodoList)"
+              dense class="ma-0 pa-0" style="height: 24px" :input-value="!onlyShowTodo"
+              @click="emit('check-entry', entry.id, onlyShowTodo)"
+              @keydown.enter="emit('check-entry', entry.id, onlyShowTodo)"
             />
             <v-text-field
               v-if="entry.additional.edit"
@@ -83,7 +83,7 @@
               </v-btn>
             </div>
             <v-spacer />
-            <v-icon v-if="isTodoList" small class="handle cursor-move">
+            <v-icon v-if="onlyShowTodo" small class="handle cursor-move">
               mdi-menu
             </v-icon>
           </v-card>
@@ -102,9 +102,9 @@ import config from '../../config';
 const props = withDefaults(defineProps<{
   shoppingList: ShoppingList,
   label: string,
-  isTodoList?: boolean,
+  onlyShowTodo?: boolean,
 }>(), {
-  isTodoList: false,
+  onlyShowTodo: false,
 });
 
 const emit = defineEmits<{
