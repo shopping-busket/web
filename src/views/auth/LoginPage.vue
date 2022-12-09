@@ -1,8 +1,8 @@
 <template>
-  <div style="max-width: 500px" class="mt-16 ma-auto">
+  <div class="mt-16 ma-auto" style="max-width: 500px">
     <v-card
-      variant="outlined"
-      :style="isDarkTheme ? 'border-color: #393939' : 'border-color: #e0e0e0'" title="Login"
+      :style="isDarkTheme ? 'border-color: #393939' : 'border-color: #e0e0e0'"
+      title="Login" variant="outlined"
     >
       <v-card-subtitle style="margin-top: -12px">
         Login using your Busket account. Don't have one?
@@ -15,26 +15,26 @@
       <v-card-text>
         <v-text-field
           v-model="email"
-          variant="underlined"
-          color="primary"
-          label="Email"
           :rules="emailRules"
-          hide-details="auto"
           class="pb-3"
+          color="primary"
+          hide-details="auto"
+          label="Email"
           type="email"
+          variant="underlined"
         />
         <v-text-field
           v-model="password"
-          variant="underlined"
-          color="primary"
-          label="Password"
-          hide-details="auto"
-          :rules="passwordRules"
           :append-inner-icon="showPsw ? 'mdi-eye-outline' : 'mdi-eye-off-outline'"
+          :rules="passwordRules"
           :type="showPsw ? 'text' : 'password'"
+          color="primary"
+          hide-details="auto"
+          label="Password"
+          variant="underlined"
+          @blur="passwordBlur"
           @click:append-inner="showPsw = !showPsw"
           @keypress.enter="submit"
-          @blur="passwordBlur"
         />
         <span v-show="forgetHint" class="pt-1">
           Forgot your password? Contact me at <a href="mailto:busket@bux.at">busket@bux.at</a>!
@@ -42,12 +42,12 @@
       </v-card-text>
       <v-card-actions class="flex flex-column">
         <v-btn
+          :disabled="btnDisabled"
+          :loading="btnLoading"
+          block
+          class="btn-with-outline"
           color="primary"
           variant="tonal"
-          class="btn-with-outline"
-          block
-          :loading="btnLoading"
-          :disabled="btnDisabled"
           @click="submit"
         >
           Login using Busket
@@ -57,9 +57,9 @@
 
     <v-alert
       v-if="route.query.redirect && route.query.redirect.length > 0"
-      variant="tonal"
-      type="info"
       class="mt-4"
+      type="info"
+      variant="tonal"
     >
       After logging in you will be redirected to {{ route.query.redirect }}
     </v-alert>
@@ -69,12 +69,12 @@
 <script lang="ts" setup>
 import {
   VAlert,
+  VBtn,
   VCard,
+  VCardActions,
   VCardSubtitle,
   VCardText,
-  VTextField,
-  VCardActions,
-  VBtn
+  VTextField
 } from 'vuetify/components';
 import feathersClient from '@/feathers-client';
 import { onMounted, ref, watch } from 'vue';

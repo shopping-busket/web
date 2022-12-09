@@ -1,5 +1,5 @@
 <template>
-  <div style="max-width: 800px; margin: auto" class="mt-4">
+  <div class="mt-4" style="max-width: 800px; margin: auto">
     <v-card outlined>
       <v-card-title>
         <div class="d-flex align-center">
@@ -11,15 +11,15 @@
           </div>
 
           <v-btn
-            size="x-small" variant="text" color="primary" icon="mdi-text-box"
+            color="primary" icon="mdi-text-box" size="x-small" variant="text"
             @click="openLogDialog = true"
           />
           <v-btn
-            size="x-small" variant="text" color="primary" icon="mdi-download"
+            color="primary" icon="mdi-download" size="x-small" variant="text"
             @click="downloadList"
           />
           <v-btn
-            size="x-small" variant="text" color="primary" icon="mdi-refresh"
+            color="primary" icon="mdi-refresh" size="x-small" variant="text"
             @click="loadListFromRemote"
           />
         </div>
@@ -37,15 +37,15 @@
         <v-text-field
           ref="newItemField"
           v-model="newItemName"
+          :rules="newItemRules"
+          append-inner-icon="mdi-basket-plus-outline"
           color="primary"
+          density="comfortable"
           placeholder="Add item"
           variant="outlined"
-          append-inner-icon="mdi-basket-plus-outline"
-          density="comfortable"
-          :rules="newItemRules"
+          @blur="newItemName.length === 0 ? newItemField?.resetValidation() : null"
           @click:append-inner="createEntry"
           @keydown.enter="createEntry"
-          @blur="newItemName.length === 0 ? newItemField?.resetValidation() : null"
         />
         <!--        TODO: <v-autocomplete :items="suggestedItems"-->
         <!--                        outlined-->
@@ -61,24 +61,24 @@
       </v-card-text>
     </v-card>
 
-    <v-sheet outlined rounded class="mt-3 pa-2">
+    <v-sheet class="mt-3 pa-2" outlined rounded>
       <div
         v-if="shoppingList === null"
         class="d-flex justify-center align-items"
       >
         Loading
         <v-progress-circular
-          color="primary" :size="25" :width="3" indeterminate
-          class="ml-2"
+          :size="25" :width="3" class="ml-2" color="primary"
+          indeterminate
         />
       </div>
       <div v-else>
         <TodoList
           v-model="shoppingList.entries"
           class="mb-4"
+          is-movable
           label="Todo"
           show-count
-          is-movable
           @clear-done="clearDone"
           @check-entry="checkEntry"
           @rename-entry="renameEntry"
@@ -87,9 +87,9 @@
 
         <TodoList
           v-model="shoppingList.checkedEntries"
-          label="Done"
-          is-clearable
           checked-state
+          is-clearable
+          label="Done"
           @clear-done="clearDone"
           @check-entry="checkEntry"
           @rename-entry="renameEntry"
@@ -103,8 +103,8 @@
       v-if="shoppingList !== null"
       id="eventViewer"
       v-model="openLogDialog"
-      :list-name="shoppingList.name"
       :events="historicalEvents"
+      :list-name="shoppingList.name"
     />
   </div>
 </template>
@@ -116,9 +116,9 @@ import {
   VCardSubtitle,
   VCardText,
   VCardTitle,
+  VProgressCircular,
   VSheet,
   VTextField,
-  VProgressCircular,
 } from 'vuetify/components';
 import EventViewer from '@/components/EventViewer.vue';
 import TodoList from '@/components/TodoList.vue';

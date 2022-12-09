@@ -4,26 +4,26 @@
       v-for="item in lists"
       :key="item.listid"
       :ripple="true"
+      class="mb-2 v-ripple"
       hover
       variant="flat"
-      class="mb-2 v-ripple"
       @click="openList(item.listid)"
     >
-      <v-list-item :title="item.name" :subtitle="item.description">
+      <v-list-item :subtitle="item.description" :title="item.name">
         <template #append>
           <v-icon
-            icon="mdi-trash-can-outline"
             color="red"
+            icon="mdi-trash-can-outline"
             @click.stop="deleteList(item.listid)"
           />
         </template>
       </v-list-item>
     </v-card>
     <v-card
-      outlined
       :ripple="true"
-      hover
       class="d-flex justify-center flex-column align-center new-list-card"
+      hover
+      outlined
       @click="feathersClient.io.connected ? newListDialog = true : toast('You are offline!')"
     >
       <div class="new-list-title">
@@ -44,23 +44,23 @@
         <v-card-text class="mt-1">
           <v-form ref="newListForm" v-model="incorrectEntries" @submit.stop="createList()">
             <v-text-field
-              v-model="newList.name" label="Name"
-              variant="outlined"
-              color="primary"
-              density="compact"
-              :rules="nameRules"
-              counter="32"
+              v-model="newList.name" :rules="nameRules"
               autofocus
+              color="primary"
+              counter="32"
+              density="compact"
+              label="Name"
+              variant="outlined"
             />
             <v-textarea
               v-model="newList.description"
-              variant="outlined"
-              color="primary"
-              label="Description"
-              height="80px"
-              no-resize
-              counter
               :rules="descriptionRules"
+              color="primary"
+              counter
+              height="80px"
+              label="Description"
+              no-resize
+              variant="outlined"
             />
           </v-form>
 
@@ -76,11 +76,11 @@
             <v-spacer />
 
             <v-btn
-              color="primary"
-              variant="outlined"
-              rounded
-              width="200px"
               :disabled="!incorrectEntries"
+              color="primary"
+              rounded
+              variant="outlined"
+              width="200px"
               @click="createList(); newListDialog = false"
             >
               Create
@@ -134,19 +134,19 @@
 
 <script lang="ts" setup>
 import {
-  VListItem,
-  VCard,
-  VCardTitle,
-  VCardSubtitle,
-  VIcon,
   VBtn,
-  VTextField,
-  VTextarea,
-  VForm,
-  VSpacer,
+  VCard,
+  VCardSubtitle,
   VCardText,
+  VCardTitle,
   VDialog,
   VFileInput,
+  VForm,
+  VIcon,
+  VListItem,
+  VSpacer,
+  VTextarea,
+  VTextField,
 } from 'vuetify/components';
 import { v4 as uuidv4 } from 'uuid';
 import feathersClient, { AuthObject, listService } from '@/feathers-client';

@@ -1,10 +1,11 @@
 <template>
   <div>
-    <v-card width="500px"
-            variant="outlined"
-            :style="isDarkTheme ? 'border-color: #393939' : 'border-color: #e0e0e0'"
-            class="mt-16 ma-auto"
-            title="Signup"
+    <v-card
+      :style="isDarkTheme ? 'border-color: #393939' : 'border-color: #e0e0e0'"
+      class="mt-16 ma-auto"
+      title="Signup"
+      variant="outlined"
+      width="500px"
     >
       <v-card-subtitle style="margin-top: -12px">
         Create a new Busket account. Already have one?
@@ -16,37 +17,37 @@
       <v-card-text>
         <v-text-field
           v-model="username"
-          variant="underlined"
-          color="primary"
-          label="Name"
           :rules="usernameRules"
-          hide-details="auto"
           class="pb-3"
+          color="primary"
+          hide-details="auto"
+          label="Name"
           type="text"
+          variant="underlined"
         />
         <v-text-field
           v-model="email"
-          variant="underlined"
-          color="primary"
-          label="Email"
           :rules="emailRules"
-          hide-details="auto"
           class="pb-3"
+          color="primary"
+          hide-details="auto"
+          label="Email"
           type="email"
+          variant="underlined"
         />
         <v-text-field
           ref="passwordField"
           v-model="password"
-          variant="underlined"
-          color="primary"
-          label="Password"
-          hide-details="auto"
-          :rules="passwordRules"
           :append-inner-icon="showPsw ? 'mdi-eye-outline' : 'mdi-eye-off-outline'"
+          :rules="passwordRules"
           :type="showPsw ? 'text' : 'password'"
+          color="primary"
+          hide-details="auto"
+          label="Password"
+          variant="underlined"
+          @blur="passwordBlur"
           @click:append-inner="showPsw = !showPsw"
           @keypress.enter="submit"
-          @blur="passwordBlur"
         />
         <span v-show="forgetHint" class="pt-1">
           Forgot your password? Contact me at <a href="mailto:busket@bux.at">busket@bux.at</a>!
@@ -54,7 +55,7 @@
       </v-card-text>
 
       <v-card-actions class="flex flex-column">
-        <v-btn color="primary" variant="tonal" class="btn-with-outline" block @click="submit">
+        <v-btn block class="btn-with-outline" color="primary" variant="tonal" @click="submit">
           Signup
         </v-btn>
       </v-card-actions>
@@ -64,12 +65,12 @@
 
 <script lang="ts" setup>
 import {
+  VBtn,
   VCard,
+  VCardActions,
   VCardSubtitle,
   VCardText,
-  VTextField,
-  VCardActions,
-  VBtn
+  VTextField
 } from 'vuetify/components';
 import { v4 as uuidv4 } from 'uuid';
 import feathersClient from '@/feathers-client';
@@ -123,6 +124,7 @@ function themeWatcher() {
 }
 
 watch([email, password], validateInfo);
+
 function validateInfo(): void {
   emailRules.some((r) => {
     const c = r(email.value) !== true;

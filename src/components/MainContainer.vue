@@ -2,22 +2,22 @@
   <div style="height: 100%">
     <v-navigation-drawer
       v-model="drawer"
-      app
-      expand-on-hover
       :rail="mini"
       :temporary="!permDrawer"
+      app
+      expand-on-hover
     >
       <v-list-item
         :prepend-avatar="auth != null ? gravatar(auth.user.email) : img"
         :title="auth == null ? 'Not logged in' : auth?.user?.fullName"
-        nav
         class="{'my-1': drawerdsaduhasdhuashudashu}"
+        nav
       >
         <template #append>
           <v-btn
             v-if="!permDrawer"
-            variant="text"
             icon="mdi-chevron-left"
+            variant="text"
             @click.stop="drawer = !drawer"
           />
         </template>
@@ -44,7 +44,7 @@
 
       <div v-show="showInstallable" class="primary pa-2 white--text">
         <span class="pb-4">You want to use Busket when you are offline without having to open your Browser?</span>
-        <v-btn outlined color="white" small rounded block class="mt-2" @click="installApp">
+        <v-btn block class="mt-2" color="white" outlined rounded small @click="installApp">
           Sure!
         </v-btn>
         <span
@@ -73,8 +73,8 @@
     </v-navigation-drawer>
 
     <v-app-bar
-      class="pl-3"
       :color="props.appbarColor"
+      class="pl-3"
       dark
     >
       <div v-if="!permDrawer">
@@ -98,18 +98,18 @@
 
 <script lang="ts" setup>
 import {
-  VNavigationDrawer,
   VAppBar,
-  VListItem,
-  VDivider,
-  VList,
-  VListItemTitle,
-  VBtn,
-  VIcon,
-  VToolbarTitle,
-  VSpacer,
-  VFadeTransition,
   VAppBarNavIcon,
+  VBtn,
+  VDivider,
+  VFadeTransition,
+  VIcon,
+  VList,
+  VListItem,
+  VListItemTitle,
+  VNavigationDrawer,
+  VSpacer,
+  VToolbarTitle,
 } from 'vuetify/components';
 
 import { LocationQueryRaw, useRoute, useRouter } from 'vue-router';
@@ -272,7 +272,7 @@ watch(permDrawer, () => {
 });
 </script>
 
-<style scoped lang="scss">
+<style lang="scss" scoped>
 $dark: #cccccc;
 $white: #e8e8e8;
 

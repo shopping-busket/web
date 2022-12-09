@@ -1,50 +1,50 @@
 <template>
   <div>
     <div class="d-flex">
-      <div class="hr-sect mb-1" :class="isDarkTheme ? 'text-grey hr-sect-dark': 'hr-sect-light'">
+      <div :class="isDarkTheme ? 'text-grey hr-sect-dark': 'hr-sect-light'" class="hr-sect mb-1">
         {{ label }} {{ getCountString(showCount) }}
       </div>
       <v-btn
         v-if="isClearable"
-        size="x-small"
-        icon="mdi-trash-can-outline"
-        variant="tonal"
-        color="red"
         class="mr-2"
+        color="red"
+        icon="mdi-trash-can-outline"
+        size="x-small"
+        variant="tonal"
         @click="emit('clear-done')"
       />
     </div>
 
     <draggable
       v-model="entries"
-      handle=".handle"
       ghost-class="ghost"
+      handle=".handle"
       item-key="id"
       @end="moveEntry"
     >
       <template #item="{element}">
         <v-card
-          variant="tonal"
+          :class="{'entry-focus': element.additional.focused}"
           class="pa-2 mt-2 d-flex flex-row"
           style="align-items: center"
-          :class="{'entry-focus': element.additional.focused}"
+          variant="tonal"
           @click="focusEntry(element.id)"
         >
           <v-checkbox-btn
-            density="comfortable"
             :model-value="checkedState"
+            density="comfortable"
             @click="emit('check-entry', element.id, !checkedState)"
             @keydown.enter="emit('check-entry', element.id, !checkedState)"
           />
           <v-text-field
             v-if="element.additional.edit"
             v-model="element.additional.editName"
-            variant="outlined"
-            density="compact"
-            color="primary"
-            label="Name"
-            hide-details
             autofocus
+            color="primary"
+            density="compact"
+            hide-details
+            label="Name"
+            variant="outlined"
             @keydown.enter="emit('rename-entry', element.id)"
             @keydown.esc="element.additional.edit = false; element.additional.editName = element.name"
           />
@@ -53,9 +53,9 @@
           </div>
           <v-btn
             v-if="element.additional.editName === element.name"
+            :icon="element.additional.edit ? 'mdi-pencil-outline' : 'mdi-pencil'"
             size="x-small"
             variant="text"
-            :icon="element.additional.edit ? 'mdi-pencil-outline' : 'mdi-pencil'"
             @click="element.additional.edit = !element.additional.edit"
           />
           <div v-else>
@@ -80,7 +80,7 @@
             </v-btn>
           </div>
           <v-spacer />
-          <v-icon v-if="isMovable" size="small" class="handle cursor-move">
+          <v-icon v-if="isMovable" class="handle cursor-move" size="small">
             mdi-menu
           </v-icon>
         </v-card>
@@ -90,7 +90,7 @@
 </template>
 
 <script lang="ts" setup>
-import { VBtn, VCard, VCheckboxBtn, VIcon, VTextField, VSpacer } from 'vuetify/components';
+import { VBtn, VCard, VCheckboxBtn, VIcon, VSpacer, VTextField } from 'vuetify/components';
 import Draggable from 'vuedraggable';
 import { ShoppingListItem } from '@/shoppinglist/ShoppingList';
 import config from '../../config';

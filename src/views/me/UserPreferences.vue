@@ -1,6 +1,6 @@
 <template>
-  <div style="max-width: 1200px" class="mx-auto mt-2">
-    <v-alert variant="tonal" type="info" class="mb-2" dismissible>
+  <div class="mx-auto mt-2" style="max-width: 1200px">
+    <v-alert class="mb-2" dismissible type="info" variant="tonal">
       For some settings to apply, you have to refresh the page.
     </v-alert>
 
@@ -52,13 +52,13 @@
 import {
   VAlert,
   VCard,
+  VCheckboxBtn,
   VList,
   VListItem,
   VListItemAction,
-  VListItemTitle,
   VListItemSubtitle,
+  VListItemTitle,
   VListSubheader,
-  VCheckboxBtn,
 } from 'vuetify/components';
 import feathersClient, { AuthObject, usersService } from '@/feathers-client';
 import { onMounted, reactive, Ref, ref, watch } from 'vue';

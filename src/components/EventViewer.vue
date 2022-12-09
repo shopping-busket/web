@@ -1,20 +1,20 @@
 <template>
-  <v-dialog v-model="model" max-width="850px" class="pa-2">
+  <v-dialog v-model="model" class="pa-2" max-width="850px">
     <v-card :title="`Log of list '${listName}'`" subtitle="View the log of this list.">
       <v-card-text>
         <div class="mb-1 d-flex flex-row">
           <v-checkbox v-model="showISO" label="Show ISO string" />
-          <v-checkbox v-model="showIndexNumber" label="Index" class="ml-5" />
-          <v-checkbox v-model="showIcons" label="Icons" class="ml-5" />
-          <v-checkbox v-model="colorCode" label="Color" class="ml-5" />
-          <v-checkbox v-model="wrapContent" label="Wrap" class="ml-5" />
-          <v-checkbox v-model="hideId" label="Hide id" class="ml-5" />
-          <v-checkbox v-model="logToConsole" label="Console log" class="ml-5" />
+          <v-checkbox v-model="showIndexNumber" class="ml-5" label="Index" />
+          <v-checkbox v-model="showIcons" class="ml-5" label="Icons" />
+          <v-checkbox v-model="colorCode" class="ml-5" label="Color" />
+          <v-checkbox v-model="wrapContent" class="ml-5" label="Wrap" />
+          <v-checkbox v-model="hideId" class="ml-5" label="Hide id" />
+          <v-checkbox v-model="logToConsole" class="ml-5" label="Console log" />
         </div>
 
         <v-sheet
-          v-if="events" outlined
-          :class="{ 'scroll': true, 'text-no-wrap': !wrapContent, 'px-1': true }"
+          v-if="events" :class="{ 'scroll': true, 'text-no-wrap': !wrapContent, 'px-1': true }"
+          outlined
         >
           <div
             v-if="events.length <= 0"
@@ -26,9 +26,9 @@
             <span v-if="showIndexNumber" class="gray mr-1">[{{ events.length - i }}]</span>
             <v-icon
               v-if="showIcons"
-              small
-              class="mr-1"
               :color="colorCode ? map[event.event].color : ''"
+              class="mr-1"
+              small
             >
               {{ map[event.event].icon }}
             </v-icon>
@@ -56,15 +56,7 @@
 </template>
 
 <script lang="ts" setup>
-import {
-  VDialog,
-  VCard,
-  VCardText,
-  VDivider,
-  VSheet,
-  VIcon,
-  VCheckbox,
-} from 'vuetify/components';
+import { VCard, VCardText, VCheckbox, VDialog, VDivider, VIcon, VSheet, } from 'vuetify/components';
 import { LogEvent } from '@/shoppinglist/events';
 import ColorJson from '@/components/ColorJson.vue';
 import { computed, ref } from 'vue';
@@ -133,7 +125,7 @@ function formatDate(iso: string): string {
 </script>
 
 
-<style scoped lang="scss">
+<style lang="scss" scoped>
 .scroll {
   overflow-y: scroll;
   height: calc(100vh - 20rem);

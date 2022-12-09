@@ -10,10 +10,10 @@
           right
         >
           New content available. Refresh page now?
-          <v-btn text color="primary" small @click="showUpdateUI = false">
+          <v-btn color="primary" small text @click="showUpdateUI = false">
             Close
           </v-btn>
-          <v-btn text color="primary" small @click="updateAndRefreshPage">
+          <v-btn color="primary" small text @click="updateAndRefreshPage">
             Refresh
           </v-btn>
         </v-snackbar>
@@ -24,7 +24,7 @@
 </template>
 
 <script lang="ts" setup>
-import { VApp, VMain, VSnackbar, VBtn } from 'vuetify/components';
+import { VApp, VBtn, VMain, VSnackbar } from 'vuetify/components';
 
 import { Workbox } from 'workbox-window';
 import feathersClient, { AuthObject } from '@/feathers-client';

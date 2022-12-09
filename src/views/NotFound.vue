@@ -1,7 +1,7 @@
 <template>
   <div
-    style="font-family: 'Poppins', sans-serif; max-width: 800px; height: calc(100vh - 63px)"
     class="d-flex justify-center align-center flex-column ma-auto"
+    style="font-family: 'Poppins', sans-serif; max-width: 800px; height: calc(100vh - 63px)"
   >
     <div class="text-center">
       <div class="header">
@@ -11,7 +11,10 @@
         Page not found.
       </div>
       <p>This page doesn't seem to exist on our servers.</p>
-      <v-btn class="mt-1" variant="outlined" color="primary" block @click="$router.push({ name: 'home' })">
+      <v-btn
+        block class="mt-1" color="primary" variant="outlined"
+        @click="$router.push({ name: 'home' })"
+      >
         Go home
       </v-btn>
     </div>
@@ -19,8 +22,7 @@
 </template>
 
 <script lang="ts" setup>
-import { VBtn } from 'vuetify/components';
-</script>
+import { VBtn } from 'vuetify/components';</script>
 
 <style lang="scss" scoped>
 .text-subtitle-1 {
