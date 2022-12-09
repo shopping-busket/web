@@ -2,24 +2,27 @@
   <div style="max-width: 800px; margin: auto" class="mt-4">
     <v-card outlined>
       <v-card-title>
-        <div v-if="shoppingList !== null">
-          {{ shoppingList.name }}
-        </div>
-        <div v-else>
-          Working on it...
-        </div>
+        <div class="d-flex align-center">
+          <div v-if="shoppingList !== null">
+            {{ shoppingList.name }}
+          </div>
+          <div v-else>
+            Working on it...
+          </div>
 
-        <v-btn icon small color="primary" @click="openLogDialog = true">
-          <v-icon small>
-            mdi-text-box
-          </v-icon>
-        </v-btn>
-
-        <v-btn icon small color="primary" @click="downloadList">
-          <v-icon small>
-            mdi-download
-          </v-icon>
-        </v-btn>
+          <v-btn
+            size="x-small" variant="text" color="primary" icon="mdi-text-box"
+            @click="openLogDialog = true"
+          />
+          <v-btn
+            size="x-small" variant="text" color="primary" icon="mdi-download"
+            @click="downloadList"
+          />
+          <v-btn
+            size="x-small" variant="text" color="primary" icon="mdi-refresh"
+            @click="loadListFromRemote"
+          />
+        </div>
       </v-card-title>
       <v-card-subtitle>
         <div v-if="shoppingList !== null">
@@ -34,12 +37,13 @@
         <v-text-field
           ref="newItemField"
           v-model="newItemName"
+          color="primary"
           placeholder="Add item"
-          outlined
-          append-icon="mdi-basket-plus-outline"
-          dense
+          variant="outlined"
+          append-inner-icon="mdi-basket-plus-outline"
+          density="comfortable"
           :rules="newItemRules"
-          @click:append="createEntry"
+          @click:append-inner="createEntry"
           @keydown.enter="createEntry"
           @blur="newItemName.length === 0 ? newItemField?.resetValidation() : null"
         />
@@ -70,10 +74,11 @@
       </div>
       <div v-else>
         <TodoList
-          label="Todo"
-          :shopping-list="shoppingList"
-          :only-show-done="false"
+          v-model="shoppingList.entries"
           class="mb-4"
+          label="Todo"
+          show-count
+          is-movable
           @clear-done="clearDone"
           @check-entry="checkEntry"
           @rename-entry="renameEntry"
@@ -81,9 +86,10 @@
         />
 
         <TodoList
+          v-model="shoppingList.checkedEntries"
           label="Done"
-          :shopping-list="shoppingList"
-          :only-show-done="true"
+          is-clearable
+          checked-state
           @clear-done="clearDone"
           @check-entry="checkEntry"
           @rename-entry="renameEntry"
@@ -110,7 +116,6 @@ import {
   VCardSubtitle,
   VCardText,
   VCardTitle,
-  VIcon,
   VSheet,
   VTextField,
   VProgressCircular,
@@ -123,7 +128,7 @@ import { onMounted, Ref, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { Route } from '@/router';
 import { useToast } from 'vue-toastification';
-import { EventType, LogEvent, LogEventListenerData } from '@/shoppinglist/events';
+import { EventData, EventType, LogEvent, LogEventListenerData } from '@/shoppinglist/events';
 
 const props = defineProps<{
   id: string | undefined,
@@ -144,105 +149,110 @@ const newItemRules = [
 ];
 const user: Ref<null | User> = ref(null);
 const connected = ref(feathersClient.io.connected);
-const events: Ref<LogEvent[]> = ref([]);
-const historicalEvents: Ref<LogEvent[]> = ref([]);
+const events: Ref<EventData[]> = ref([]);
+const historicalEvents: Ref<EventData[]> = ref([]);
 
 onMounted(async () => {
-  await connectionWatcher();
-  await registerEventListener();
+  connectionWatcher();
+  registerEventListener();
   registerSearch();
 
   events.value = loadStoredEvents();
 
-  if (!feathersClient.io.connected.value) shoppingList.value = await loadListFromCache();
-  shoppingList.value = await loadListFromRemote();
-
-  user.value = await feathersClient.get('authentication').user;
+  if (connected.value) {
+    shoppingList.value = await loadListFromRemote();
+    user.value = await feathersClient.get('authentication').user;
+  } else {
+    shoppingList.value = await loadListFromCache();
+  }
 });
 
 //region register listeners
 watch(connected, connectionWatcher);
 
-function connectionWatcher() {
+async function connectionWatcher() {
   if (feathersClient.io.connected.value) {
-    sendEventsToServer();
-    console.log('Sending events.value to server.');
+    user.value = await feathersClient.get('authentication').user;
+    await sendEventsToServer();
   }
 }
 
 function registerEventListener() {
-  feathersClient.service('event')
-    .on('created', (data: LogEventListenerData) => {
-      console.log('event shared', data);
-      const event = data.eventData;
+  feathersClient.service('event').on('created', (data: LogEventListenerData) => {
+    const event = data.eventData;
+    if (event.sender == user.value?.uuid) {
+      console.log('ignoring event because it was sent from this client');
+      return;
+    }
+    console.log('event received', data);
 
-      if (!shoppingList.value) return;
+    if (!shoppingList.value) return;
 
-      let foundEntry: IShoppingListItem | undefined;
-      let foundEntryIndex = -1;
-      shoppingList.value.entries.forEach((entry, i) => {
-        if (entry.id === event.entryId) {
-          foundEntry = entry;
-          foundEntryIndex = i;
-        }
-      });
-
-      switch (data.eventData.event) {
-        case EventType.CREATE_ENTRY:
-          if (foundEntry) return;
-
-          newItemName.value = event.state.name;
-          createEntry(false);
-          break;
-
-        case EventType.MARK_ENTRY_TODO:
-          if (!foundEntry) return;
-          if (!foundEntry.done) return;
-
-          checkEntry(event.entryId, false, false);
-          break;
-
-        case EventType.MARK_ENTRY_DONE:
-          if (!foundEntry) return;
-          if (foundEntry.done) return;
-
-          checkEntry(event.entryId, true, false);
-          break;
-
-        case EventType.CHANGED_ENTRY_NAME:
-          if (!foundEntry) return;
-          if (foundEntry.name === data.eventData.state.name) return;
-
-          renameEntry(event.entryId, data.eventData.state.name, false);
-          break;
-
-        case EventType.DELETE_ENTRY:
-          if (!foundEntry) return;
-
-          if (!shoppingList.value) return;
-          shoppingList.value.clearDone();
-          break;
-
-        case EventType.MOVE_ENTRY:
-          if (!foundEntry) return;
-          if (foundEntryIndex === event.state.newIndex) return;
-
-          if (event.state.newIndex && event.state.oldIndex) moveEntry(event.state.newIndex, event.state.oldIndex, false);
-          break;
-
-        default:
-          console.log('Couldn\'t create/edit entry. Reloading...');
-          window.location.reload();
-          break;
+    let foundEntry: IShoppingListItem | undefined;
+    let foundEntryIndex = -1;
+    shoppingList.value?.entries.forEach((entry, i) => {
+      if (entry.id === event.entryId) {
+        foundEntry = entry;
+        foundEntryIndex = i;
       }
     });
+
+    switch (data.eventData.event) {
+      case EventType.CREATE_ENTRY:
+        if (foundEntry) return;
+
+        newItemName.value = event.state.name;
+        createEntry(false);
+        break;
+
+      case EventType.MARK_ENTRY_TODO:
+        if (!foundEntry) return;
+        if (!foundEntry.done) return;
+
+        checkEntry(event.entryId, false, false);
+        break;
+
+      case EventType.MARK_ENTRY_DONE:
+        if (!foundEntry) return;
+        if (foundEntry.done) return;
+
+        checkEntry(event.entryId, true, false);
+        break;
+
+      case EventType.CHANGED_ENTRY_NAME:
+        if (!foundEntry) return;
+        if (foundEntry.name === data.eventData.state.name) return;
+
+        renameEntry(event.entryId, data.eventData.state.name, false);
+        break;
+
+      case EventType.DELETE_ENTRY:
+        if (!foundEntry) return;
+
+        if (!shoppingList.value) return;
+        shoppingList.value.clearDone();
+        break;
+
+      case EventType.MOVE_ENTRY:
+        if (!foundEntry) return;
+        if (foundEntryIndex === event.state.newIndex) return;
+
+        if (event.state.newIndex && event.state.oldIndex) moveEntry(event.state.newIndex, event.state.oldIndex, false);
+        break;
+
+      default:
+        console.log('Couldn\'t create/edit entry. Reloading...');
+        window.location.reload();
+        break;
+    }
+  });
 }
 
 function registerSearch() {
   window.addEventListener('keydown', (e) => {
     if (e.key === '/') {
       e.preventDefault();
-      console.log('shift+7 search open/close');
+      console.log('TODO: shift+7 search open/close');
       // TODO: Implement search
     }
   });
@@ -257,9 +267,8 @@ async function loadListFromRemote(): Promise<ShoppingList> {
       listNotFound();
     }) as { data: IShoppingList[] })?.data;
   if (!list) await listNotFound();
-  console.log(list[0].entries);
 
-  return new ShoppingList(list[0].name, list[0].description, list[0].owner, list[0].entries.items);
+  return new ShoppingList(list[0].name, list[0].description, list[0].owner, list[0].entries.items, list[0].checkedEntries.items);
 }
 
 async function loadListFromCache(): Promise<ShoppingList> {
@@ -273,7 +282,7 @@ async function loadListFromCache(): Promise<ShoppingList> {
   const list = (JSON.parse(lists) as Array<IShoppingList>).find((l) => l.listid === props.id);
   if (!list) throw await listNotFound();
 
-  return new ShoppingList(list.name, list.description, list.owner, list.entries.items);
+  return new ShoppingList(list.name, list.description, list.owner, list.entries.items, list.checkedEntries.items);
 }
 
 async function listNotFound() {
@@ -286,7 +295,7 @@ async function listNotFound() {
 async function clearDone(): Promise<void> {
   if (!shoppingList.value) return;
 
-  const deleted = shoppingList.value.clearDone();
+  const deleted = shoppingList.value?.clearDone();
 
 // eslint-disable-next-line no-restricted-syntax
   for (const entry of deleted) {
@@ -311,7 +320,7 @@ async function renameEntry(id: string, name: string | null = null, _recordEvent 
 
   if (name) entry.additional.editName = name;
 
-  shoppingList.value.renameItem(entry.id, entry.additional.editName);
+  shoppingList.value?.renameItem(entry.id, entry.additional.editName);
 
   if (!_recordEvent) return;
   await recordEvent({
@@ -384,10 +393,9 @@ async function checkEntry(id: string, check = true, _recordEvent = true): Promis
   if (!shoppingList.value) return;
 
   const entry = shoppingList.value?.findEntryGlobal((t) => t.id === id);
-  console.log(entry);
   if (!entry) return;
 
-  shoppingList.value.checkItem(id, check);
+  shoppingList.value?.checkItem(id, check);
 
   if (!_recordEvent) return;
   await recordEvent({
@@ -396,6 +404,7 @@ async function checkEntry(id: string, check = true, _recordEvent = true): Promis
     isoDate: (new Date()).toISOString(),
     state: {
       name: entry.name,
+      done: check,
     },
   });
 }
@@ -403,16 +412,16 @@ async function checkEntry(id: string, check = true, _recordEvent = true): Promis
 //endregion
 
 //region event service
-function loadStoredEvents(): Array<LogEvent> {
+function loadStoredEvents(): Array<EventData> {
   let ls: string | null = localStorage.getItem(`events.value-${props.id}`);
   if (!ls) return [];
 
   ls = JSON.parse(ls || '');
 
-  return ls as unknown as Array<LogEvent>;
+  return ls as unknown as Array<EventData>;
 }
 
-async function recordEvent(event: LogEvent): Promise<unknown> {
+async function recordEvent(event: EventData): Promise<unknown> {
   const stored = localStorage.getItem('lists');
   if (!stored) localStorage.setItem('lists', JSON.stringify([]));
 
@@ -434,25 +443,15 @@ async function recordEvent(event: LogEvent): Promise<unknown> {
 }
 
 async function sendEventsToServer(): Promise<unknown> {
-  interface ServerEventData {
-    listid: string,
-    eventData: {
-      event: EventType,
-      entryId: string,
-      state: {
-        name: string,
-        done?: boolean,
-      },
-      isoDate: string,
-    },
-  }
-
   console.log('Sending events.value to server.');
 
-  const data: ServerEventData[] = events.value.map((e) => ({
+  const data: LogEvent[] = events.value.map((e) => ({
     listid: props.id,
-    eventData: e,
-  } as ServerEventData));
+    eventData: {
+      ...e,
+      sender: user.value?.uuid,
+    },
+  } as LogEvent));
 
   return eventService.create(data)
     .then((d) => {
@@ -461,7 +460,7 @@ async function sendEventsToServer(): Promise<unknown> {
       localStorage.setItem(`events.value-${props.id}`, JSON.stringify(events.value));
     })
     .catch((e) => {
-      console.log('[LOG] Can\'t send events.value to server! no-connection');
+      console.log('[LOG] Can\'t send events.value to server!');
       throw e;
     });
 }
@@ -507,7 +506,6 @@ function suggestionAPICall(val: string): void {
       'cheese',
     ];
     const out = names.find((n) => n.includes(val));
-    console.log(out, val);
     if (!out) return;
     suggestedItems.value.push(out);
     suggestionLoading.value = false;

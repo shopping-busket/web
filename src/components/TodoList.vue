@@ -1,119 +1,133 @@
 <template>
   <div>
-    <div class="hr-sect mb-1">
+    <div class="d-flex">
+      <div class="hr-sect mb-1" :class="isDarkTheme ? 'text-grey hr-sect-dark': 'hr-sect-light'">
+        {{ label }} {{ getCountString(showCount) }}
+      </div>
       <v-btn
-        v-if="!onlyShowTodo" outlined color="red" x-small class="mr-2"
+        v-if="isClearable"
+        size="x-small"
+        icon="mdi-trash-can-outline"
+        variant="tonal"
+        color="red"
+        class="mr-2"
         @click="emit('clear-done')"
-      >
-        <v-icon small>
-          mdi-trash-can-outline
-        </v-icon>
-      </v-btn>
-      {{ label }} {{ getCountString(!onlyShowTodo) }}
+      />
     </div>
 
     <draggable
-      :is="draggable"
-      v-model="/* eslint-disable vue/no-mutating-props */shoppingList[onlyShowTodo ? 'entries':'checkedEntries']" :animation="0"
+      v-model="entries"
       handle=".handle"
-      ghost-class="ghost" @end="moveEntry"
+      ghost-class="ghost"
+      item-key="id"
+      @end="moveEntry"
     >
-      <transition-group type="transition" name="flip-list">
-        <div
-          v-for="entry in shoppingList[onlyShowTodo ? 'entries' : 'checkedEntries']"
-          :key="entry.id"
+      <template #item="{element}">
+        <v-card
+          variant="tonal"
+          class="pa-2 mt-2 d-flex flex-row"
+          style="align-items: center"
+          :class="{'entry-focus': element.additional.focused}"
+          @click="focusEntry(element.id)"
         >
-          <v-card
-            v-click-outside="blurEntry"
-            outlined
-            rounded
-            class="d-flex flex-row align-center pa-2 mt-2"
-            :class="{'entry-focus': entry.additional.focused}"
-            @click="focusEntry(entry.id)"
-          >
-            <v-checkbox
-              dense class="ma-0 pa-0" style="height: 24px" :input-value="!onlyShowTodo"
-              @click="emit('check-entry', entry.id, onlyShowTodo)"
-              @keydown.enter="emit('check-entry', entry.id, onlyShowTodo)"
-            />
-            <v-text-field
-              v-if="entry.additional.edit"
-              v-model="entry.additional.editName"
-              outlined
-              dense
-              color="primary"
-              label="Name"
-              hide-details
-              autofocus
-              @keydown.enter="emit('rename-entry', entry.id)"
-              @keydown.esc="entry.additional.edit = false; entry.additional.editName = entry.name"
-            />
-            <div v-else @dblclick="entry.additional.edit = true">
-              {{ entry.name }}
-            </div>
+          <v-checkbox-btn
+            density="comfortable"
+            :model-value="checkedState"
+            @click="emit('check-entry', element.id, !checkedState)"
+            @keydown.enter="emit('check-entry', element.id, !checkedState)"
+          />
+          <v-text-field
+            v-if="element.additional.edit"
+            v-model="element.additional.editName"
+            variant="outlined"
+            density="compact"
+            color="primary"
+            label="Name"
+            hide-details
+            autofocus
+            @keydown.enter="emit('rename-entry', element.id)"
+            @keydown.esc="element.additional.edit = false; element.additional.editName = element.name"
+          />
+          <div v-else @dblclick="element.additional.edit = true">
+            {{ element.name }}
+          </div>
+          <v-btn
+            v-if="element.additional.editName === element.name"
+            size="x-small"
+            variant="text"
+            :icon="element.additional.edit ? 'mdi-pencil-outline' : 'mdi-pencil'"
+            @click="element.additional.edit = !element.additional.edit"
+          />
+          <div v-else>
             <v-btn
-              v-if="entry.additional.editName === entry.name" icon small
-              @click="entry.additional.edit = !entry.additional.edit"
+              icon
+              small
+              @click="emit('rename-entry', element.id)"
+              @keydown.enter="emit('rename-entry', element.id)"
             >
               <v-icon small>
-                {{
-                  entry.additional.edit ? 'mdi-pencil-outline' : 'mdi-pencil'
-                }}
+                mdi-content-save
               </v-icon>
             </v-btn>
-            <div v-else>
-              <v-btn
-                icon
-                small
-                @click="emit('rename-entry', entry.id)"
-                @keydown.enter="emit('rename-entry', entry.id)"
-              >
-                <v-icon small>
-                  mdi-content-save
-                </v-icon>
-              </v-btn>
-              <v-btn
-                icon
-                small
-                @click="entry.additional.edit = false; entry.additional.editName = entry.name;"
-              >
-                <v-icon small>
-                  mdi-close
-                </v-icon>
-              </v-btn>
-            </div>
-            <v-spacer />
-            <v-icon v-if="onlyShowTodo" small class="handle cursor-move">
-              mdi-menu
-            </v-icon>
-          </v-card>
-        </div>
-      </transition-group>
+            <v-btn
+              icon
+              small
+              @click="element.additional.edit = false; element.additional.editName = element.name;"
+            >
+              <v-icon small>
+                mdi-close
+              </v-icon>
+            </v-btn>
+          </div>
+          <v-spacer />
+          <v-icon v-if="isMovable" size="small" class="handle cursor-move">
+            mdi-menu
+          </v-icon>
+        </v-card>
+      </template>
     </draggable>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { VBtn, VCard, VCheckbox, VIcon, VTextField, } from 'vuetify/components';
-import draggable from 'vuedraggable';
-import ShoppingList from '@/shoppinglist/ShoppingList';
+import { VBtn, VCard, VCheckboxBtn, VIcon, VTextField, VSpacer } from 'vuetify/components';
+import Draggable from 'vuedraggable';
+import { ShoppingListItem } from '@/shoppinglist/ShoppingList';
 import config from '../../config';
+import { computed, ref, watch } from 'vue';
+import { useTheme } from 'vuetify';
 
 const props = withDefaults(defineProps<{
-  shoppingList: ShoppingList,
+  modelValue: ShoppingListItem[],
   label: string,
-  onlyShowTodo?: boolean,
+  showCount?: boolean,
+  checkedState?: boolean,
+  isMovable?: boolean,
+  isClearable?: boolean,
 }>(), {
-  onlyShowTodo: false,
+  showCount: false,
+  checkedState: false,
+  isMovable: true,
+  isClearable: false,
 });
 
 const emit = defineEmits<{
+  (e: 'update:modelValue', value: ShoppingListItem[]): void,
   (e: 'clear-done'): void
   (e: 'check-entry', id: string, done: boolean): void
   (e: 'rename-entry', id: string): void
   (e: 'move-entry', newDraggableIndex: number, oldDraggableIndex: number): void
 }>();
 
+const entries = computed({
+  get() {
+    return props.modelValue;
+  },
+
+  set(value: ShoppingListItem[]) {
+    return emit('update:modelValue', value);
+  }
+});
 // TODO: Focusing/Blurring in onMounted()
 // window.addEventListener('click', (e) => {
 //   const focused = this.shoppingList?.items?.find((t) => t.additional.focused);
@@ -127,6 +141,15 @@ const emit = defineEmits<{
 //   }
 // });
 
+const theme = useTheme();
+const isDarkTheme = ref(false);
+
+watch(theme.global.name, themeWatcher);
+
+function themeWatcher() {
+  isDarkTheme.value = theme.global.name.value === 'darkTheme';
+}
+
 function moveEntry(e: { newDraggableIndex: number, oldDraggableIndex: number }): void {
   // Return if entry wasn't moved
   if (e.newDraggableIndex === e.oldDraggableIndex) return;
@@ -134,7 +157,7 @@ function moveEntry(e: { newDraggableIndex: number, oldDraggableIndex: number }):
 }
 
 function getCountString(done: boolean): string {
-  const count = props.shoppingList?.entries.filter((t) => t.done === done).length;
+  const count = entries.value.filter((t) => t.done === done).length;
 
   if (count === 0) return '';
   return ` ― ${count}`;
@@ -144,15 +167,15 @@ function focusEntry(id: string): void {
   // TODO: Make it possible to focus entries
   if (!config.supportFocus) return;
 
-  const entry = props.shoppingList?.entries.find((t) => t.id === id);
+  const entry = entries.value.find((t) => t.id === id);
   if (!entry) return;
 
   entry.additional.focused = true;
 }
 
-function blurEntry(): void {
+/*function blurEntry(): void {
   // TODO: Make it possible to blur entries
-}
+}*/
 </script>
 
 <style lang="scss" scoped>
@@ -160,19 +183,25 @@ function blurEntry(): void {
   display: flex;
   flex-basis: 100%;
   align-items: center;
-  color: rgba(0, 0, 0, 0.35);
   margin-left: 5px;
   font-variant: all-small-caps;
 
   &:after {
     content: "";
     flex-grow: 1;
-    background: rgba(0, 0, 0, 0.35);
     height: 1px;
     font-size: 0;
     line-height: 0;
     margin: 0 8px;
   }
+}
+
+.hr-sect-light:after {
+  background: rgba(0, 0, 0, 0.35) !important;
+}
+
+.hr-sect-dark:after {
+  background: rgba(255, 255, 255, 0.35) !important;
 }
 
 .entry-focus {

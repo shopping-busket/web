@@ -1,6 +1,14 @@
 <template>
   <div class="ma-auto mt-4" style="max-width: 70rem">
-    <v-card v-for="item in lists" :key="item.listid" ripple hover variant="flat" class="mb-2 v-ripple" @click="openList(item.listid)">
+    <v-card
+      v-for="item in lists"
+      :key="item.listid"
+      :ripple="true"
+      hover
+      variant="flat"
+      class="mb-2 v-ripple"
+      @click="openList(item.listid)"
+    >
       <v-list-item :title="item.name" :subtitle="item.description">
         <template #append>
           <v-icon
@@ -12,7 +20,9 @@
       </v-list-item>
     </v-card>
     <v-card
-      outlined ripple hover
+      outlined
+      :ripple="true"
+      hover
       class="d-flex justify-center flex-column align-center new-list-card"
       @click="feathersClient.io.connected ? newListDialog = true : toast('You are offline!')"
     >
@@ -32,7 +42,7 @@
         </v-card-subtitle>
 
         <v-card-text class="mt-1">
-          <v-form ref="newListForm" v-model="incorrectEntries">
+          <v-form ref="newListForm" v-model="incorrectEntries" @submit.stop="createList()">
             <v-text-field
               v-model="newList.name" label="Name"
               variant="outlined"
@@ -276,7 +286,12 @@ async function createList(): Promise<void> {
     name,
     description,
     owner: auth.value?.user.uuid,
-    entries: {},
+    entries: {
+      items: [],
+    },
+    checkedEntries: {
+      items: [],
+    },
   };
 
   newList.value.name = '';

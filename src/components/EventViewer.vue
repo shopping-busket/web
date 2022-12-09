@@ -1,6 +1,6 @@
 <template>
   <v-dialog v-model="model" max-width="850px" class="pa-2">
-    <v-card title="{{ listName }} Log" subtitle="View the log of this list.">
+    <v-card :title="`Log of list '${listName}'`" subtitle="View the log of this list.">
       <v-card-text>
         <div class="mb-1 d-flex flex-row">
           <v-checkbox v-model="showISO" label="Show ISO string" />
