@@ -160,8 +160,9 @@ function moveEntry(e: { newDraggableIndex: number, oldDraggableIndex: number }):
   emit('move-entry', e.newDraggableIndex, e.oldDraggableIndex);
 }
 
-function getCountString(done: boolean): string {
-  const count = entries.value.filter((t) => t.done === done).length;
+function getCountString(showCount = true): string {
+  let count = entries.value.length;
+  if (!showCount) count = 0;
 
   if (count === 0) return '';
   return ` ― ${count}`;

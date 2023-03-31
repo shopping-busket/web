@@ -295,7 +295,6 @@ async function clearDone(): Promise<void> {
       isoDate: (new Date()).toISOString(),
       state: {
         name: entry.name,
-        done: true,
       },
     });
   }
@@ -318,7 +317,6 @@ async function renameEntry(id: string, name: string | null = null, _recordEvent 
     isoDate: (new Date()).toISOString(),
     state: {
       name: entry.name,
-      done: entry.done,
     },
   });
 }
@@ -340,7 +338,6 @@ async function moveEntry(index: number, oldIndex: number, _recordEvent = true, m
     isoDate: (new Date()).toISOString(),
     state: {
       name: entry.name,
-      done: entry.done,
       oldIndex,
       newIndex: index,
     },
@@ -379,7 +376,6 @@ async function createEntry(_recordEvent = true): Promise<void> {
     isoDate: (new Date()).toISOString(),
     state: {
       name: item.name,
-      done: item.done,
     },
   });
 }
@@ -399,7 +395,6 @@ async function checkEntry(id: string, check = true, _recordEvent = true): Promis
     isoDate: (new Date()).toISOString(),
     state: {
       name: entry.name,
-      done: check,
     },
   });
 }
