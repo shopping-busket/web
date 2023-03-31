@@ -2,14 +2,17 @@
   <v-dialog v-model="model" class="pa-2" max-width="850px">
     <v-card :title="`Log of list '${listName}'`" subtitle="View the log of this list.">
       <v-card-text>
-        <div class="mb-1 d-flex flex-row">
-          <v-checkbox v-model="showISO" label="Show ISO string" />
-          <v-checkbox v-model="showIndexNumber" class="ml-5" label="Index" />
-          <v-checkbox v-model="showIcons" class="ml-5" label="Icons" />
+        <div class="mb-8 d-flex flex-row flex-wrap checkbox-wrapper">
+          <v-checkbox v-model="displayIndexNumber" class="" label="Index" />
+          <v-checkbox v-model="displayIcons" class="ml-5" label="Icons" />
           <v-checkbox v-model="colorCode" class="ml-5" label="Color" />
-          <v-checkbox v-model="wrapContent" class="ml-5" label="Wrap" />
-          <v-checkbox v-model="hideId" class="ml-5" label="Hide id" />
           <v-checkbox v-model="logToConsole" class="ml-5" label="Console log" />
+          <v-checkbox v-model="wrapContent" class="ml-5" style="width: 20rem" label="Wrap" />
+          <v-checkbox v-model="displayISO" class="" label="Show ISO string" />
+          <v-checkbox v-model="displayId" class="ml-5" label="Show ID" />
+          <v-checkbox v-model="displayDate" class="ml-5" label="Show Date" />
+          <v-checkbox v-model="displayJSON" class="ml-5" label="Show JSON" />
+          <v-checkbox v-model="displaySender" class="ml-5" label="Show Sender" />
         </div>
 
         <v-sheet
@@ -23,9 +26,9 @@
             No log available. Try reloading or changing something.
           </div>
           <div v-for="(event, i) in events.slice().reverse() as EventData[]" :key="i">
-            <span v-if="showIndexNumber" class="gray mr-1">[{{ events.length - i }}]</span>
+            <span v-if="displayIndexNumber" class="gray mr-1">[{{ events.length - i }}]</span>
             <v-icon
-              v-if="showIcons"
+              v-if="displayIcons"
               :color="colorCode ? map[event.event].color : ''"
               class="mr-1"
               small
@@ -35,16 +38,21 @@
             <span :style="{ color: colorCode ? map[event.event].color : 'inherit' }" class="mr-1">
               {{ event.event }}
             </span>
-            <span :class="colorCode ? 'state mr-1' : 'mr-1'">
+            <span v-if="displayJSON" :class="colorCode ? 'state mr-1' : 'mr-1'">
               <ColorJson :is="ColorJson" v-if="colorCode" :input="JSON.stringify(event.state)" />
               <span v-else>{{ JSON.stringify(event.state) }}</span>
             </span>
-            <span v-if="!hideId" :class="colorCode ? 'itemId mr-1' : 'mr-1'">{{ event.entryId }}</span>
-            <span :class="colorCode ? 'at mr-1' : 'mr-1'">at</span>
+            <span v-if="displayId" :class="colorCode ? 'itemId mr-1' : 'mr-1'">{{ event.entryId }}</span>
+
+            <span v-if="displayISO || displayDate" :class="colorCode ? 'at mr-1' : 'mr-1'">at</span>
             <span v-if="event.isoDate" :class="{ 'date': colorCode }">
-              {{ showISO ? event.isoDate : '' }}
-              ({{ formatDate(event.isoDate) }})
+              {{ displayISO ? event.isoDate : '' }}
+              {{ displayDate ? `(${formatDate(event.isoDate)})` : '' }}
             </span>
+
+            <span v-if="displaySender" :class="colorCode ? 'at mr-1' : 'mr-1'">by</span>
+            <span v-if="displaySender" :class="{ 'sender': colorCode }">{{ event.sender }}</span>
+
             <v-divider />
           </div>
         </v-sheet>
@@ -58,6 +66,7 @@ import { VCard, VCardText, VCheckbox, VDialog, VDivider, VIcon, VSheet, } from '
 import { EventData } from '@/shoppinglist/events';
 import ColorJson from '@/components/ColorJson.vue';
 import { computed, ref } from 'vue';
+import feathersClient from '@/feathers-client';
 
 const props = defineProps<{
   modelValue: boolean,
@@ -76,12 +85,15 @@ const model = computed({
 });
 
 const logToConsole = ref(false);
-const showISO = ref(false);
-const showIndexNumber = ref(true);
-const showIcons = ref(true);
+const displayISO = ref(false);
+const displayIndexNumber = ref(true);
+const displayIcons = ref(true);
 const colorCode = ref(true);
 const wrapContent = ref(false);
-const hideId = ref(false);
+const displayId = ref(true);
+const displayDate = ref(true);
+const displayJSON = ref(true);
+const displaySender = ref(true);
 const map = {
   /* 1 */
   MOVE_ENTRY: {
@@ -120,6 +132,16 @@ function formatDate(iso: string): string {
   const d = new Date(iso);
   return `${fmt(d.getMonth())}/${fmt(d.getDay())}/${d.getFullYear()} ${fmt(d.getHours())}:${fmt(d.getMinutes())}:${fmt(d.getSeconds())}`;
 }
+
+async function getSenderNameById(id: string): Promise<void> {
+  const data = await feathersClient.service('users').find({
+    query: {
+      uuid: id,
+    },
+  });
+
+  console.log(data);
+}
 </script>
 
 
@@ -143,5 +165,10 @@ function formatDate(iso: string): string {
 //noinspection CssUnusedSymbol
 .date, .itemId {
   color: #625b83;
+}
+
+.checkbox-wrapper>div {
+  height: 3.5rem;
+  margin-bottom: -1.5rem;
 }
 </style>

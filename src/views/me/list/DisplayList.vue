@@ -186,11 +186,11 @@ function registerEventListener() {
       console.log('ignoring event because it was sent from this client');
       return;
     }
-    console.log('event received', data);
+
+    historicalEvents.value.push(data.eventData);
 
     if (!shoppingList.value) return;
     const entry = shoppingList.value?.findEntryGlobal((value) => value.id === event.entryId);
-    console.log('entry (event): ', entry);
     if (!entry) return;
 
     switch (data.eventData.event) {
