@@ -1,41 +1,44 @@
 <template>
-  <span ref="content"></span>
+  <span ref="content" />
 </template>
 
-<script lang="ts">
+<script lang="ts" setup>
+import { onMounted, Ref, ref } from 'vue';
 
-import {
-  Component,
-  Prop,
-  Vue,
-} from 'vue-property-decorator';
+enum TokenColors {
+  BOOLEAN = 'rgb(170,177,190)',
+  STRING = '#97c278',
+  NULL = '#c577dc',
+  DEFAULT = '#cc9865',
+}
 
-@Component
-export default class ColorJson extends Vue {
-  @Prop({ required: true, type: String }) private input: string | undefined;
+const props = defineProps<{
+  input: string;
+}>();
 
-  mounted (): void {
-    if (!this.input) return;
-    (this.$refs.content as HTMLSpanElement).innerHTML = this.syntaxHighlight(this.input);
-  }
+const content: Ref<HTMLSpanElement | null> = ref(null);
 
-  syntaxHighlight (inp: string): string {
-    const json = inp.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, (match) => {
-      let stl = '#cc9865';
-      if (/^"/.test(match)) {
-        if (/:$/.test(match)) {
-          stl = 'rgb(170,177,190)'; // bool
-        } else {
-          stl = '#97c278'; // string
-        }
-      } else if (/true|false/.test(match)) {
-        stl = '#c577dc'; // bool
-      } else if (/null/.test(match)) {
-        stl = '#c577dc'; // null
+onMounted(() => {
+  if (!content.value) return;
+  content.value.innerHTML = syntaxHighlight(props.input);
+});
+
+function syntaxHighlight(inp: string) {
+  const json = inp.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, (match) => {
+    let stl = TokenColors.DEFAULT;
+    if (/^"/.test(match)) {
+      if (/:$/.test(match)) {
+        stl = TokenColors.BOOLEAN;
+      } else {
+        stl = TokenColors.STRING;
       }
-      return `<span style="color: ${stl} !important;">${match}</span>`;
-    });
-  }
+    } else if (/true|false/.test(match)) {
+      stl = TokenColors.BOOLEAN;
+    } else if (/null/.test(match)) {
+      stl = TokenColors.NULL;
+    }
+    return `<span style="color: ${stl} !important;">${match}</span>`;
+  });
 }
 </script>

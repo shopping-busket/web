@@ -1,126 +1,129 @@
 <template>
-  <div style="height: 100vh">
+  <div style="height: 100%">
     <v-navigation-drawer
-      app
       v-model="drawer"
+      :rail="mini"
       :temporary="!permDrawer"
-      :permanent="permDrawer"
-      :mini-variant.sync="mini"
+      app
+      expand-on-hover
     >
-      <v-list-item class="px-2">
-        <v-list-item-avatar>
-          <v-img :src="gravatar(auth.user.email)"
-                 v-if="auth && auth.user && auth.user.email"></v-img>
-          <v-img src="@/assets/avatar-placeholder.png" v-else></v-img>
-        </v-list-item-avatar>
-
-        <v-list-item-title>
-          <div v-if="!!auth">
-            {{ auth.user.fullName }}
-            <v-icon color="red" @click="logOut" title="Logout" small>mdi-logout-variant</v-icon>
-          </div>
-          <div class="skeleton" title="Loading..." aria-placeholder="Loading..." v-else></div>
-        </v-list-item-title>
-
-        <v-btn
-          icon
-          @click.stop="drawer = !drawer"
-          v-if="!permDrawer"
-        >
-          <v-icon>mdi-chevron-left</v-icon>
-        </v-btn>
-        <v-btn
-          icon
-          @click.stop="mini = !mini"
-          v-else
-        >
-          <v-icon>mdi-chevron-left</v-icon>
-        </v-btn>
+      <v-list-item
+        :prepend-avatar="auth != null ? gravatar(auth.user.email) : img"
+        :title="auth == null ? 'Not logged in' : auth?.user?.fullName"
+        class="{'my-1': drawerdsaduhasdhuashudashu}"
+        nav
+      >
+        <template #append>
+          <v-btn
+            v-if="!permDrawer"
+            icon="mdi-chevron-left"
+            variant="text"
+            @click.stop="drawer = !drawer"
+          />
+        </template>
       </v-list-item>
 
-      <v-divider></v-divider>
+      <v-divider />
 
       <v-list nav>
         <v-list-item
-          v-for="item in items.filter((it) => !it.divide)"
+          v-for="item in menuItems.filter((it) => !it.divide)"
           :key="item.title"
           link
           @click.stop="item.to === undefined ? item.click() : tryRouteTo(item.to)"
         >
-          <v-list-item-icon>
-            <v-icon>{{ item.icon }}</v-icon>
-          </v-list-item-icon>
+          <template #prepend>
+            <v-icon :icon="item.icon" />
+          </template>
 
-          <v-list-item-content>
+          <v-list-item>
             <v-list-item-title>{{ item.title }}</v-list-item-title>
-          </v-list-item-content>
+          </v-list-item>
         </v-list-item>
       </v-list>
 
-      <div class="primary pa-2 white--text" v-show="showInstallable">
+      <div v-show="showInstallable" class="primary pa-2 white--text">
         <span class="pb-4">You want to use Busket when you are offline without having to open your Browser?</span>
-        <v-btn outlined color="white" small rounded block @click="installApp" class="mt-2">Sure!
+        <v-btn block class="mt-2" color="white" outlined rounded small @click="installApp">
+          Sure!
         </v-btn>
-        <span class="white--text opacity text-decoration-underline cursor-pointer"
-              @click="showInstallable = false">Don't show me this again!</span>
+        <span
+          class="white--text opacity text-decoration-underline cursor-pointer"
+          @click="showInstallable = false"
+        >Don't show me this again!</span>
       </div>
 
-      <template v-slot:append>
-        <v-divider/>
+      <template #append>
+        <v-divider />
         <v-list nav>
           <v-list-item
-            v-for="item in items.filter((it) => it.divide)"
+            v-for="item in menuItems.filter((it) => it.divide)"
             :key="item.title"
             link
-            @click.stop="item.to === undefined ? item.click() : tryRouteTo(item.to)"
+            @click.stop="item.to == null ? clickItemAsync(item) : tryRouteTo(item.to)"
           >
-            <v-list-item-icon>
-              <v-icon>{{ item.icon }}</v-icon>
-            </v-list-item-icon>
+            <template #prepend>
+              <v-icon :icon="item.icon" />
+            </template>
 
-            <v-list-item-content>
-              <v-list-item-title>{{ item.title }}</v-list-item-title>
-            </v-list-item-content>
+            <v-list-item-title>{{ item.title }}</v-list-item-title>
           </v-list-item>
         </v-list>
       </template>
     </v-navigation-drawer>
 
     <v-app-bar
-      :color="appbarColor"
+      :color="props.appbarColor"
+      class="pl-3"
       dark
     >
-      <div v-if="permDrawer">
-        <v-icon @click="mini = false" class="mr-2" v-if="mini">mdi-chevron-right</v-icon>
-        <v-icon @click="mini = true" class="mr-2" v-else>mdi-chevron-left</v-icon>
-      </div>
-      <div v-else>
-        <v-app-bar-nav-icon @click="drawer = true" class="mr-1"></v-app-bar-nav-icon>
+      <div v-if="!permDrawer">
+        <v-app-bar-nav-icon class="mr-1" @click="drawer = true" />
       </div>
 
       <v-toolbar-title>Busket</v-toolbar-title>
-      <v-spacer></v-spacer>
+      <v-spacer />
       <v-fade-transition>
         <div v-show="!feathersClient.io.connected" class="mr-3">
-          <div class="fake-btn">(Offline)</div>
+          <div class="fake-btn">
+            Offline
+          </div>
         </div>
       </v-fade-transition>
     </v-app-bar>
 
-    <slot></slot>
+    <slot />
   </div>
 </template>
 
-<script lang="ts">
+<script lang="ts" setup>
 import {
-  Component,
-  Prop,
-  Vue,
-  Watch,
-} from 'vue-property-decorator';
-import { RawLocation } from 'vue-router';
+  VAppBar,
+  VAppBarNavIcon,
+  VBtn,
+  VDivider,
+  VFadeTransition,
+  VIcon,
+  VList,
+  VListItem,
+  VListItemTitle,
+  VNavigationDrawer,
+  VSpacer,
+  VToolbarTitle,
+} from 'vuetify/components';
+
+import { LocationQueryRaw, useRoute, useRouter } from 'vue-router';
 import { Md5 } from 'ts-md5';
 import feathersClient, { AuthObject } from '@/feathers-client';
+import { onMounted, Ref, ref, watch } from 'vue';
+import { useToast } from 'vue-toastification';
+import img from '@/assets/avatar-placeholder.png';
+
+const props = withDefaults(defineProps<{
+  appbarColor?: string
+}>(), {
+  appbarColor: 'primary',
+});
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -129,131 +132,147 @@ interface BeforeInstallPromptEvent extends Event {
     platform: string;
   }>;
 
-  prompt (): Promise<void>;
+  prompt(): Promise<void>;
 }
 
-export interface Item {
+interface MenuItem {
   title: string,
   icon: string,
-  to?: RawLocation,
-  click?: () => void,
+  to?: LocationQueryRaw,
+  click?: () => void | Promise<void>,
   divide?: boolean,
 }
 
-@Component({})
-export default class MainContainer extends Vue {
-  @Prop({ required: false, default: 'primary' }) private appbarColor: undefined | string;
-  protected baseItems: Item[] = [
-    { title: 'Home', icon: 'mdi-home-city', to: { name: 'home' } },
-    { title: 'My lists', icon: 'mdi-clipboard-list-outline', to: { name: 'my lists' } },
-    { title: 'About', icon: 'mdi-information-outline', to: { name: 'about' } },
-    { title: 'Github', icon: 'mdi-github', to: { name: 'github' } },
-  ];
-  protected items: Item[] = [];
-  private drawer = false;
-  private permDrawer = false;
-  private mini = false;
-  private auth: AuthObject | null = null;
-  private installPrompt: BeforeInstallPromptEvent | null = null;
-  private showInstallable = false;
-  private feathersClient = feathersClient;
+const baseMenuItems = [
+  {
+    title: 'Home',
+    icon: 'mdi-home-city',
+    to: { name: 'home' }
+  },
+  {
+    title: 'My lists',
+    icon: 'mdi-clipboard-list-outline',
+    to: { name: 'my lists' }
+  },
+  {
+    title: 'Github',
+    icon: 'mdi-github',
+    to: { name: 'github' }
+  },
+];
 
-  async mounted (): Promise<void> {
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      this.installPrompt = e as unknown as BeforeInstallPromptEvent;
-      this.showInstallable = true;
+const route = useRoute();
+const router = useRouter();
+const toast = useToast();
+
+const menuItems: MenuItem[] = [];
+const drawer = ref(false);
+const permDrawer = ref(false);
+const mini = ref(false);
+
+const auth: Ref<AuthObject | null> = ref(null);
+let installPrompt: BeforeInstallPromptEvent | null = null;
+let showInstallable = false;
+
+onMounted(() => {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    installPrompt = e as unknown as BeforeInstallPromptEvent;
+    showInstallable = true;
+  });
+
+  setTimeout(async () => {
+    auth.value = await feathersClient.get('authentication');
+  }, 500);
+
+  menuItems.push(...baseMenuItems);
+  menuItems.push({
+    title: 'Log in',
+    icon: 'mdi-login-variant',
+    to: { name: 'login' },
+    divide: true,
+  });
+});
+
+function gravatar(email: string): string {
+  const defaultImg = window.location.origin.includes('localhost') ? 'identicon' : encodeURIComponent(`${window.location.origin}/avatar-placeholder.png`);
+  return `https://www.gravatar.com/avatar/${Md5.hashStr(email.toLowerCase()
+    .trim())}?d=${defaultImg}`;
+}
+
+async function installApp(): Promise<void> {
+  if (!installPrompt) return;
+
+  await installPrompt.prompt();
+  const { outcome } = await installPrompt.userChoice;
+
+  installPrompt = null;
+  showInstallable = false;
+
+  if (outcome) toast('Thanks for installing Busket!');
+}
+
+async function logOut(): Promise<void> {
+  if (await feathersClient.get('authentication') === null) {
+    toast('Can\'t log out. Not logged in.');
+    return;
+  }
+  feathersClient.authentication.logout()
+    .then(() => {
+      toast('Logged out successfully.');
+      window.location.reload();
     });
+}
 
-    setTimeout(async () => {
-      this.auth = await feathersClient.get('authentication');
-    }, 500);
+function tryRouteTo(loc: LocationQueryRaw): Promise<void> | void {
+  const matchedLoc = router.resolve(loc);
+  if (route.name === matchedLoc.name || route.path === matchedLoc.path) return;
+  router.push(loc);
+}
 
-    this.items.push(...this.baseItems);
-    this.items.push({
+async function clickItemAsync(item: MenuItem) {
+  if (item.click) await item.click();
+}
+
+watch(auth, () => {
+  console.log('watch', auth, !auth.value, !!auth.value);
+
+  menuItems.length = 0;
+  menuItems.push(...baseMenuItems);
+
+  if (auth.value == null) {
+    menuItems.push({
       title: 'Log in',
       icon: 'mdi-login-variant',
       to: { name: 'login' },
       divide: true,
     });
+    return;
+  }
+  if (auth.value.user.prefersMiniDrawer) {
+    permDrawer.value = true;
+    mini.value = true;
   }
 
-  gravatar (email: string): string {
-    console.log('gravatar', email);
+  menuItems.push({
+    title: 'Preferences',
+    icon: 'mdi-account-cog',
+    to: { name: 'preferences' },
+    divide: true,
+  }, {
+    title: 'Logout',
+    icon: 'mdi-logout-variant',
+    click: logOut,
+    divide: true,
+  });
+});
 
-    const defaultImg = window.location.origin.includes('localhost') ? 'identicon' : encodeURIComponent(`${window.location.origin}/avatar-placeholder.png`);
-    return `https://www.gravatar.com/avatar/${Md5.hashStr(email.toLowerCase().trim())}?d=${defaultImg}`;
-  }
-
-  async installApp (): Promise<void> {
-    if (!this.installPrompt) return;
-
-    await this.installPrompt.prompt();
-    const { outcome } = await this.installPrompt.userChoice;
-
-    this.installPrompt = null;
-    this.showInstallable = false;
-
-    console.log('User choice: ', outcome);
-    if (outcome) {
-      this.$toast('Thanks for installing Busket!');
-    }
-  }
-
-  @Watch('auth')
-  authWatcher (): void {
-    console.log('watch', this.auth, !this.auth, !!this.auth);
-
-    this.items = [];
-    this.items.push(...this.baseItems);
-
-    if (!this.auth) {
-      this.items.push({
-        title: 'Log in',
-        icon: 'mdi-login-variant',
-        to: { name: 'login' },
-        divide: true,
-      });
-      return;
-    }
-    if (this.auth.user.prefersMiniDrawer) {
-      this.permDrawer = true;
-      this.mini = true;
-    }
-
-    this.items.push({
-      title: 'Preferences',
-      icon: 'mdi-account-cog',
-      to: { name: 'preferences' },
-      divide: true,
-    });
-  }
-
-  @Watch('permDrawer')
-  watchPermDrawer (): void {
-    if (!this.permDrawer) this.mini = false;
-  }
-
-  async logOut (): Promise<void> {
-    if (await feathersClient.get('authentication') === null) {
-      this.$toast('Can\'t log out. Not logged in.');
-      return;
-    }
-    feathersClient.authentication.logout().then(() => {
-      this.$toast('Logged out successfully.');
-      window.location.reload();
-    });
-  }
-
-  tryRouteTo (loc: RawLocation): Promise<void> | void {
-    const matchedLoc = this.$router.match(loc);
-    if (this.$route.name === matchedLoc.name || this.$route.path === matchedLoc.path) return;
-    this.$router.push(loc);
-  }
-}
+watch(permDrawer, () => {
+  if (!permDrawer.value) mini.value = false;
+});
 </script>
 
-<style scoped lang="scss">
+<style lang="scss" scoped>
 $dark: #cccccc;
 $white: #e8e8e8;
 

@@ -1,101 +1,112 @@
-import Vue from 'vue';
-import VueRouter, { RouteConfig } from 'vue-router';
-import Home from '@/views/Home.vue';
-import feathersClient from '@/feathers-client';
-import EventBus from '@/eventbus';
+import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
+import feathersClient, { FeathersError } from '@/feathers-client';
 
-Vue.use(VueRouter);
+type RouteRecordRawWithMeta = RouteRecordRaw & {
+  meta?: {
+    requiresAuth?: boolean,
+  },
+}
 
-const routes: Array<RouteConfig> = [
+export enum Route {
+  SIGNUP = 'signup',
+  LOGIN = 'login',
+  MY_LISTS = 'my lists',
+  LIST_NOT_FOUND = 'list not found',
+  DISPLAY_LIST = 'display list',
+  PREFERENCES = 'preferences',
+  HOME = 'home',
+  NOT_FOUND = 'not found',
+}
+
+const routes: Array<RouteRecordRawWithMeta> = [
+  //region authentication
+  {
+    path: '/signup',
+    name: Route.SIGNUP,
+    meta: {
+      requiresAuth: false,
+    },
+    component: () => import('../views/auth/SignupPage.vue'),
+  },
+  {
+    path: '/login',
+    name: Route.LOGIN,
+    meta: {
+      requiresAuth: false,
+    },
+    component: () => import('../views/auth/LoginPage.vue'),
+  },
+  //endregion authentication
+
+  //region lists
+  {
+    path: '/me/list/:id/not-found',
+    name: Route.LIST_NOT_FOUND,
+    props: true,
+    component: () => import('../views/me/list/ListNotFound.vue'),
+  },
   {
     path: '/me/list/:id',
-    name: 'list details',
+    name: Route.DISPLAY_LIST,
     props: true,
     meta: {
       requiresAuth: true,
     },
-    component: () => import(/* webpackChunkName: "List details" */ '@/views/Me/List/Details.vue'),
+    component: () => import('@/views/Me/List/DisplayList.vue'),
+  },
+  {
+    path: '/me/lists/:id',
+    redirect: (to) => ({
+      name: Route.DISPLAY_LIST,
+      params: to.params,
+    }),
   },
   {
     path: '/me/lists',
-    name: 'my lists',
+    name: Route.MY_LISTS,
     meta: {
       requiresAuth: true,
     },
-    component: () => import(/* webpackChunkName: "My lists" */ '@/views/Me/List/MyLists.vue'),
+    component: () => import('../views/me/list/MyLists.vue'),
   },
   {
     path: '/me/list',
-    redirect: { name: 'my lists' },
+    redirect: { name: Route.MY_LISTS },
   },
+  //endregion
+
+  //region user
   {
-    path: '/signup',
-    name: 'signup',
-    meta: {
-      requiresAuth: false,
-    },
-    component: () => import(/* webpackChunkName: "SignupPage" */ '@/views/Auth/SignupPage.vue'),
-  },
-  {
-    path: '/login',
-    name: 'login',
-    meta: {
-      requiresAuth: false,
-    },
-    component: () => import(/* webpackChunkName: "ColorPalette" */ '@/views/Auth/LoginPage.vue'),
+    path: '/me/settings',
+    redirect: { name: Route.PREFERENCES },
   },
   {
     path: '/me/preferences',
-    name: 'preferences',
+    name: Route.PREFERENCES,
     meta: {
-      requiresAuth: false,
+      requiresAuth: true,
     },
-    component: () => import(/* webpackChunkName: "Preferences" */ '@/views/Me/Preferences.vue'), // TODO: Actually make prefs
+    component: () => import('../views/me/UserPreferences.vue'),
   },
-  {
-    path: '/about',
-    name: 'about',
-    meta: {
-      requiresAuth: false,
-    },
-    component: () => import(/* webpackChunkName: "ColorPalette" */ '@/views/About.vue'), // TODO: Actually make about
-  },
-  {
-    path: '/palettes',
-    name: 'color palette',
-    meta: {
-      requiresAuth: false,
-    },
-    component: () => import(/* webpackChunkName: "ColorPalette" */ '@/views/ColorPalette.vue'),
-  },
-  {
-    path: '/github',
-    name: 'github',
-    meta: {
-      requiresAuth: false,
-    },
-    beforeEnter (): void {
-      window.open('https://github.com/shopping-busket/');
-    },
-  },
+  //endregion
+
   {
     path: '/',
-    name: 'home',
+    name: Route.HOME,
     meta: {
       requiresAuth: false,
     },
-    component: Home,
+    component: () => import('../views/WelcomePage.vue'),
   },
   {
-    path: '*',
-    name: '404',
-    component: () => import(/* webpackChunkName: "404" */ '@/views/NotFound.vue'),
-  },
+    path: '/:pathMatch(.*)*',
+    name: Route.NOT_FOUND,
+    component: () => import('../views/NotFound.vue'),
+  }
 ];
 
-const router = new VueRouter({
-  mode: 'history',
-  base: process.env.BASE_URL,
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 });
 
@@ -110,19 +121,21 @@ router.beforeEach(async (to, from, next) => {
       next();
     }, 800);
 
-    await feathersClient.authenticate().catch((err) => {
-      if (err.code === 408) {
-        console.log('[Auth] Timeout while trying to authenticate. You are offline!');
-        return;
-      }
-      console.log(`[Auth] Not authenticated. This page requires auth: ${to.meta?.requiresAuth ? 'yes' : 'no'}`);
-      if (!err.data?.reason && to.meta?.requiresAuth) {
-        router.replace({
-          name: 'login',
-          query: { redirect: to.path },
-        });
-      }
-    });
+    await feathersClient.authenticate()
+      .catch((err: FeathersError) => {
+        if (err.code === 408) {
+          console.log('[Auth] Timeout while trying to authenticate. You are offline!');
+          return;
+        }
+        console.log(`[Auth] Not authenticated. This page requires auth: ${to.meta?.requiresAuth ? 'yes' : 'no'}`);
+        if (!err.data?.reason && to.meta?.requiresAuth) {
+          router.replace({
+            name: 'login',
+            query: { redirect: to.path },
+          });
+          return;
+        }
+      });
   }
   next();
 });

@@ -1,9 +1,5 @@
 import { registerRoute } from 'workbox-routing';
-import {
-  NetworkFirst,
-  StaleWhileRevalidate,
-  CacheFirst,
-} from 'workbox-strategies';
+import { CacheFirst, NetworkFirst, StaleWhileRevalidate, } from 'workbox-strategies';
 
 // Used for filtering matches based on status code, header, or both
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
