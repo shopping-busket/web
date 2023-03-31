@@ -111,7 +111,7 @@ const props = withDefaults(defineProps<{
 }>(), {
   showCount: false,
   checkedState: false,
-  isMovable: true,
+  isMovable: false,
   isClearable: false,
 });
 
