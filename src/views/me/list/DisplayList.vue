@@ -61,7 +61,7 @@
       </v-card-text>
     </v-card>
 
-    <v-card class="mt-3 pa-2" variant="outlined" rounded>
+    <v-card class="mt-3 pa-2" rounded variant="outlined">
       <div
         v-if="shoppingList === null"
         class="d-flex justify-center align-items"
@@ -121,7 +121,7 @@ import {
 } from 'vuetify/components';
 import EventViewer from '@/components/EventViewer.vue';
 import TodoList from '@/components/TodoList.vue';
-import feathersClient, { eventService, listService, User } from '@/feathers-client';
+import feathersClient, { eventService, listService } from '@/feathers-client';
 import ShoppingList, { IShoppingList } from '@/shoppinglist/ShoppingList';
 import { onMounted, Ref, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
@@ -146,7 +146,6 @@ const newItemRules = [
   (val: string) => val.trim().length >= 1 || 'Must at least have one character that isn\'t a space',
   (val: string) => val.trim().length <= 256 || 'Can\'t exceed 256 character limit!',
 ];
-const user: Ref<null | User> = ref(null);
 const connected = ref(feathersClient.io.connected);
 const events: Ref<EventData[]> = ref([]);
 const historicalEvents: Ref<EventData[]> = ref([]);

@@ -30,7 +30,7 @@
           v-for="item in menuItems.filter((it) => !it.divide)"
           :key="item.title"
           link
-          @click.stop="item.to === undefined ? item.click() : tryRouteTo(item.to)"
+          @click.stop="item.to === undefined ? item!!.click() : tryRouteTo(item.to)"
         >
           <template #prepend>
             <v-icon :icon="item.icon" />

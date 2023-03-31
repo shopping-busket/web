@@ -1,10 +1,10 @@
 <template>
   <div
-    :style="{ color: $vuetify.theme.dark ? '#f6f6f6' : '#4d4d4d' }"
+    :style="{ color: $vuetify.theme.current.value.dark ? '#f6f6f6' : '#4d4d4d' }"
     class="d-flex align-center justify-center flex-column ma-auto text-block"
   >
-    <div :class="{'text-grey-darken-1': $vuetify.theme.global.current.dark}">
-      <h1 :class="{'text-grey': $vuetify.theme.global.current.dark}">
+    <div :class="{'text-grey-darken-1': $vuetify.theme.current.value.dark}">
+      <h1 :class="{'text-grey': $vuetify.theme.current.value.dark}">
         <span v-if="!auth">
           Welcome!
         </span>

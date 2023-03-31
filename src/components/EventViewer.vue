@@ -39,9 +39,7 @@
               <ColorJson :is="ColorJson" v-if="colorCode" :input="JSON.stringify(event.state)" />
               <span v-else>{{ JSON.stringify(event.state) }}</span>
             </span>
-            <span v-if="!hideId" :class="colorCode ? 'itemId mr-1' : 'mr-1'">{{
-              event.entryId
-            }}</span>
+            <span v-if="!hideId" :class="colorCode ? 'itemId mr-1' : 'mr-1'">{{ event.entryId }}</span>
             <span :class="colorCode ? 'at mr-1' : 'mr-1'">at</span>
             <span v-if="event.isoDate" :class="{ 'date': colorCode }">
               {{ showISO ? event.isoDate : '' }}

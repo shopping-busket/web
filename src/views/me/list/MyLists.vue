@@ -199,7 +199,9 @@ function setImportFile(file: File): void {
 }
 
 async function populateLists(): Promise<void> {
-  const l: Array<IShoppingList> = ((await listService.find({ query: { owner: auth.value?.user.uuid } })) as { data: Array<IShoppingList> }).data;
+  const l: Array<IShoppingList> = ((await listService.find({ query: { owner: auth.value?.user.uuid } })) as {
+    data: Array<IShoppingList>
+  }).data;
 
   lists.value = l.map((l) => {
     const o = l;
