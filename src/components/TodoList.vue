@@ -49,7 +49,7 @@
             hide-details
             label="Name"
             variant="outlined"
-            @keydown.enter="emit('rename-entry', element.id)"
+            @keydown.enter="emit('rename-entry', element.id); element.additional.edit = false"
             @keydown.esc="element.additional.edit = false; element.additional.editName = element.name"
           />
           <div v-else @dblclick="element.additional.edit = true">
@@ -66,7 +66,7 @@
             <v-btn
               icon
               small
-              @click="emit('rename-entry', element.id)"
+              @click="emit('rename-entry', element.id); element.additional.edit = false"
               @keydown.enter="emit('rename-entry', element.id)"
             >
               <v-icon small>
