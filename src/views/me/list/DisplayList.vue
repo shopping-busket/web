@@ -122,7 +122,7 @@ import {
 import EventViewer from '@/components/EventViewer.vue';
 import TodoList from '@/components/TodoList.vue';
 import feathersClient, { eventService, listService, User } from '@/feathers-client';
-import ShoppingList, { IShoppingList, IShoppingListItem } from '@/shoppinglist/ShoppingList';
+import ShoppingList, { IShoppingList } from '@/shoppinglist/ShoppingList';
 import { onMounted, Ref, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { Route } from '@/router';
@@ -179,66 +179,48 @@ async function connectionWatcher() {
 }
 
 function registerEventListener() {
-  feathersClient.service('event').on('created', (data: LogEventListenerData) => {
+  feathersClient.service('event').on('created', async (data: LogEventListenerData) => {
+    const { user } = await feathersClient.get('authentication');
+
     const event = data.eventData;
-    if (event.sender == user.value?.uuid) {
+    if (event.sender == user.uuid) {
       console.log('ignoring event because it was sent from this client');
       return;
     }
     console.log('event received', data);
 
     if (!shoppingList.value) return;
-
-    let foundEntry: IShoppingListItem | undefined;
-    let foundEntryIndex = -1;
-    shoppingList.value?.entries.forEach((entry, i) => {
-      if (entry.id === event.entryId) {
-        foundEntry = entry;
-        foundEntryIndex = i;
-      }
-    });
+    const entry = shoppingList.value?.findEntryGlobal((value) => value.id === event.entryId);
+    console.log('entry (event): ', entry);
+    if (!entry) return;
 
     switch (data.eventData.event) {
       case EventType.CREATE_ENTRY:
-        if (foundEntry) return;
-
         newItemName.value = event.state.name;
-        createEntry(false);
+        await createEntry(false);
         break;
 
       case EventType.MARK_ENTRY_TODO:
-        if (!foundEntry) return;
-        if (!foundEntry.done) return;
-
-        checkEntry(event.entryId, false, false);
+        await checkEntry(event.entryId, false, false);
         break;
 
       case EventType.MARK_ENTRY_DONE:
-        if (!foundEntry) return;
-        if (foundEntry.done) return;
-
-        checkEntry(event.entryId, true, false);
+        await checkEntry(event.entryId, true, false);
         break;
 
       case EventType.CHANGED_ENTRY_NAME:
-        if (!foundEntry) return;
-        if (foundEntry.name === data.eventData.state.name) return;
+        if (entry.name === data.eventData.state.name) return;
 
-        renameEntry(event.entryId, data.eventData.state.name, false);
+        await renameEntry(event.entryId, data.eventData.state.name, false);
         break;
 
       case EventType.DELETE_ENTRY:
-        if (!foundEntry) return;
-
         if (!shoppingList.value) return;
         shoppingList.value.clearDone();
         break;
 
       case EventType.MOVE_ENTRY:
-        if (!foundEntry) return;
-        if (foundEntryIndex === event.state.newIndex) return;
-
-        if (event.state.newIndex && event.state.oldIndex) moveEntry(event.state.newIndex, event.state.oldIndex, false);
+        if (event.state.newIndex != undefined && event.state.oldIndex != undefined) await moveEntry(event.state.newIndex, event.state.oldIndex, false, false);
         break;
 
       default:
@@ -341,9 +323,15 @@ async function renameEntry(id: string, name: string | null = null, _recordEvent 
   });
 }
 
-async function moveEntry(index: number, oldIndex: number, _recordEvent = true): Promise<void> {
+async function moveEntry(index: number, oldIndex: number, _recordEvent = true, moveAlreadyHandled = true): Promise<void> {
   if (!shoppingList.value) return;
-  const entry = shoppingList.value.entries[index];
+
+  let entry = shoppingList.value.entries[index];
+  if (!moveAlreadyHandled) {
+    entry = shoppingList.value.entries[oldIndex];
+    shoppingList.value.entries.splice(oldIndex, 1);
+    shoppingList.value.entries.splice(index, 0, entry);
+  }
 
   if (!_recordEvent) return;
   await recordEvent({
