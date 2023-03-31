@@ -1,6 +1,6 @@
 <template>
   <div class="mt-4" style="max-width: 800px; margin: auto">
-    <v-card outlined>
+    <v-card variant="outlined">
       <v-card-title>
         <div class="d-flex align-center">
           <div v-if="shoppingList !== null">
@@ -61,7 +61,7 @@
       </v-card-text>
     </v-card>
 
-    <v-sheet class="mt-3 pa-2" outlined rounded>
+    <v-card class="mt-3 pa-2" variant="outlined" rounded>
       <div
         v-if="shoppingList === null"
         class="d-flex justify-center align-items"
@@ -96,7 +96,7 @@
           @move-entry="moveEntry"
         />
       </div>
-    </v-sheet>
+    </v-card>
 
     <!-- TODO: Change list name   -->
     <EventViewer

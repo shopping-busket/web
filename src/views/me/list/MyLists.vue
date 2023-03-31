@@ -4,12 +4,12 @@
       v-for="item in lists"
       :key="item.listid"
       :ripple="true"
-      class="mb-2 v-ripple"
+      class="mb-2 v-ripple pb-1 pt-1"
       hover
-      variant="flat"
+      variant="outlined"
       @click="openList(item.listid)"
     >
-      <v-list-item :subtitle="item.description" :title="item.name">
+      <v-list-item :subtitle="item.description" :title="item.name" class="pb-2">
         <template #append>
           <v-icon
             color="red"
@@ -23,7 +23,7 @@
       :ripple="true"
       class="d-flex justify-center flex-column align-center new-list-card"
       hover
-      outlined
+      variant="outlined"
       @click="feathersClient.io.connected ? newListDialog = true : toast('You are offline!')"
     >
       <div class="new-list-title">

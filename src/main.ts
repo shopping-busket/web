@@ -7,6 +7,7 @@ import vuetify from './plugins/vuetify';
 import 'vuetify/styles';
 import 'roboto-fontface/css/roboto/roboto-fontface.css';
 import '@mdi/font/css/materialdesignicons.css';
+import './style.scss';
 import i18n from './i18n';
 import wb from './registerServiceWorker';
 
