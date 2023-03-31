@@ -6,6 +6,7 @@
 
     <v-card
       elevation="0"
+      variant="outlined"
     >
       <v-list lines="three" select-strategy="multiple">
         <v-list-subheader>General</v-list-subheader>
