@@ -1,7 +1,7 @@
 <template>
   <div class="ma-auto mt-4" style="max-width: 70rem">
     <v-card
-      v-for="item in lists"
+      v-for="item in lists as Array<IShoppingList>"
       :key="item.listid"
       :ripple="true"
       class="mb-2 v-ripple pb-1 pt-1"
