@@ -20,7 +20,7 @@
           />
           <v-btn
             color="primary" icon="mdi-refresh" size="x-small" variant="text"
-            @click="loadListFromRemote"
+            @click="reloadList"
           />
         </div>
       </v-card-title>
@@ -160,7 +160,8 @@ onMounted(async () => {
 
   if (connected.value) {
     shoppingList.value = await loadListFromRemote();
-    user.value = await feathersClient.get('authentication').user;
+    const { user } = await feathersClient.get('authentication');
+    user.value = user;
   } else {
     shoppingList.value = await loadListFromCache();
   }
@@ -171,7 +172,8 @@ watch(connected, connectionWatcher);
 
 async function connectionWatcher() {
   if (feathersClient.io.connected.value) {
-    user.value = await feathersClient.get('authentication').user;
+    const { user } = await feathersClient.get('authentication');
+    user.value = user;
     await sendEventsToServer();
   }
 }
@@ -260,12 +262,18 @@ function registerSearch() {
 //endregion
 
 //region list loaders
+async function reloadList(): Promise<void> {
+  shoppingList.value = await loadListFromRemote();
+}
+
 async function loadListFromRemote(): Promise<ShoppingList> {
   const list: IShoppingList[] | null = (await listService.find({ query: { listid: props.id } })
     .catch(() => {
       listNotFound();
     }) as { data: IShoppingList[] })?.data;
   if (!list) await listNotFound();
+
+  console.log(list);
 
   return new ShoppingList(list[0].name, list[0].description, list[0].owner, list[0].entries.items, list[0].checkedEntries.items);
 }
@@ -444,13 +452,17 @@ async function recordEvent(event: EventData): Promise<unknown> {
 async function sendEventsToServer(): Promise<unknown> {
   console.log('Sending events.value to server.');
 
+  const { user } = await feathersClient.get('authentication');
+
   const data: LogEvent[] = events.value.map((e) => ({
     listid: props.id,
     eventData: {
       ...e,
-      sender: user.value?.uuid,
+      sender: user.uuid,
     },
   } as LogEvent));
+
+  console.log(data);
 
   return eventService.create(data)
     .then((d) => {
