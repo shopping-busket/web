@@ -15,6 +15,10 @@
       />
     </div>
 
+    <div v-if="entries.length == 0" class="d-flex justify-center mb-2 text-grey-darken-1">
+      No items in {{ label }}
+    </div>
+
     <draggable
       v-model="entries"
       ghost-class="ghost"
