@@ -117,7 +117,6 @@ import {
   VCardText,
   VCardTitle,
   VProgressCircular,
-  VSheet,
   VTextField,
 } from 'vuetify/components';
 import EventViewer from '@/components/EventViewer.vue';
@@ -153,7 +152,7 @@ const events: Ref<EventData[]> = ref([]);
 const historicalEvents: Ref<EventData[]> = ref([]);
 
 onMounted(async () => {
-  connectionWatcher();
+  await connectionWatcher();
   registerEventListener();
   registerSearch();
 
@@ -514,11 +513,3 @@ function suggestionAPICall(val: string): void {
 
 //endregion
 </script>
-
-<style scoped>
-.header {
-  color: #3b3b3b;
-  font-size: 7rem;
-  line-height: 6rem;
-}
-</style>

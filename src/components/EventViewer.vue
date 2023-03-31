@@ -22,7 +22,7 @@
           >
             No log available. Try reloading or changing something.
           </div>
-          <div v-for="(event, i) in events.slice().reverse()" :key="i">
+          <div v-for="(event, i) in events.slice().reverse() as EventData[]" :key="i">
             <span v-if="showIndexNumber" class="gray mr-1">[{{ events.length - i }}]</span>
             <v-icon
               v-if="showIcons"
@@ -43,7 +43,7 @@
               event.entryId
             }}</span>
             <span :class="colorCode ? 'at mr-1' : 'mr-1'">at</span>
-            <span :class="{ 'date': colorCode }">
+            <span v-if="event.isoDate" :class="{ 'date': colorCode }">
               {{ showISO ? event.isoDate : '' }}
               ({{ formatDate(event.isoDate) }})
             </span>
@@ -57,14 +57,14 @@
 
 <script lang="ts" setup>
 import { VCard, VCardText, VCheckbox, VDialog, VDivider, VIcon, VSheet, } from 'vuetify/components';
-import { LogEvent } from '@/shoppinglist/events';
+import { EventData } from '@/shoppinglist/events';
 import ColorJson from '@/components/ColorJson.vue';
 import { computed, ref } from 'vue';
 
 const props = defineProps<{
   modelValue: boolean,
   listName: string,
-  events: LogEvent[],
+  events: EventData[],
 }>();
 const emit = defineEmits(['update:modelValue']);
 const model = computed({
