@@ -142,7 +142,7 @@ const entries = computed({
 // });
 
 const theme = useTheme();
-const isDarkTheme = ref(false);
+const isDarkTheme = ref(theme.current.value.dark);
 
 watch(theme.global.name, themeWatcher);
 
