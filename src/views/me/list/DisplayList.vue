@@ -22,6 +22,11 @@
             color="primary" icon="mdi-refresh" size="x-small" variant="text"
             @click="reloadList"
           />
+
+          <v-btn
+            color="primary" icon="mdi-account-group-outline" size="x-small" variant="text"
+            @click="openShareDialog = true"
+          />
         </div>
       </v-card-title>
       <v-card-subtitle>
@@ -106,6 +111,12 @@
       :events="historicalEvents"
       :list-name="shoppingList.name"
     />
+
+    <ShareDialog
+      v-if="shoppingList !== null"
+      v-model="openShareDialog"
+      :list-id="shoppingList.listid"
+    />
   </div>
 </template>
 
@@ -128,25 +139,34 @@ import { useRouter } from 'vue-router';
 import { Route } from '@/router';
 import { useToast } from 'vue-toastification';
 import { EventData, EventType, LogEvent, LogEventListenerData } from '@/shoppinglist/events';
+import ShareDialog from '@/components/ShareDialog.vue';
 
 const props = defineProps<{
   id: string | undefined,
 }>();
+
 const router = useRouter();
 const toast = useToast();
 
 const newItemField: Ref<VTextField | null> = ref(null);
+
 const suggestedItems: Ref<string[]> = ref([]);
 const suggestionSearch = ref('');
 const suggestionLoading = ref(false);
+
 const openLogDialog = ref(false);
+const openShareDialog = ref(false);
+
 const shoppingList: Ref<ShoppingList | null> = ref(null);
+
 const newItemName = ref('');
 const newItemRules = [
   (val: string) => val.trim().length >= 1 || 'Must at least have one character that isn\'t a space',
   (val: string) => val.trim().length <= 256 || 'Can\'t exceed 256 character limit!',
 ];
+
 const connected = ref(feathersClient.io.connected);
+
 const events: Ref<EventData[]> = ref([]);
 const historicalEvents: Ref<EventData[]> = ref([]);
 
@@ -248,15 +268,15 @@ async function reloadList(): Promise<void> {
 }
 
 async function loadListFromRemote(): Promise<ShoppingList> {
-  const list: IShoppingList[] | null = (await listService.find({ query: { listid: props.id } })
+  const list: IShoppingList[] | null = await listService.find({ query: { listid: props.id } })
     .catch(() => {
       listNotFound();
-    }) as { data: IShoppingList[] })?.data;
+    }) as IShoppingList[];
   if (!list) await listNotFound();
 
   console.log(list);
 
-  return new ShoppingList(list[0].name, list[0].description, list[0].owner, list[0].entries.items, list[0].checkedEntries.items);
+  return new ShoppingList(list[0].listid, list[0].name, list[0].description, list[0].owner, list[0].entries.items, list[0].checkedEntries.items);
 }
 
 async function loadListFromCache(): Promise<ShoppingList> {
@@ -270,7 +290,7 @@ async function loadListFromCache(): Promise<ShoppingList> {
   const list = (JSON.parse(lists) as Array<IShoppingList>).find((l) => l.listid === props.id);
   if (!list) throw await listNotFound();
 
-  return new ShoppingList(list.name, list.description, list.owner, list.entries.items, list.checkedEntries.items);
+  return new ShoppingList(list.listid, list.name, list.description, list.owner, list.entries.items, list.checkedEntries.items);
 }
 
 async function listNotFound() {

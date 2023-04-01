@@ -1,10 +1,10 @@
 <template>
   <div
-    :style="{ color: $vuetify.theme.current.value.dark ? '#f6f6f6' : '#4d4d4d' }"
+    :style="{ color: theme.current.value.dark ? '#f6f6f6' : '#4d4d4d' }"
     class="d-flex align-center justify-center flex-column ma-auto text-block"
   >
-    <div :class="{'text-grey-darken-1': $vuetify.theme.current.value.dark}">
-      <h1 :class="{'text-grey': $vuetify.theme.current.value.dark}">
+    <div :class="{'text-grey-darken-1': theme.current.value.dark}">
+      <h1 :class="{'text-grey': theme.current.value.dark}">
         <span v-if="!auth">
           Welcome!
         </span>
@@ -27,8 +27,11 @@
 <script lang="ts" setup>
 import { onMounted, Ref, ref } from 'vue';
 import feathersClient, { AuthObject } from '@/feathers-client';
+import { useTheme } from 'vuetify';
 
 const auth: Ref<AuthObject | null> = ref(null);
+const theme = useTheme();
+
 onMounted(async () => {
   auth.value = await feathersClient.get('authentication');
 });
