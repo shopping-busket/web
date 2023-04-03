@@ -1,6 +1,6 @@
 import io from 'socket.io-client';
 import socketio from '@feathersjs/socketio-client';
-import { feathers, Service } from '@feathersjs/feathers';
+import { feathers, Service as FeathersService } from '@feathersjs/feathers';
 import auth from '@feathersjs/authentication-client';
 import config from '../config';
 
@@ -37,6 +37,13 @@ export interface FeathersError {
   data: Record<string, unknown>,
 }
 
+export enum Service {
+  EVENT = 'event',
+  LIST = 'list',
+  USERS = 'users',
+  SHARE_LINK = 'share-link',
+}
+
 export async function isLoggedIn(): Promise<boolean> {
   return new Promise<boolean>((resolve) => {
     if (!feathersClient.authentication.authenticated) {
@@ -46,9 +53,5 @@ export async function isLoggedIn(): Promise<boolean> {
     }
   });
 }
-
-export const eventService: Service<unknown> = feathersClient.service('event');
-export const listService: Service<unknown> = feathersClient.service('list');
-export const usersService: Service<unknown> = feathersClient.service('users');
 
 export default feathersClient;

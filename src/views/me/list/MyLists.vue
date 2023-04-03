@@ -149,7 +149,7 @@ import {
   VTextField,
 } from 'vuetify/components';
 import { v4 as uuidv4 } from 'uuid';
-import feathersClient, { AuthObject, listService } from '@/feathers-client';
+import feathersClient, { AuthObject, Service } from '@/feathers-client';
 import { IShoppingList } from '@/shoppinglist/ShoppingList';
 import { onMounted, ref, Ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
@@ -199,7 +199,7 @@ function setImportFile(file: File): void {
 }
 
 async function populateLists(): Promise<void> {
-  const l: IShoppingList[] = ((await listService.find({ query: { owner: auth.value?.user.uuid } })) as IShoppingList[]);
+  const l: IShoppingList[] = ((await feathersClient.service(Service.LIST).find({ query: { owner: auth.value?.user.uuid } })) as IShoppingList[]);
 
   lists.value = l.map((l) => {
     const o = l;
@@ -227,7 +227,7 @@ async function deleteList(listid: string): Promise<void> {
     }
   });
 
-  await listService.remove(id);
+  await feathersClient.service(Service.LIST).remove(id);
 }
 
 async function uploadImportedList(): Promise<void> {
@@ -256,7 +256,7 @@ async function uploadImportedList(): Promise<void> {
 
     newListDialog.value = false;
 
-    await listService.create(newList);
+    await feathersClient.service(Service.LIST).create(newList);
     await populateLists();
     console.log('created list', newList.name);
 
@@ -297,7 +297,7 @@ async function createList(): Promise<void> {
   newList.value.name = '';
   newList.value.description = '';
 
-  await listService.create(list);
+  await feathersClient.service(Service.LIST).create(list);
   await populateLists();
 
   openList(list.listid);

@@ -132,7 +132,7 @@ import {
 } from 'vuetify/components';
 import EventViewer from '@/components/EventViewer.vue';
 import TodoList from '@/components/TodoList.vue';
-import feathersClient, { eventService, listService } from '@/feathers-client';
+import feathersClient, { Service } from '@/feathers-client';
 import ShoppingList, { IShoppingList } from '@/shoppinglist/ShoppingList';
 import { onMounted, Ref, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
@@ -268,7 +268,7 @@ async function reloadList(): Promise<void> {
 }
 
 async function loadListFromRemote(): Promise<ShoppingList | null> {
-  const list: IShoppingList[] | null = await listService.find({ query: { listid: props.id } })
+  const list: IShoppingList[] | null = await feathersClient.service(Service.LIST).find({ query: { listid: props.id } })
     .catch(() => {
       listNotFound();
     }) as IShoppingList[] | null;
@@ -469,7 +469,7 @@ async function sendEventsToServer(): Promise<unknown> {
 
   console.log(data);
 
-  return eventService.create(data)
+  return feathersClient.service(Service.EVENT).create(data)
     .then((d) => {
       console.log('[LOG] Sent event to server');
       events.value.splice(0, (d as Array<LogEvent>).length);

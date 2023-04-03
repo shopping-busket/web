@@ -61,7 +61,7 @@ import {
   VListItemTitle,
   VListSubheader,
 } from 'vuetify/components';
-import feathersClient, { AuthObject, usersService } from '@/feathers-client';
+import feathersClient, { AuthObject, Service } from '@/feathers-client';
 import { onMounted, reactive, Ref, ref, watch } from 'vue';
 import { useTheme } from 'vuetify';
 
@@ -91,7 +91,7 @@ onMounted(async () => {
 watch(settings, async () => {
   theme.global.name.value = settings.prefersDarkMode ? 'darkTheme' : 'lightTheme';
 
-  await usersService.patch(auth.value?.user.id || -1, {
+  await feathersClient.service(Service.USERS).patch(auth.value?.user.id || -1, {
     prefersDarkMode: settings.prefersDarkMode,
     prefersMiniDrawer: settings.prefersMiniDrawer,
     preferredLanguage: settings.preferredLanguage,
