@@ -267,12 +267,15 @@ async function reloadList(): Promise<void> {
   shoppingList.value = await loadListFromRemote();
 }
 
-async function loadListFromRemote(): Promise<ShoppingList> {
+async function loadListFromRemote(): Promise<ShoppingList | null> {
   const list: IShoppingList[] | null = await listService.find({ query: { listid: props.id } })
     .catch(() => {
       listNotFound();
-    }) as IShoppingList[];
-  if (!list) await listNotFound();
+    }) as IShoppingList[] | null;
+  if (list == null) {
+    await listNotFound();
+    return null;
+  }
 
   console.log(list);
 
