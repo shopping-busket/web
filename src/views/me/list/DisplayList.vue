@@ -132,14 +132,14 @@ import {
 } from 'vuetify/components';
 import EventViewer from '@/components/EventViewer.vue';
 import TodoList from '@/components/TodoList.vue';
-import feathersClient, { Service } from '@/feathers-client';
+import feathersClient, { AuthObject, Service } from '@/feathers-client';
 import ShoppingList, { IShoppingList } from '@/shoppinglist/ShoppingList';
 import { onMounted, Ref, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { Route } from '@/router';
 import { useToast } from 'vue-toastification';
 import { EventData, EventType, LogEvent, LogEventListenerData } from '@/shoppinglist/events';
-import ShareDialog from '@/components/ShareDialog.vue';
+import ShareDialog, { ShareLink } from '@/components/ShareDialog.vue';
 
 const props = defineProps<{
   id: string | undefined,
@@ -268,6 +268,19 @@ async function reloadList(): Promise<void> {
 }
 
 async function loadListFromRemote(): Promise<ShoppingList | null> {
+  // const share = feathersClient.service(Service.SHARE_LINK).patch(null, {
+  //   uri: props.id,
+  //   users:
+  // } as Partial<ShareLink>);
+  // console.log(share);
+
+  const { user } = await feathersClient.get('authentication') as AuthObject;
+  if (!user) return null;
+  const d = await feathersClient.service(Service.SHARE_LINK).join({
+    shareLink: props.id,
+    user: user.uuid,
+  }, {});
+
   const list: IShoppingList[] | null = await feathersClient.service(Service.LIST).find({ query: { listid: props.id } })
     .catch(() => {
       listNotFound();

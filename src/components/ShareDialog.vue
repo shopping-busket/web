@@ -5,7 +5,8 @@
     <v-card>
       <v-card-text>
         <div v-for="link in shareLinks" :key="link.id">
-          {{ link.uri }}
+          <div>People with access: {{ link.users.map(l => getUsername(l)).join(', ') }}</div>
+          <div>URL: {{ getURI(link) }}</div>
         </div>
       </v-card-text>
       <v-card-actions>
@@ -23,14 +24,20 @@
 
 <script lang="ts" setup>
 import { VBtn, VCard, VCardActions, VCardText, VDialog } from 'vuetify/components';
-import { computed, onMounted, Ref, ref } from 'vue';
+import { computed, onMounted, reactive } from 'vue';
 import feathersClient from '@/feathers-client';
+import { ReactiveVariable } from 'vue/macros';
+import config from '../../config';
+import { RouteRecord, useRoute, useRouter } from 'vue-router';
+import { Route } from '../router';
 
 const props = defineProps<{
   modelValue: boolean,
   listId: string,
 }>();
 const emit = defineEmits(['update:modelValue']);
+
+const router = useRouter();
 
 const openDialog = computed({
   get() {
@@ -49,7 +56,7 @@ export interface ShareLink {
   users: string[],
 }
 
-const shareLinks: Ref<ShareLink[]> = ref([]);
+const shareLinks: ReactiveVariable<ShareLink[]> = reactive([]);
 
 onMounted(async () => {
   console.log(props.listId);
@@ -60,10 +67,7 @@ onMounted(async () => {
     },
   });
 
-
-  console.log(links);
-  if (links != undefined) shareLinks.value.push(links);
-  console.log(shareLinks);
+  if (links != null) shareLinks.push(...links);
 });
 
 async function createShareLink() {
@@ -72,6 +76,20 @@ async function createShareLink() {
     users: [],
   });
 
-  shareLinks.value.push(shareLink);
+  shareLinks.push(shareLink);
+}
+
+function getURI(shareLink: ShareLink): string {
+  return `${config.httpProtocol}://${config.uri}${router.getRoutes().find((r: RouteRecord) => r.name === Route.DISPLAY_LIST)?.path.replace(':id', '')}${shareLink.uri}`;
+}
+
+async function getUsername(id: string) {
+  const data = await feathersClient.service('users').find({
+    query: {
+      uuid: id,
+    },
+  });
+
+  console.log(data);
 }
 </script>
