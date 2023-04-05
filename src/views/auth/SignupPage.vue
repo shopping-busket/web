@@ -149,15 +149,9 @@ async function submit(): Promise<void> {
 
   await feathersClient.service('users')
     .create({
-      uuid: uuidv4(),
       email: email.value,
       password: password.value,
       fullName: username.value,
-      avatarURL: null,
-
-      prefersMiniDrawer: false,
-      prefersDarkMode: false,
-      preferredLanguage: 'en',
     })
     .then(() => {
       btnLoading.value = false;
