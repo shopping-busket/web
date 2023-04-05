@@ -1,17 +1,19 @@
 import io from 'socket.io-client';
 import socketio from '@feathersjs/socketio-client';
-import { feathers, FeathersService, Params } from '@feathersjs/feathers';
+import { feathers, FeathersService } from '@feathersjs/feathers';
 import auth from '@feathersjs/authentication-client';
 import config from '../config';
 
 const socket = io(config.backend, { transports: ['websocket'] });
 
-type ShareLinkData = {
-  shareLink: string,
-  user: string,
-};
+export enum Service {
+  EVENT = 'event',
+  LIST = 'list',
+  USERS = 'users',
+  WHITELISTED_USERS = 'whitelisted-users',
+}
 
-type ServiceTypes = {
+type ServiceTypes = Record<Service, FeathersService> & {
   'share-link': FeathersService,
   event: FeathersService,
   list: FeathersService,
@@ -47,13 +49,6 @@ export interface AuthObject {
 export interface FeathersError {
   code: number,
   data: Record<string, unknown>,
-}
-
-export enum Service {
-  EVENT = 'event',
-  LIST = 'list',
-  USERS = 'users',
-  SHARE_LINK = 'share-link',
 }
 
 export async function isLoggedIn(): Promise<boolean> {
