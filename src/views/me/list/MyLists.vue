@@ -251,7 +251,7 @@ async function uploadImportedList(): Promise<void> {
       name: list.name ?? 'placeholder name',
       description: list.description ?? '',
       owner: auth.value?.user?.uuid,
-      entries: list.entries ?? {},
+      entries: list.entries ?? [],
     };
 
     newListDialog.value = false;
@@ -286,12 +286,8 @@ async function createList(): Promise<void> {
     name,
     description,
     owner: auth.value?.user.uuid,
-    entries: {
-      items: [],
-    },
-    checkedEntries: {
-      items: [],
-    },
+    entries: [],
+    checkedEntries: [],
   };
 
   newList.value.name = '';
