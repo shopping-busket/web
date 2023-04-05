@@ -2,7 +2,7 @@
 // @ts-ignore
 // noinspection JSUnusedGlobalSymbols
 
-import {v4 as uuidv4} from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface IShoppingListItem {
   id: string,
@@ -11,7 +11,7 @@ export interface IShoppingListItem {
 }
 
 export interface IShoppingListEntries {
-  items: IShoppingListItem[]
+  items: IShoppingListItem[];
 }
 
 export interface IShoppingList {
@@ -28,7 +28,7 @@ export interface IShoppingList {
 }
 
 interface ErrorConstructor {
-  captureStackTrace(thisArg: any, func: any): void
+  captureStackTrace(thisArg: any, func: any): void;
 }
 
 // eslint-disable-next-line max-classes-per-file
@@ -100,21 +100,26 @@ export default class ShoppingList {
 
   /**
    * Create a new list.
+   * @param listId UUIDv4 of the list
    * @param name Name of the new list
    * @param description Description of the list
    * @param owner
-   * @param entries (optional) Pass already existing [IShoppingListItems]{@link IShoppingListItem}.
+   * @param entries (optional) Pass already existing [IShoppingListItems]
+   * {@param checkedEntries @link IShoppingListItem} (optional) Pass already existing [IShoppingListItems] (only checked)
    */
-  constructor(name: string, description: string, owner?: string, entries?: IShoppingListItem[]) {
+  constructor(listId: string, name: string, description: string, owner?: string, entries?: IShoppingListItem[], checkedEntries?: IShoppingListItem[]) {
     this.name = name;
     this.description = description;
-    this.listid = uuidv4();
+    this.listid = listId;
     this.owner = owner ?? '';
 
     // Convert database shopping list item type to class type
-    if (!entries) return;
-    entries.forEach((t) => {
+    entries?.forEach((t) => {
       this.entries.push(new ShoppingListItem(t.name, t.done, t.id));
+    });
+
+    checkedEntries?.forEach((t) => {
+      this.checkedEntries.push(new ShoppingListItem(t.name, t.done, t.id));
     });
   }
 
@@ -127,17 +132,13 @@ export default class ShoppingList {
     let entry;
 
     ['entries', 'checkedEntries'].every((k) => {
-      console.log(k);
-
       entry = this[k as 'entries'].find((_v, _i, _obj) => {
-        console.log(_v);
         const condition = predicate(_v, _i, _obj);
         if (condition) index = _i;
 
         return condition;
       }) as ShoppingListItemWithIndex;
 
-      console.log(entry);
       if (entry === undefined) return true;
       entry.index = index;
       return false;
