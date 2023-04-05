@@ -276,10 +276,10 @@ async function loadListFromRemote(): Promise<ShoppingList | null> {
 
   const { user } = await feathersClient.get('authentication') as AuthObject;
   if (!user) return null;
-  const d = await feathersClient.service(Service.SHARE_LINK).join({
+  /*const d = await feathersClient.service(Service.SHARE_LINK).join({
     shareLink: props.id,
     user: user.uuid,
-  }, {});
+  }, {});*/
 
   const list: IShoppingList[] | null = await feathersClient.service(Service.LIST).find({ query: { listid: props.id } })
     .catch(() => {
@@ -292,7 +292,7 @@ async function loadListFromRemote(): Promise<ShoppingList | null> {
 
   console.log(list);
 
-  return new ShoppingList(list[0].listid, list[0].name, list[0].description, list[0].owner, list[0].entries.items, list[0].checkedEntries.items);
+  return new ShoppingList(list[0].listid, list[0].name, list[0].description, list[0].owner, list[0].entries, list[0].checkedEntries);
 }
 
 async function loadListFromCache(): Promise<ShoppingList> {
@@ -306,7 +306,7 @@ async function loadListFromCache(): Promise<ShoppingList> {
   const list = (JSON.parse(lists) as Array<IShoppingList>).find((l) => l.listid === props.id);
   if (!list) throw await listNotFound();
 
-  return new ShoppingList(list.listid, list.name, list.description, list.owner, list.entries.items, list.checkedEntries.items);
+  return new ShoppingList(list.listid, list.name, list.description, list.owner, list.entries, list.checkedEntries);
 }
 
 async function listNotFound() {
