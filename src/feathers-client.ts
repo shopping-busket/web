@@ -25,6 +25,12 @@ const feathersClient = feathers<ServiceTypes>();
 feathersClient.configure(socketio(socket, { timeout: 30000 }));
 feathersClient.configure(auth());
 
+export interface DB {
+  id: number;
+}
+
+export type NullableDB = Partial<DB>;
+
 export interface User {
   createdAt: string;
   updatedAt: string;
@@ -59,6 +65,16 @@ export async function isLoggedIn(): Promise<boolean> {
         .catch(() => resolve(false));
     }
   });
+}
+
+export async function getUser(): Promise<User | null> {
+  return await feathersClient.get('authentication').user ?? null;
+}
+
+export async function requireUser(): Promise<User> {
+  const user = await getUser();
+  if (!user) throw new Error('required type is not allowed to be null. something in the authentication chain went wrong!');
+  return user;
 }
 
 export default feathersClient;
