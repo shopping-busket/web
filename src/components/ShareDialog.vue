@@ -1,10 +1,11 @@
 <template>
   <v-dialog
     v-model="openDialog"
+    max-width="500px"
   >
     <v-card>
       <v-card-text>
-        <div v-for="link in shareLinks" :key="link.id">
+        <div v-for="link in whitelistedUsers" :key="link.id">
           <div>People with access: {{ link.users.map(l => getUsername(l)).join(', ') }}</div>
           <div>URL: {{ getURI(link) }}</div>
         </div>
@@ -14,7 +15,7 @@
           Close
         </v-btn>
 
-        <v-btn color="primary" variant="outlined" @click="createShareLink">
+        <v-btn color="primary" variant="outlined" @click="addToWhitelist">
           Create new share link
         </v-btn>
       </v-card-actions>
@@ -24,20 +25,16 @@
 
 <script lang="ts" setup>
 import { VBtn, VCard, VCardActions, VCardText, VDialog } from 'vuetify/components';
-import { computed, onMounted, reactive } from 'vue';
-import feathersClient from '@/feathers-client';
+import { computed, onMounted, reactive, Ref, ref } from 'vue';
+import feathersClient, { DB, Service } from '@/feathers-client';
 import { ReactiveVariable } from 'vue/macros';
-import config from '../../config';
-import { RouteRecord, useRoute, useRouter } from 'vue-router';
-import { Route } from '../router';
+import { Params } from '@feathersjs/feathers';
 
 const props = defineProps<{
   modelValue: boolean,
   listId: string,
 }>();
 const emit = defineEmits(['update:modelValue']);
-
-const router = useRouter();
 
 const openDialog = computed({
   get() {
@@ -49,47 +46,42 @@ const openDialog = computed({
   }
 });
 
-export interface ShareLink {
+const email: Ref<string> = ref('')
+
+export interface UserWhitelist extends DB {
   id: number,
-  uri: string,
-  pointsTo: string,
-  users: string[],
+  user: string,
+  listId: string,
 }
 
-const shareLinks: ReactiveVariable<ShareLink[]> = reactive([]);
+const whitelistedUsers: ReactiveVariable<UserWhitelist[]> = reactive([]);
 
 onMounted(async () => {
-  console.log(props.listId);
-
-  const links = await feathersClient.service('share-link').find({
+  const links = await feathersClient.service(Service.WHITELISTED_USERS).find({
     query: {
-      pointsTo: props.listId,
+      listId: props.listId,
     },
-  });
+  } as Params<Partial<UserWhitelist>>);
 
-  if (links != null) shareLinks.push(...links);
+  if (links != null) whitelistedUsers.push(...links);
 });
 
-async function createShareLink() {
-  const shareLink = await feathersClient.service('share-link').create({
-    pointsTo: props.listId,
-    users: [],
-  });
+async function addToWhitelist() {
+  const whitelisted = await feathersClient.service(Service.WHITELISTED_USERS).create({
+    email: email.value,
+    listId: props.listId,
+  } as Partial<UserWhitelist>);
 
-  shareLinks.push(shareLink);
+  whitelistedUsers.push(whitelisted);
 }
 
-function getURI(shareLink: ShareLink): string {
-  return `${config.httpProtocol}://${config.uri}${router.getRoutes().find((r: RouteRecord) => r.name === Route.DISPLAY_LIST)?.path.replace(':id', '')}${shareLink.uri}`;
-}
-
-async function getUsername(id: string) {
-  const data = await feathersClient.service('users').find({
+async function getWhitelistedUser(uuid: string) {
+  const user = await feathersClient.service(Service.USERS).find({
     query: {
-      uuid: id,
-    },
+      uuid,
+    }
   });
 
-  console.log(data);
+  console.log(user);
 }
 </script>
