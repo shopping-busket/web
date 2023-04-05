@@ -10,22 +10,15 @@ type ShareLinkData = {
   shareLink: string,
   user: string,
 };
-type ShareLinkResponse = { acknowledged?: boolean } | void;
 
 type ServiceTypes = {
-  'share-link': FeathersService & {
-    join(data: Partial<ShareLinkData>, params: Params): Promise<ShareLinkResponse>
-  },
+  'share-link': FeathersService,
   event: FeathersService,
   list: FeathersService,
   users: FeathersService,
 }
 
 const feathersClient = feathers<ServiceTypes>();
-
-feathersClient.use('share-link', feathersClient.service('share-link'), {
-  methods: ['join'],
-});
 
 feathersClient.configure(socketio(socket, { timeout: 30000 }));
 feathersClient.configure(auth());
