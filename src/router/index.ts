@@ -52,7 +52,7 @@ const routes: Array<RouteRecordRawWithMeta> = [
     meta: {
       requiresAuth: true,
     },
-    component: () => import('@/views/Me/List/DisplayList.vue'),
+    component: () => import('@/views/me/list/DisplayList.vue'),
   },
   {
     path: '/me/lists/:id',
