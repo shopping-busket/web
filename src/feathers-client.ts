@@ -14,10 +14,10 @@ export enum Service {
 }
 
 type ServiceTypes = Record<Service, FeathersService> & {
-  'share-link': FeathersService,
   event: FeathersService,
   list: FeathersService,
   users: FeathersService,
+  'whitelisted-users': FeathersService,
 }
 
 const feathersClient = feathers<ServiceTypes>();
