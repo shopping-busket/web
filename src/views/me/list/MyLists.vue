@@ -251,7 +251,7 @@ async function uploadImportedList(): Promise<void> {
       name: list.name ?? 'placeholder name',
       description: list.description ?? '',
       owner: auth.value?.user?.uuid,
-      entries: list.entries ?? {},
+      entries: list.entries ?? [],
     };
 
     newListDialog.value = false;
