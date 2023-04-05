@@ -2,43 +2,82 @@
   <div class="mt-4" style="max-width: 800px; margin: auto">
     <v-card variant="outlined">
       <v-card-title>
-        <div class="d-flex align-center">
-          <div v-if="shoppingList !== null">
-            {{ shoppingList.name }}
+        <div class="d-flex align-center w-100">
+          <div v-if="shoppingList !== null" :class="{ 'w-100': editingListInfo }">
+            <div v-if="editingListInfo" style="width: 100%">
+              <v-text-field
+                v-model="temporaryData.listName"
+                class="mt-2"
+                style="width: 100%; height: 2.9rem"
+                variant="outlined"
+                label="List Name"
+                density="compact"
+                color="primary"
+                append-inner-icon="mdi-content-save"
+                @click:append-inner="setListInfo()"
+                @keydown.enter="setListInfo()"
+              />
+            </div>
+            <span v-else>
+              {{ shoppingList.name }}
+            </span>
           </div>
           <div v-else>
             Working on it...
           </div>
 
-          <v-btn
-            color="primary" icon="mdi-text-box" size="x-small" variant="text"
-            @click="openLogDialog = true"
-          />
-          <v-btn
-            color="primary" icon="mdi-download" size="x-small" variant="text"
-            @click="downloadList"
-          />
-          <v-btn
-            color="primary" icon="mdi-refresh" size="x-small" variant="text"
-            @click="reloadList"
-          />
+          <div v-if="!editingListInfo">
+            <v-btn
+              color="primary" icon="mdi-pencil-outline" size="x-small" variant="text"
+              @click="enterListInfoEditState()"
+            />
 
-          <v-btn
-            color="primary" icon="mdi-account-group-outline" size="x-small" variant="text"
-            @click="openShareDialog = true"
-          />
+            <v-btn
+              color="primary" icon="mdi-text-box" size="x-small" variant="text"
+              @click="openLogDialog = true"
+            />
+            <v-btn
+              color="primary" icon="mdi-download" size="x-small" variant="text"
+              @click="downloadList"
+            />
+            <v-btn
+              color="primary" icon="mdi-refresh" size="x-small" variant="text"
+              @click="reloadList"
+            />
+
+            <v-btn
+              color="primary" icon="mdi-account-group-outline" size="x-small" variant="text"
+              @click="openShareDialog = true"
+            />
+          </div>
         </div>
       </v-card-title>
-      <v-card-subtitle>
+      <v-card-subtitle :style="editingListInfo ? 'opacity: 100% !important' : ''">
         <div v-if="shoppingList !== null">
-          {{ shoppingList.description }}
+          <div v-if="editingListInfo" style="width: 100%">
+            <v-text-field
+              v-model="temporaryData.listDescription"
+              class="mt-2 mb-2"
+              style="width: 100%; height: 2.9rem"
+              variant="outlined"
+              label="List Description"
+              density="compact"
+              color="primary"
+              append-inner-icon="mdi-content-save"
+              @click:append-inner="setListInfo()"
+              @keydown.enter="setListInfo()"
+            />
+          </div>
+          <div v-else>
+            {{ shoppingList.description }}
+          </div>
         </div>
         <div v-else>
           Working on it...
         </div>
       </v-card-subtitle>
 
-      <v-card-text class="mb-0 pb-0">
+      <v-card-text v-if="!editingListInfo" class="mb-0 pb-0">
         <v-text-field
           ref="newItemField"
           v-model="newItemName"
@@ -134,12 +173,12 @@ import EventViewer from '@/components/EventViewer.vue';
 import TodoList from '@/components/TodoList.vue';
 import feathersClient, { AuthObject, Service } from '@/feathers-client';
 import ShoppingList, { IShoppingList } from '@/shoppinglist/ShoppingList';
-import { onMounted, Ref, ref, watch } from 'vue';
+import { onMounted, reactive, Ref, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { Route } from '@/router';
 import { useToast } from 'vue-toastification';
 import { EventData, EventType, LogEvent, LogEventListenerData } from '@/shoppinglist/events';
-import ShareDialog, { ShareLink } from '@/components/ShareDialog.vue';
+import ShareDialog from '@/components/ShareDialog.vue';
 
 const props = defineProps<{
   id: string | undefined,
@@ -156,6 +195,11 @@ const suggestionLoading = ref(false);
 
 const openLogDialog = ref(false);
 const openShareDialog = ref(false);
+const editingListInfo = ref(false);
+const temporaryData = reactive({
+  listName: '',
+  listDescription: '',
+});
 
 const shoppingList: Ref<ShoppingList | null> = ref(null);
 
@@ -492,6 +536,39 @@ async function sendEventsToServer(): Promise<unknown> {
       console.log('[LOG] Can\'t send events.value to server!');
       throw e;
     });
+}
+
+//endregion
+
+//region list utils
+function enterListInfoEditState() {
+  temporaryData.listName = shoppingList.value?.name ?? 'Error';
+  temporaryData.listDescription = shoppingList.value?.description ?? 'Error';
+
+  editingListInfo.value = true;
+}
+
+async function setListInfo() {
+  if (!shoppingList.value) return;
+  shoppingList.value.name = temporaryData.listName;
+  shoppingList.value.description = temporaryData.listDescription;
+
+  editingListInfo.value = false;
+
+  await sendListInfoChangeToServer();
+}
+
+async function sendListInfoChangeToServer() {
+  if (!shoppingList.value) return;
+
+  await feathersClient.service('list').patch(shoppingList.value.id, {
+    name: shoppingList.value.name,
+    description: shoppingList.value.description,
+  } as Partial<IShoppingList>, {
+    query: {
+      listid: shoppingList.value.listid
+    }
+  });
 }
 
 //endregion
