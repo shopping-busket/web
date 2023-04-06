@@ -51,7 +51,7 @@
             </span>
 
             <span v-if="displaySender" :class="colorCode ? 'at mr-1' : 'mr-1'">by</span>
-            <span v-if="displaySender" :class="{ 'sender': colorCode }">{{ event.sender }}</span>
+            <span v-if="displaySender" :class="{ 'sender': colorCode }">{{ event.sender ?? 'us (this client)' }}</span>
 
             <v-divider />
           </div>

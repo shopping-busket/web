@@ -253,7 +253,7 @@ function registerEventListener() {
 
     if (!shoppingList.value) return;
     const entry = shoppingList.value?.findEntryGlobal((value) => value.id === event.entryId);
-    if (!entry) return;
+    if (!entry && data.eventData.event !== EventType.CREATE_ENTRY) return;
 
     switch (data.eventData.event) {
       case EventType.CREATE_ENTRY:
