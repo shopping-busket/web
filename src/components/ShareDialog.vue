@@ -7,13 +7,13 @@
       <v-card-text>
         <v-list :lines="'one'">
           <v-list-item
-            v-for="(link, i) in whitelistedUsers"
-            :key="link.listId"
-            :title="link.inviteEmail"
+            v-for="(whitelist, i) in whitelistedUsers"
+            :key="whitelist.listId"
+            :title="whitelist.inviteEmail"
             subtitle="Pending..."
             append-icon="mdi-pencil-outline"
             :ripple="true"
-            :prepend-avatar="getGravatar()"
+            :prepend-avatar="getGravatar(whitelist)"
             @click="editUserDialog = true; editUserIndex = i"
           />
         </v-list>
