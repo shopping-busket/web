@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
-import feathersClient, { FeathersError } from '@/feathers-client';
+import feathersClient, { AuthObject, FeathersError } from '@/feathers-client';
+import app from '@/main';
+import { authenticationInjection, userInjection } from '@/helpers/injectionKeys';
 
 type RouteRecordRawWithMeta = RouteRecordRaw & {
   meta?: {
@@ -121,21 +123,23 @@ router.beforeEach(async (to, from, next) => {
       next();
     }, 800);
 
-    await feathersClient.authenticate()
-      .catch((err: FeathersError) => {
-        if (err.code === 408) {
-          console.log('[Auth] Timeout while trying to authenticate. You are offline!');
-          return;
-        }
-        console.log(`[Auth] Not authenticated. This page requires auth: ${to.meta?.requiresAuth ? 'yes' : 'no'}`);
-        if (!err.data?.reason && to.meta?.requiresAuth) {
-          router.replace({
-            name: 'login',
-            query: { redirect: to.path },
-          });
-          return;
-        }
-      });
+    await feathersClient.authenticate().then((authentication) => {
+        app.provide(authenticationInjection, authentication as AuthObject);
+        app.provide(userInjection, (authentication as AuthObject).user);
+    }).catch((err: FeathersError) => {
+      if (err.code === 408) {
+        console.log('[Auth] Timeout while trying to authenticate. You are offline!');
+        return;
+      }
+      console.log(`[Auth] Not authenticated. This page requires auth: ${to.meta?.requiresAuth ? 'yes' : 'no'}`);
+      if (!err.data?.reason && to.meta?.requiresAuth) {
+        router.replace({
+          name: 'login',
+          query: { redirect: to.path },
+        });
+        return;
+      }
+    });
   }
   next();
 });
