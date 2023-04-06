@@ -100,11 +100,10 @@ import {
   VCheckboxBtn,
   VTextField,
 } from 'vuetify/components';
-import { computed, onMounted, reactive, Ref, ref, watch } from 'vue';
-import feathersClient, { DB, Service, User } from '@/feathers-client';
+import { computed, onMounted, reactive, Ref, ref } from 'vue';
+import feathersClient, { DB, Service } from '@/feathers-client';
 import { ReactiveVariable } from 'vue/macros';
 import { Params } from '@feathersjs/feathers';
-import crypto from 'crypto';
 import md5 from '@/helpers/md5';
 
 const props = defineProps<{
