@@ -8,7 +8,7 @@
       expand-on-hover
     >
       <v-list-item
-        :prepend-avatar="auth != null ? gravatar(auth.user.email) : img"
+        :prepend-avatar="auth != null ? auth.user.avatarURI : img"
         :title="auth == null ? 'Not logged in' : auth?.user?.fullName"
         class="{'my-1': drawerdsaduhasdhuashudashu}"
         nav
@@ -115,9 +115,10 @@ import {
 import { LocationQueryRaw, useRoute, useRouter } from 'vue-router';
 import { Md5 } from 'ts-md5';
 import feathersClient, { AuthObject } from '@/feathers-client';
-import { onMounted, Ref, ref, watch } from 'vue';
+import { inject, onMounted, Ref, ref, watch } from 'vue';
 import { useToast } from 'vue-toastification';
 import img from '@/assets/avatar-placeholder.png';
+import { authenticationInjection } from '@/helpers/injectionKeys';
 
 const props = withDefaults(defineProps<{
   appbarColor?: string
@@ -170,7 +171,7 @@ const drawer = ref(false);
 const permDrawer = ref(false);
 const mini = ref(false);
 
-const auth: Ref<AuthObject | null> = ref(null);
+const auth: Ref<AuthObject | null> = ref(inject(authenticationInjection) ?? null);
 let installPrompt: BeforeInstallPromptEvent | null = null;
 let showInstallable = false;
 
@@ -193,12 +194,6 @@ onMounted(() => {
     divide: true,
   });
 });
-
-function gravatar(email: string): string {
-  const defaultImg = window.location.origin.includes('localhost') ? 'identicon' : encodeURIComponent(`${window.location.origin}/avatar-placeholder.png`);
-  return `https://www.gravatar.com/avatar/${Md5.hashStr(email.toLowerCase()
-    .trim())}?d=${defaultImg}`;
-}
 
 async function installApp(): Promise<void> {
   if (!installPrompt) return;
