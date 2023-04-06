@@ -167,6 +167,6 @@ async function updateUserPermissions(whitelist: UserWhitelist) {
 }
 
 function getGravatar(whitelist: UserWhitelist): string {
-  return `https://s.gravatar.com/avatar/${md5(whitelist.inviteEmail.toLowerCase())}?s=60`;
+  return `https://gravatar.com/avatar/${md5(whitelist.inviteEmail.toLowerCase())}?s=60&d=monsterid`;
 }
 </script>
