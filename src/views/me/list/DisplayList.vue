@@ -171,14 +171,16 @@ import {
 } from 'vuetify/components';
 import EventViewer from '@/components/EventViewer.vue';
 import TodoList from '@/components/TodoList.vue';
-import feathersClient, { AuthObject, Service } from '@/feathers-client';
+import feathersClient, { Service } from '@/feathers-client';
 import ShoppingList, { IShoppingList } from '@/shoppinglist/ShoppingList';
-import { onMounted, reactive, Ref, ref, watch } from 'vue';
+import { inject, onMounted, reactive, Ref, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { Route } from '@/router';
 import { useToast } from 'vue-toastification';
 import { EventData, EventType, LogEvent, LogEventListenerData } from '@/shoppinglist/events';
 import ShareDialog from '@/components/ShareDialog.vue';
+import { v4 as uuidv4 } from 'uuid';
+import { userInjection } from '@/helpers/injectionKeys';
 
 const props = defineProps<{
   id: string | undefined,
@@ -213,6 +215,8 @@ const connected = ref(feathersClient.io.connected);
 
 const events: Ref<EventData[]> = ref([]);
 const historicalEvents: Ref<EventData[]> = ref([]);
+const sessionId = uuidv4();
+const user = inject(userInjection);
 
 onMounted(async () => {
   await connectionWatcher();
@@ -223,8 +227,6 @@ onMounted(async () => {
 
   if (connected.value) {
     shoppingList.value = await loadListFromRemote();
-    const { user } = await feathersClient.get('authentication');
-    user.value = user;
   } else {
     shoppingList.value = await loadListFromCache();
   }
@@ -234,19 +236,15 @@ onMounted(async () => {
 watch(connected, connectionWatcher);
 
 async function connectionWatcher() {
-  if (feathersClient.io.connected.value) {
-    const { user } = await feathersClient.get('authentication');
-    user.value = user;
+  if (feathersClient.io.connected) {
     await sendEventsToServer();
   }
 }
 
 function registerEventListener() {
   feathersClient.service('event').on('created', async (data: LogEventListenerData) => {
-    const { user } = await feathersClient.get('authentication');
-
     const event = data.eventData;
-    if (event.sender == user.uuid) {
+    if (event.sender === sessionId) {
       console.log('ignoring event because it was sent from this client');
       return;
     }
@@ -318,7 +316,6 @@ async function loadListFromRemote(): Promise<ShoppingList | null> {
   // } as Partial<ShareLink>);
   // console.log(share);
 
-  const { user } = await feathersClient.get('authentication') as AuthObject;
   if (!user) return null;
   /*const d = await feathersClient.service(Service.SHARE_LINK).join({
     shareLink: props.id,
@@ -514,13 +511,11 @@ async function recordEvent(event: EventData): Promise<unknown> {
 async function sendEventsToServer(): Promise<unknown> {
   console.log('Sending events.value to server.');
 
-  const { user } = await feathersClient.get('authentication');
-
   const data: LogEvent[] = events.value.map((e) => ({
     listid: props.id,
     eventData: {
       ...e,
-      sender: user.uuid,
+      sender: sessionId,
     },
   } as LogEvent));
 
@@ -561,7 +556,7 @@ async function setListInfo() {
 async function sendListInfoChangeToServer() {
   if (!shoppingList.value) return;
 
-  await feathersClient.service('list').patch(shoppingList.value.id, {
+  await feathersClient.service('list').patch(null, {
     name: shoppingList.value.name,
     description: shoppingList.value.description,
   } as Partial<IShoppingList>, {
