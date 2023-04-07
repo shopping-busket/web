@@ -310,17 +310,7 @@ async function reloadList(): Promise<void> {
 }
 
 async function loadListFromRemote(): Promise<ShoppingList | null> {
-  // const share = feathersClient.service(Service.SHARE_LINK).patch(null, {
-  //   uri: props.id,
-  //   users:
-  // } as Partial<ShareLink>);
-  // console.log(share);
-
   if (!user) return null;
-  /*const d = await feathersClient.service(Service.SHARE_LINK).join({
-    shareLink: props.id,
-    user: user.uuid,
-  }, {});*/
 
   const list: IShoppingList[] | null = await feathersClient.service(Service.LIST).find({ query: { listid: props.id } })
     .catch(() => {
