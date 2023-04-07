@@ -46,6 +46,7 @@
             />
 
             <v-btn
+              v-show="shoppingList != null && user != undefined && shoppingList.owner === user.uuid"
               color="primary" icon="mdi-account-group-outline" size="x-small" variant="text"
               @click="openShareDialog = true"
             />
@@ -152,9 +153,9 @@
     />
 
     <ShareDialog
-      v-if="shoppingList !== null"
+      v-if="shoppingList != null && user != undefined && shoppingList.owner === user.uuid"
       v-model="openShareDialog"
-      :list-id="shoppingList.listid"
+      :list-id="(shoppingList as ShoppingList).listid"
     />
   </div>
 </template>
