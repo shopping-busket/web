@@ -142,7 +142,7 @@ router.beforeEach(async (to, from, next) => {
         return;
       }
       console.log(`[Auth] Not authenticated. This page requires auth: ${to.meta?.requiresAuth ? 'yes' : 'no'}`);
-      if (!err.data?.reason && to.meta?.requiresAuth) {
+      if (!Array.isArray(err.data) && !err.data?.reason && to.meta?.requiresAuth) {
         router.replace({
           name: 'login',
           query: { redirect: to.path },
