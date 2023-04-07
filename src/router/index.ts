@@ -46,6 +46,9 @@ const routes: Array<RouteRecordRawWithMeta> = [
     path: '/me/list/:id/join/:secret/:whitelistId',
     name: Route.JOIN_LIST,
     props: true,
+    meta: {
+      requiresAuth: true,
+    },
     component: () => import('../views/me/list/JoinList.vue'),
   },
   {
