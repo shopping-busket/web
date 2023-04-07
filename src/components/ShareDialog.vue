@@ -5,7 +5,7 @@
   >
     <v-card title="Manage Whitelist">
       <v-card-text>
-        <v-list :lines="'one'">
+        <v-list v-if="whitelistedUsers.length > 0" :lines="'one'">
           <v-list-item
             v-for="(whitelist, i) in whitelistedUsers"
             :key="whitelist.listId"
@@ -27,6 +27,9 @@
             </v-list-item-subtitle>
           </v-list-item>
         </v-list>
+        <div v-else class="d-flex justify-center align-center mb-8 mt-4" style="opacity: 70%">
+          Nobody is whitelisted. Start by inviting somebody!
+        </div>
 
         <div class="d-flex align-center mt-4">
           <v-text-field
@@ -36,7 +39,9 @@
           />
 
           <v-btn
-            color="primary" variant="outlined"
+            :loading="inviteButtonLoading"
+            color="primary"
+            variant="outlined"
             @click="addToWhitelist"
           >
             Invite User
@@ -149,10 +154,11 @@ import {
   VTextField,
 } from 'vuetify/components';
 import { computed, onMounted, reactive, Ref, ref } from 'vue';
-import feathersClient, { DB, Service } from '@/feathers-client';
+import feathersClient, { BadRequest, DB, FeathersError, Service } from '@/feathers-client';
 import { ReactiveVariable } from 'vue/macros';
 import { Params } from '@feathersjs/feathers';
 import md5 from '@/helpers/md5';
+import { useToast } from 'vue-toastification';
 
 const props = defineProps<{
   modelValue: boolean,
@@ -170,6 +176,9 @@ const openDialog = computed({
   }
 });
 
+const toast = useToast();
+
+const inviteButtonLoading = ref(false);
 const email: Ref<string> = ref('');
 const editUserDialog = ref(false);
 const editUserIndex = ref(-1);
@@ -197,15 +206,31 @@ onMounted(async () => {
   } as Params<Partial<UserWhitelist>>);
 
   if (links != null) whitelistedUsers.push(...links);
+
+  feathersClient.service(Service.WHITELISTED_USERS).on('patched', (d: UserWhitelist) => {
+    whitelistedUsers.splice(whitelistedUsers.findIndex((u) => u.id === d.id), 1, d);
+  });
 });
 
 async function addToWhitelist() {
-  const whitelisted = await feathersClient.service(Service.WHITELISTED_USERS).create({
+  inviteButtonLoading.value = true;
+
+  await feathersClient.service(Service.WHITELISTED_USERS).create({
     inviteEmail: email.value,
     listId: props.listId,
-  } as Partial<UserWhitelist>);
+  } as Partial<UserWhitelist>).then((whitelisted) => {
+    whitelistedUsers.push(whitelisted);
+  }).catch((err: FeathersError<BadRequest>) => {
+    let emailFormatErr = false;
+    if (Array.isArray(err.data)) emailFormatErr = err.data[0].keyword === 'format';
+    else emailFormatErr = err.data.keyword === 'format';
 
-  whitelistedUsers.push(whitelisted);
+    if (emailFormatErr) toast('Input has to be an email!');
+    else toast.error('Unexpected Error! Try again.')
+  });
+
+  inviteButtonLoading.value = false;
+  email.value = '';
 }
 
 async function updateUserPermissions(whitelist: UserWhitelist) {

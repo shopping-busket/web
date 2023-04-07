@@ -52,9 +52,20 @@ export interface AuthObject {
   user: User;
 }
 
-export interface FeathersError {
+export interface FeathersError<T = Record<string, unknown>> {
   code: number,
-  data: Record<string, unknown>,
+  name: string,
+  message: string,
+  className: string,
+  data: T[] | T,
+}
+
+export interface BadRequest {
+  instancePath: string,
+  schemaPath: string,
+  keyword: string,
+  params: Record<string, unknown>,
+  message: string,
 }
 
 export async function isLoggedIn(): Promise<boolean> {
