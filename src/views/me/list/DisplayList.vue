@@ -28,6 +28,7 @@
 
           <div v-if="!editingListInfo">
             <v-btn
+              v-show="shoppingList != null && user != undefined && shoppingList.owner === user.uuid"
               color="primary" icon="mdi-pencil-outline" size="x-small" variant="text"
               @click="enterListInfoEditState()"
             />
@@ -226,11 +227,14 @@ onMounted(async () => {
 
   events.value = loadStoredEvents();
 
-  if (connected.value) {
-    shoppingList.value = await loadListFromRemote();
-  } else {
-    shoppingList.value = await loadListFromCache();
-  }
+  if (connected.value) shoppingList.value = await loadListFromRemote();
+  else shoppingList.value = await loadListFromCache();
+
+  feathersClient.service(Service.LIST).on('patched', (patchedList: IShoppingList) => {
+    if (!shoppingList.value) return;
+    shoppingList.value.name = patchedList.name;
+    shoppingList.value.description = patchedList.description;
+  });
 });
 
 //region register listeners
