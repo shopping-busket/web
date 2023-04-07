@@ -13,6 +13,7 @@ export enum Route {
   SIGNUP = 'signup',
   LOGIN = 'login',
   MY_LISTS = 'my lists',
+  JOIN_LIST = 'join list',
   LIST_NOT_FOUND = 'list not found',
   DISPLAY_LIST = 'display list',
   PREFERENCES = 'preferences',
@@ -41,6 +42,12 @@ const routes: Array<RouteRecordRawWithMeta> = [
   //endregion authentication
 
   //region lists
+  {
+    path: '/me/list/:id/join/:secret/:whitelistId',
+    name: Route.JOIN_LIST,
+    props: true,
+    component: () => import('../views/me/list/JoinList.vue'),
+  },
   {
     path: '/me/list/:id/not-found',
     name: Route.LIST_NOT_FOUND,
