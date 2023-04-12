@@ -173,7 +173,7 @@ import {
 } from 'vuetify/components';
 import EventViewer from '@/components/EventViewer.vue';
 import TodoList from '@/components/TodoList.vue';
-import feathersClient, { Service } from '@/feathers-client';
+import feathersClient, { FeathersError, Service } from '@/feathers-client';
 import ShoppingList, { IShoppingList } from '@/shoppinglist/ShoppingList';
 import { inject, onMounted, reactive, Ref, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
@@ -227,8 +227,11 @@ onMounted(async () => {
 
   events.value = loadStoredEvents();
 
-  if (connected.value) shoppingList.value = await loadListFromRemote();
-  else shoppingList.value = await loadListFromCache();
+  if (connected.value) {
+    shoppingList.value = await loadListFromRemote();
+  } else {
+    shoppingList.value = await loadListFromCache();
+  }
 
   feathersClient.service(Service.LIST).on('patched', (patchedList: IShoppingList) => {
     if (!shoppingList.value) return;
@@ -520,15 +523,26 @@ async function sendEventsToServer(): Promise<unknown> {
 
   console.log(data);
 
+  const removeQueueEvent = (d: LogEvent[]) => {
+    events.value.splice(0, d.length);
+    localStorage.setItem(`events.value-${props.id}`, JSON.stringify(events.value));
+  };
+
   return feathersClient.service(Service.EVENT).create(data)
     .then((d) => {
       console.log('[LOG] Sent event to server');
-      events.value.splice(0, (d as Array<LogEvent>).length);
-      localStorage.setItem(`events.value-${props.id}`, JSON.stringify(events.value));
+      removeQueueEvent(d);
     })
     .catch((e) => {
       console.log('[LOG] Can\'t send events.value to server!');
-      throw e;
+      if ((e as FeathersError).code === 403) {
+        console.log('Not permitted to send this type of event!');
+        toast.warning('You are not permitted to do this action!');
+        removeQueueEvent(data);
+        reloadList();
+      } else {
+        throw e;
+      }
     });
 }
 
