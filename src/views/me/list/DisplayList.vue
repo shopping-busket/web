@@ -282,7 +282,7 @@ function registerEventListener() {
         break;
 
       case EventType.CHANGED_ENTRY_NAME:
-        if (entry.name === data.eventData.state.name) return;
+        if (entry != undefined && entry.name === data.eventData.state.name) return;
 
         await renameEntry(event.entryId, data.eventData.state.name, false);
         break;
