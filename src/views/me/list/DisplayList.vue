@@ -630,9 +630,11 @@ function getViewInfoAlertHideStateFromStore() {
   return state.find(s => s.listId === shoppingList.value?.listid)?.hidden ?? hideViewOnlyInfoAlert(false)?.hidden;
 }
 
-async function updatePermissions(user: UserWhitelist | null = null) {
-  let whitelisted = [user];
-  if (!user) {
+async function updatePermissions(whitelistedUser: UserWhitelist | null = null) {
+  if (shoppingList.value && shoppingList.value?.owner === user?.uuid) return;
+
+  let whitelisted = [whitelistedUser];
+  if (!whitelistedUser) {
     whitelisted = await feathersClient.service(Service.WHITELISTED_USERS).find({
       query: {
         listId: shoppingList.value?.listid,
