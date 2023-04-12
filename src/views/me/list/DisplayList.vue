@@ -239,36 +239,18 @@ const viewOnlyInfoAlertHidden = ref(false);
 onMounted(async () => {
   await connectionWatcher();
   registerEventListener();
+  registerListInfoChangeListener();
+  registerWhitelistListeners();
   registerSearch();
 
   events.value = loadStoredEvents();
 
   if (connected.value) {
     shoppingList.value = await loadListFromRemote();
+    if (shoppingList.value != null) await updatePermissions();
   } else {
     shoppingList.value = await loadListFromCache();
   }
-
-  feathersClient.service(Service.LIST).on('patched', (patchedList: IShoppingList) => {
-    if (!shoppingList.value) return;
-    if (shoppingList.value?.listid !== patchedList.listid) return;
-
-    shoppingList.value.name = patchedList.name;
-    shoppingList.value.description = patchedList.description;
-  });
-
-  feathersClient.service(Service.WHITELISTED_USERS).once('removed', (removed: UserWhitelist) => {
-    if (shoppingList.value?.listid !== removed.listId) return;
-    window.location.reload();
-  });
-
-  feathersClient.service(Service.WHITELISTED_USERS).on('patched', async (patchedUser: UserWhitelist) => {
-    if (user && user.uuid === shoppingList.value?.owner) return;
-    if (shoppingList.value?.listid !== patchedUser.listId) return;
-    await updatePermissions(patchedUser);
-    hideViewOnlyInfoAlert(false);
-  });
-  await updatePermissions();
 
   viewOnlyInfoAlertHidden.value = getViewInfoAlertHideStateFromStore();
 });
@@ -280,6 +262,30 @@ async function connectionWatcher() {
   if (feathersClient.io.connected) {
     await sendEventsToServer();
   }
+}
+
+function registerListInfoChangeListener() {
+  feathersClient.service(Service.LIST).on('patched', (patchedList: IShoppingList) => {
+    if (!shoppingList.value) return;
+    if (shoppingList.value?.listid !== patchedList.listid) return;
+
+    shoppingList.value.name = patchedList.name;
+    shoppingList.value.description = patchedList.description;
+  });
+}
+
+function registerWhitelistListeners() {
+  feathersClient.service(Service.WHITELISTED_USERS).once('removed', (removed: UserWhitelist) => {
+    if (shoppingList.value?.listid !== removed.listId) return;
+    window.location.reload();
+  });
+
+  feathersClient.service(Service.WHITELISTED_USERS).on('patched', async (patchedUser: UserWhitelist) => {
+    if (user && user.uuid === shoppingList.value?.owner) return;
+    if (shoppingList.value?.listid !== patchedUser.listId) return;
+    await updatePermissions(patchedUser);
+    hideViewOnlyInfoAlert(false);
+  });
 }
 
 function registerEventListener() {
@@ -355,11 +361,11 @@ async function reloadList(): Promise<void> {
 async function loadListFromRemote(): Promise<ShoppingList | null> {
   if (!user) return null;
 
-  const list: IShoppingList[] | null = await feathersClient.service(Service.LIST).find({ query: { listid: props.id } })
+  const list: IShoppingList[] | undefined = await feathersClient.service(Service.LIST).find({ query: { listid: props.id } })
     .catch(() => {
       listNotFound();
-    }) as IShoppingList[] | null;
-  if (list == null) {
+    }) as IShoppingList[] | undefined;
+  if (list == undefined || list.length <= 0) {
     await listNotFound();
     return null;
   }
