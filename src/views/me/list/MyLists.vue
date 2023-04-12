@@ -44,7 +44,8 @@
         <v-card-text class="mt-1">
           <v-form ref="newListForm" v-model="incorrectEntries" @submit.stop="createList()">
             <v-text-field
-              v-model="newList.name" :rules="nameRules"
+              v-model="newList.name"
+              :rules="nameRules"
               autofocus
               color="primary"
               counter="32"
@@ -53,6 +54,7 @@
               variant="outlined"
             />
             <v-textarea
+              value=" "
               v-model="newList.description"
               :rules="descriptionRules"
               color="primary"
@@ -175,6 +177,7 @@ const newList = ref({
 const auth: Ref<null | AuthObject> = ref(null);
 const lists: Ref<Array<IShoppingList> | null> = ref(null);
 const importFile: Ref<File | null> = ref(null);
+const newListForm: Ref<VForm | null> = ref(null);
 
 onMounted(async () => {
   if (!feathersClient.io.connected) {
@@ -192,6 +195,11 @@ onMounted(async () => {
   }
 
   auth.value = await feathersClient.get('authentication');
+});
+
+watch(['newListDialog'], () => {
+  if (!newListForm.value) return;
+  newListForm.value?.resetValidation();
 });
 
 function setImportFile(file: File): void {
