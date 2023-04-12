@@ -2,12 +2,12 @@
   <div class="d-flex justify-center align-center h-100 flex-column">
     <span class="mb-3" style="opacity: 60%">
       <span v-if="invalidSecret">
-        Invalid or expired share link.
+        Invalid, expired or used share link.
       </span>
       <span v-else-if="error">
         An unknown error occurred!
       </span>
-      <span>
+      <span v-else>
         Joining...
       </span>
     </span>
@@ -44,7 +44,7 @@ onMounted(async () => {
       params: { id: props.id }
     });
   } catch (e) {
-    if ((e as FeathersError).code === 403) {
+    if ((e as FeathersError).code === 400) {
       console.log('inviteSecret invalid!');
       invalidSecret.value = true;
     }
