@@ -87,20 +87,20 @@
       </v-card-subtitle>
 
       <v-card-text v-if="!editingListInfo" class="mb-0 pb-0">
-        <v-text-field
-          ref="newItemField"
-          v-model="newItemName"
-          :disabled="!whitelistedUserPermissions.canEditEntries"
-          :rules="newItemRules"
-          append-inner-icon="mdi-basket-plus-outline"
-          color="primary"
-          density="comfortable"
-          placeholder="Add item"
-          variant="outlined"
-          @blur="newItemName.length === 0 ? newItemField?.resetValidation() : null"
-          @click:append-inner="createEntry"
-          @keydown.enter="createEntry"
-        />
+        <v-form ref="newItemForm" :disabled="!whitelistedUserPermissions.canEditEntries">
+          <v-text-field
+            v-model="newItemName"
+            :rules="newItemRules"
+            append-inner-icon="mdi-basket-plus-outline"
+            color="primary"
+            density="comfortable"
+            placeholder="Add item"
+            variant="outlined"
+            @blur="newItemName.length === 0 ? newItemForm?.resetValidation() : null"
+            @click:append-inner="createEntry"
+            @keydown.enter="createEntry"
+          />
+        </v-form>
         <!--        TODO: <v-autocomplete :items="suggestedItems"-->
         <!--                        outlined-->
         <!--                        placeholder="Add item"-->
@@ -178,7 +178,7 @@ import {
   VCard,
   VCardSubtitle,
   VCardText,
-  VCardTitle,
+  VCardTitle, VForm,
   VProgressCircular,
   VTextField,
 } from 'vuetify/components';
@@ -202,7 +202,7 @@ const props = defineProps<{
 const router = useRouter();
 const toast = useToast();
 
-const newItemField: Ref<VTextField | null> = ref(null);
+const newItemForm: Ref<VForm | null> = ref(null);
 
 const suggestedItems: Ref<string[]> = ref([]);
 const suggestionSearch = ref('');
@@ -462,7 +462,7 @@ async function moveEntry(index: number, oldIndex: number, _recordEvent = true, m
 async function createEntry(_recordEvent = true): Promise<void> {
   // Filters hidden characters
   // eslint-disable-next-line no-control-regex
-  const name = newItemName.value.trim().replaceAll(/[^\x00-\x7F(?:\u00c4,.\-\\/ \u00e4\u00d6\u00f6\u00dc\u00fc\u00df)]/g, '');
+  const name = (newItemName.value ?? '').trim().replaceAll(/[^\x00-\x7F(?:\u00c4,.\-\\/ \u00e4\u00d6\u00f6\u00dc\u00fc\u00df)]/g, '');
 
   for (let i = 0; i < newItemRules.length; i++) {
     const rule = newItemRules[i];
@@ -482,7 +482,7 @@ async function createEntry(_recordEvent = true): Promise<void> {
   };
 
   newItemName.value = '';
-  newItemField.value?.resetValidation();
+  await newItemForm.value?.reset();
 
   if (!_recordEvent) return;
   await recordEvent({
