@@ -1,5 +1,12 @@
 <template>
   <div class="mt-4" style="max-width: 800px; margin: auto">
+    <v-alert
+      :model-value="!viewOnlyInfoAlertHidden"
+      text="This list is view-only because you are missing permissions!" variant="outlined"
+      closable density="compact" type="info" @click:close="hideViewOnlyInfoAlert(true)"
+      class="mb-4"
+    />
+
     <v-card variant="outlined">
       <v-card-title>
         <div class="d-flex align-center w-100">
@@ -83,6 +90,7 @@
         <v-text-field
           ref="newItemField"
           v-model="newItemName"
+          :disabled="!whitelistedUserPermissions.canEditEntries"
           :rules="newItemRules"
           append-inner-icon="mdi-basket-plus-outline"
           color="primary"
@@ -125,6 +133,7 @@
           is-movable
           label="Todo"
           show-count
+          :user-permissions="whitelistedUserPermissions"
           @clear-done="clearDone"
           @check-entry="checkEntry"
           @rename-entry="renameEntry"
@@ -136,6 +145,7 @@
           checked-state
           is-clearable
           label="Done"
+          :user-permissions="whitelistedUserPermissions"
           @clear-done="clearDone"
           @check-entry="checkEntry"
           @rename-entry="renameEntry"
@@ -163,6 +173,7 @@
 
 <script lang="ts" setup>
 import {
+  VAlert,
   VBtn,
   VCard,
   VCardSubtitle,
@@ -180,7 +191,7 @@ import { useRouter } from 'vue-router';
 import { Route } from '@/router';
 import { useToast } from 'vue-toastification';
 import { EventData, EventType, LogEvent, LogEventListenerData } from '@/shoppinglist/events';
-import ShareDialog from '@/components/ShareDialog.vue';
+import ShareDialog, { UserPermissions, UserWhitelist } from '@/components/ShareDialog.vue';
 import { v4 as uuidv4 } from 'uuid';
 import { userInjection } from '@/helpers/injectionKeys';
 
@@ -219,6 +230,11 @@ const events: Ref<EventData[]> = ref([]);
 const historicalEvents: Ref<EventData[]> = ref([]);
 const sessionId = uuidv4();
 const user = inject(userInjection);
+const whitelistedUserPermissions = ref({
+  canEditEntries: true,
+  canDeleteEntries: true,
+} as UserPermissions);
+const viewOnlyInfoAlertHidden = ref(false);
 
 onMounted(async () => {
   await connectionWatcher();
@@ -242,6 +258,15 @@ onMounted(async () => {
   feathersClient.service(Service.WHITELISTED_USERS).once('removed', () => {
     window.location.reload();
   });
+
+  feathersClient.service(Service.WHITELISTED_USERS).on('patched', async (patchedUser: UserWhitelist) => {
+    if (user && user.uuid === shoppingList.value?.owner) return;
+    await updatePermissions(patchedUser);
+    hideViewOnlyInfoAlert(false);
+  });
+  await updatePermissions();
+
+  viewOnlyInfoAlertHidden.value = getViewInfoAlertHideStateFromStore();
 });
 
 //region register listeners
@@ -549,6 +574,71 @@ async function sendEventsToServer(): Promise<unknown> {
 //endregion
 
 //region list utils
+const VIEW_ONLY_INFO_ALERT_STORE = 'viewOnlyInfoAlert';
+
+interface ViewOnlyInfoAlertStore {
+  hidden: boolean,
+  listId: string,
+}
+
+function hideViewOnlyInfoAlert(hide = true): ViewOnlyInfoAlertStore {
+  if (!shoppingList.value) {
+    return {
+      hidden: false,
+      listId: '',
+    };
+  }
+
+  const raw = localStorage.getItem(VIEW_ONLY_INFO_ALERT_STORE);
+  let data: ViewOnlyInfoAlertStore[];
+  if (raw == null) {
+    data = [];
+  } else {
+    data = JSON.parse(raw);
+  }
+
+  const index = data.findIndex(d => d.listId === shoppingList.value?.listid);
+
+  const insertionState = {
+    hidden: hide,
+    listId: shoppingList.value?.listid,
+  };
+
+  if (index === -1) {
+    data.push(insertionState);
+  } else {
+    data[index] = insertionState;
+  }
+
+  localStorage.setItem(VIEW_ONLY_INFO_ALERT_STORE, JSON.stringify(data));
+  viewOnlyInfoAlertHidden.value = hide;
+
+  return insertionState;
+}
+
+function getViewInfoAlertHideStateFromStore() {
+  const rawState = localStorage.getItem(VIEW_ONLY_INFO_ALERT_STORE);
+  if (rawState == null) return hideViewOnlyInfoAlert(false).hidden;
+
+  const state: ViewOnlyInfoAlertStore[] = JSON.parse(rawState);
+  return state.find(s => s.listId === shoppingList.value?.listid)?.hidden ?? hideViewOnlyInfoAlert(false)?.hidden;
+}
+
+async function updatePermissions(user: UserWhitelist | null = null) {
+  let whitelisted = [user];
+  if (!user) {
+    whitelisted = await feathersClient.service(Service.WHITELISTED_USERS).find({
+      query: {
+        listId: shoppingList.value?.listid,
+      },
+    }) as UserWhitelist[];
+  }
+  if (whitelisted.length > 0) {
+    whitelistedUserPermissions.value.canEditEntries = whitelisted[0].canEditEntries;
+    whitelistedUserPermissions.value.canDeleteEntries = whitelisted[0].canDeleteEntries;
+  }
+}
+
 function enterListInfoEditState() {
   temporaryData.listName = shoppingList.value?.name ?? 'Error';
   temporaryData.listDescription = shoppingList.value?.description ?? 'Error';

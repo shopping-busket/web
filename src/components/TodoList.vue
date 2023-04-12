@@ -5,7 +5,7 @@
         {{ label }} {{ getCountString(showCount) }}
       </div>
       <v-btn
-        v-if="isClearable"
+        v-if="isClearable && userPermissions.canEditEntries && userPermissions.canDeleteEntries"
         class="mr-2"
         color="red"
         icon="mdi-trash-can-outline"
@@ -35,6 +35,7 @@
           @click="focusEntry(element.id)"
         >
           <v-checkbox-btn
+            v-show="userPermissions.canEditEntries"
             :model-value="checkedState"
             density="comfortable"
             @click="emit('check-entry', element.id, !checkedState)"
@@ -56,6 +57,7 @@
             {{ element.name }}
           </div>
           <v-btn
+            v-show="userPermissions.canEditEntries"
             v-if="element.additional.editName === element.name"
             :icon="element.additional.edit ? 'mdi-pencil-outline' : 'mdi-pencil'"
             size="x-small"
@@ -84,7 +86,7 @@
             </v-btn>
           </div>
           <v-spacer />
-          <v-icon v-if="isMovable" class="handle cursor-move" size="small">
+          <v-icon v-if="isMovable && userPermissions.canEditEntries" class="handle cursor-move" size="small">
             mdi-menu
           </v-icon>
         </v-card>
@@ -100,6 +102,8 @@ import { ShoppingListItem } from '@/shoppinglist/ShoppingList';
 import config from '../../config';
 import { computed, ref, watch } from 'vue';
 import { useTheme } from 'vuetify';
+import { UserPermissions } from '@/components/ShareDialog.vue';
+
 
 const props = withDefaults(defineProps<{
   modelValue: ShoppingListItem[],
@@ -108,6 +112,7 @@ const props = withDefaults(defineProps<{
   checkedState?: boolean,
   isMovable?: boolean,
   isClearable?: boolean,
+  userPermissions: UserPermissions,
 }>(), {
   showCount: false,
   checkedState: false,

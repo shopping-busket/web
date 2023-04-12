@@ -196,6 +196,8 @@ export interface UserWhitelist extends DB {
   canDeleteEntries: boolean,
 }
 
+export type UserPermissions = Pick<UserWhitelist, 'canDeleteEntries' | 'canEditEntries'>;
+
 const whitelistedUsers: ReactiveVariable<UserWhitelist[]> = reactive([]);
 
 onMounted(async () => {
