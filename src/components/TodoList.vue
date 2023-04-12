@@ -44,6 +44,7 @@
           <v-text-field
             v-if="element.additional.edit"
             v-model="element.additional.editName"
+            class="w-100"
             autofocus
             color="primary"
             density="compact"
@@ -56,6 +57,9 @@
           <div v-else @dblclick="element.additional.edit = true">
             {{ element.name }}
           </div>
+
+          <v-spacer />
+
           <v-btn
             v-show="userPermissions.canEditEntries"
             v-if="element.additional.editName === element.name"
@@ -64,10 +68,11 @@
             variant="text"
             @click="element.additional.edit = !element.additional.edit"
           />
-          <div v-else>
+          <div v-else class="d-flex">
             <v-btn
               icon
-              small
+              size="small"
+              variant="text"
               @click="emit('rename-entry', element.id); element.additional.edit = false"
               @keydown.enter="emit('rename-entry', element.id)"
             >
@@ -77,7 +82,8 @@
             </v-btn>
             <v-btn
               icon
-              small
+              size="small"
+              variant="text"
               @click="element.additional.edit = false; element.additional.editName = element.name;"
             >
               <v-icon small>
@@ -85,8 +91,9 @@
               </v-icon>
             </v-btn>
           </div>
-          <v-spacer />
-          <v-icon v-if="isMovable && userPermissions.canEditEntries" class="handle cursor-move" size="small">
+          <v-icon v-if="isMovable && userPermissions.canEditEntries" class="handle cursor-move"
+                  size="small"
+          >
             mdi-menu
           </v-icon>
         </v-card>
@@ -103,7 +110,6 @@ import config from '../../config';
 import { computed, ref, watch } from 'vue';
 import { useTheme } from 'vuetify';
 import { UserPermissions } from '@/components/ShareDialog.vue';
-
 
 const props = withDefaults(defineProps<{
   modelValue: ShoppingListItem[],
