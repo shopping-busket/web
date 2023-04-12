@@ -251,16 +251,20 @@ onMounted(async () => {
 
   feathersClient.service(Service.LIST).on('patched', (patchedList: IShoppingList) => {
     if (!shoppingList.value) return;
+    if (shoppingList.value?.listid !== patchedList.listid) return;
+
     shoppingList.value.name = patchedList.name;
     shoppingList.value.description = patchedList.description;
   });
 
-  feathersClient.service(Service.WHITELISTED_USERS).once('removed', () => {
+  feathersClient.service(Service.WHITELISTED_USERS).once('removed', (removed: UserWhitelist) => {
+    if (shoppingList.value?.listid !== removed.listId) return;
     window.location.reload();
   });
 
   feathersClient.service(Service.WHITELISTED_USERS).on('patched', async (patchedUser: UserWhitelist) => {
     if (user && user.uuid === shoppingList.value?.owner) return;
+    if (shoppingList.value?.listid !== patchedUser.listId) return;
     await updatePermissions(patchedUser);
     hideViewOnlyInfoAlert(false);
   });
@@ -289,6 +293,8 @@ function registerEventListener() {
     historicalEvents.value.push(data.eventData);
 
     if (!shoppingList.value) return;
+    if (shoppingList.value?.listid !== data.listid) return;
+
     const entry = shoppingList.value?.findEntryGlobal((value) => value.id === event.entryId);
     if (!entry && data.eventData.event !== EventType.CREATE_ENTRY) return;
 
