@@ -533,13 +533,13 @@ async function sendEventsToServer(): Promise<unknown> {
       console.log('[LOG] Sent event to server');
       removeQueueEvent(d);
     })
-    .catch((e) => {
+    .catch(async (e) => {
       console.log('[LOG] Can\'t send events.value to server!');
       if ((e as FeathersError).code === 403) {
         console.log('Not permitted to send this type of event!');
         toast.warning('You are not permitted to do this action!');
         removeQueueEvent(data);
-        reloadList();
+        await reloadList();
       } else {
         throw e;
       }
