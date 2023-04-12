@@ -235,6 +235,10 @@ onMounted(async () => {
     shoppingList.value.name = patchedList.name;
     shoppingList.value.description = patchedList.description;
   });
+
+  feathersClient.service(Service.WHITELISTED_USERS).once('removed', () => {
+    window.location.reload();
+  });
 });
 
 //region register listeners
