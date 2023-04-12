@@ -1,10 +1,10 @@
 <template>
   <div class="mt-4" style="max-width: 800px; margin: auto">
     <v-alert
-      :model-value="!viewOnlyInfoAlertHidden"
+      :model-value="!viewOnlyInfoAlertHidden && !whitelistedUserPermissions.canEditEntries"
       text="This list is view-only because you are missing permissions!" variant="outlined"
-      closable density="compact" type="info" @click:close="hideViewOnlyInfoAlert(true)"
-      class="mb-4"
+      closable density="compact" type="info" class="mb-4"
+      @click:close="hideViewOnlyInfoAlert(true)"
     />
 
     <v-card variant="outlined">
