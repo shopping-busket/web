@@ -1,7 +1,8 @@
 <template class="w-100 h-100">
   <v-card
+    max-width="500px"
     variant="outlined"
-    class="w-33 ma-auto mt-16"
+    class="ma-auto mt-16"
     title="List not found"
     :text="`The requested list with id ${props.id} was not found in our database or you don't have sufficient permissions to access it. Should the problem persist please contact us.`"
   >
