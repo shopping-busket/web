@@ -17,11 +17,12 @@
 
 <script setup lang="ts">
 import { VProgressCircular } from 'vuetify/components';
-import { onMounted, ref } from 'vue';
+import { inject, onMounted, ref } from 'vue';
 import feathersClient, { FeathersError, Service } from '@/feathers-client';
 import { UserWhitelist } from '@/components/ShareDialog.vue';
 import { Route } from '@/router';
 import { useRouter } from 'vue-router';
+import { userInjection } from '@/helpers/injectionKeys';
 
 const props = defineProps<{
   secret: string,
@@ -32,6 +33,7 @@ const props = defineProps<{
 const router = useRouter();
 const invalidSecret = ref(false);
 const error = ref(false);
+const user = inject(userInjection);
 
 onMounted(async () => {
   try {
@@ -39,16 +41,30 @@ onMounted(async () => {
       inviteSecret: props.secret,
     } as Partial<UserWhitelist>);
 
-    await router.push({
-      name: Route.DISPLAY_LIST,
-      params: { id: props.id }
-    });
   } catch (e) {
     if ((e as FeathersError).code === 400) {
+      const whitelisted = await feathersClient.service(Service.WHITELISTED_USERS).find({
+        query: {
+          listId: props.id,
+        },
+      }) as UserWhitelist[];
+
+      if (whitelisted.map(w => w.user).includes(user?.uuid)) {
+        await routeToList();
+        return;
+      }
+
       console.log('inviteSecret invalid!');
       invalidSecret.value = true;
     }
     error.value = true;
   }
 });
+
+async function routeToList() {
+  await router.push({
+    name: Route.DISPLAY_LIST,
+    params: { id: props.id }
+  });
+}
 </script>
