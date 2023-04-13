@@ -175,9 +175,15 @@ const newList = ref({
   description: '',
 });
 const auth: Ref<null | AuthObject> = ref(null);
-const lists: Ref<Array<IShoppingList> | null> = ref(null);
+const lists: Ref<IShoppingList[] | null> = ref(null);
 const importFile: Ref<File | null> = ref(null);
 const newListForm: Ref<VForm | null> = ref(null);
+
+export interface LibraryEntry {
+  user: string,
+  listId: string,
+  list: IShoppingList,
+}
 
 onMounted(async () => {
   if (!feathersClient.io.connected) {
@@ -207,14 +213,15 @@ function setImportFile(file: File): void {
 }
 
 async function populateLists(): Promise<void> {
-  const l: IShoppingList[] = ((await feathersClient.service(Service.LIST).find({ query: { owner: auth.value?.user.uuid } })) as IShoppingList[]);
+  const library = await feathersClient.service(Service.LIBRARY).find() as LibraryEntry[];
 
-  lists.value = l.map((l) => {
-    const o = l;
-    o.additional = {
-      loading: false,
-    };
-    return o;
+  lists.value = library.map((entry) => {
+    return {
+      ...entry.list,
+      additional: {
+        loading: false,
+      },
+    }
   });
 
   localStorage.setItem('lists', JSON.stringify(lists.value));

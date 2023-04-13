@@ -9,6 +9,7 @@ const socket = io(config.backend, { transports: ['websocket'] });
 export enum Service {
   EVENT = 'event',
   LIST = 'list',
+  LIBRARY = 'library',
   USERS = 'users',
   WHITELISTED_USERS = 'whitelisted-users',
 }
