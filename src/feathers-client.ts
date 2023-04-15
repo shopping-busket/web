@@ -6,6 +6,8 @@ import config from '../config';
 
 const socket = io(config.backend, { transports: ['websocket'] });
 
+export type Methods = 'create' | 'find' | 'get' | 'update' | 'patch' | 'remove';
+
 export enum Service {
   EVENT = 'event',
   LIST = 'list',
@@ -17,6 +19,7 @@ export enum Service {
 type ServiceTypes = Record<Service, FeathersService> & {
   event: FeathersService,
   list: FeathersService,
+  library: FeathersService,
   users: FeathersService,
   'whitelisted-users': FeathersService,
 }
