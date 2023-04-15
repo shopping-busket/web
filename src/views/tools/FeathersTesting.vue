@@ -15,7 +15,7 @@
         />
 
         <v-text-field
-          v-if="selectedMethod === 'get'"
+          v-if="methodArgsMap[selectedMethod].includes('id')"
           v-model.number="id"
           :rules="idRules"
           type="number"
@@ -24,7 +24,7 @@
           density="compact"
         />
 
-        <div v-if="selectedMethod === 'create'">
+        <div v-if="methodArgsMap[selectedMethod].includes('data')">
           Data
           <json-editor-vue
             v-model="data" class="jse-border-rounded" mode="text" :status-bar="false"
@@ -32,11 +32,13 @@
           />
         </div>
 
-        Params
-        <json-editor-vue
-          v-model="params" class="jse-border-rounded" mode="text" :status-bar="false"
-          style="height: 17rem"
-        />
+        <div v-if="methodArgsMap[selectedMethod].includes('params')">
+          Params
+          <json-editor-vue
+            v-model="params" class="jse-border-rounded" mode="text" :status-bar="false"
+            style="height: 17rem"
+          />
+        </div>
 
         <v-btn type="submit" color="primary" block variant="tonal" class="my-4">
           Send
@@ -92,6 +94,15 @@ const methods = ref([
   'patch',
   'remove',
 ]);
+const methodArgsMap = ref({
+  'create': ['data', 'params'],
+  'find': ['params'],
+  'get': ['id', 'params'],
+  'update': ['id', 'data', 'params'],
+  'patch': ['id', 'data', 'params'],
+  'remove': ['id', 'params'],
+});
+
 const requiredRules = [
   value => value ? true : 'This is a required field!',
 ] as Rules;
@@ -170,6 +181,7 @@ async function send() {
     logResponse(d);
     response.value = d;
   }).catch((e) => {
+    toast.warning('Backend responded with an error! Check Response');
     response.value = e;
     logResponse(JSON.stringify(e, null, 2));
     logResponse(e, 'error');
