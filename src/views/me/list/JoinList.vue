@@ -40,7 +40,7 @@ onMounted(async () => {
     await feathersClient.service(Service.WHITELISTED_USERS).patch(props.whitelistId, {
       inviteSecret: props.secret,
     } as Partial<UserWhitelist>);
-
+    await routeToList();
   } catch (e) {
     if ((e as FeathersError).code === 400) {
       const whitelisted = await feathersClient.service(Service.WHITELISTED_USERS).find({
