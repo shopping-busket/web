@@ -103,8 +103,8 @@ const isValid = ref(false);
 const selectedService = ref('');
 const selectedMethod: Ref<Methods> = ref('find');
 
-const data: Ref<string> = ref('');
 const id: Ref<string> = ref('');
+const data: Ref<Record<string, unknown>> = ref({});
 const params: Ref<Record<string, unknown>> = ref({});
 
 const response: Ref<unknown> = ref('Waiting for response');
@@ -133,15 +133,6 @@ async function send() {
   const parsedId = id.value.length > 0 ? parseInt(id.value) : null;
   if (Number.isNaN(parsedId)) return toast.warning('Cannot convert id to int!');
 
-  let parsedData: Record<string, unknown> | null = null;
-  if (data.value.length > 0) {
-    try {
-      parsedData = JSON.parse(data.value) as Record<string, unknown>;
-    } catch {
-      return toast.error('unable to parse data!');
-    }
-  }
-
   const logResponse = (data: unknown, logMethod: 'log' | 'error' | 'warn' | 'table' = 'log') => {
     console[logMethod](`${selectedService.value}.${selectedMethod.value}${id.value.length > 0 ? '{' + id.value + '}' : ''}: `, data);
   };
@@ -149,8 +140,8 @@ async function send() {
   let promise: Promise<unknown> | null = null;
   switch (selectedMethod.value) {
     case 'create':
-      if (!parsedData) return toast.error('Cannot create without data!');
-      promise = service.create(parsedData, params.value);
+      if (!data.value) return toast.error('Cannot create without data!');
+      promise = service.create(data.value, params.value);
       break;
 
     case 'find':
@@ -158,9 +149,15 @@ async function send() {
       promise = service.find(params.value);
       break;
 
+    case 'remove':
     case 'get':
-      if (!parsedId) return toast.error(('Cannot call .get without id!'));
-      promise = service.get(parsedId, params.value);
+      if (!parsedId) return toast.error(`Cannot call ${selectedMethod.value} without id!`);
+      promise = service[selectedMethod.value](parsedId, params.value);
+      break;
+
+    case 'update':
+    case 'patch':
+      promise = service[selectedMethod.value](parsedId, data.value, params.value);
       break;
 
     default:
@@ -173,6 +170,7 @@ async function send() {
     logResponse(d);
     response.value = d;
   }).catch((e) => {
+    response.value = e;
     logResponse(JSON.stringify(e, null, 2));
     logResponse(e, 'error');
   });
