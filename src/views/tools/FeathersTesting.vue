@@ -234,8 +234,8 @@ const selectedService = ref('');
 const selectedMethod: Ref<Methods> = ref('find');
 
 const reqId: Ref<string> = ref('');
-const reqData: Ref<Record<string | number | symbol, unknown>> = ref({});
-const reqParams: Ref<Record<string | number | symbol, unknown>> = ref({});
+const reqData: Ref<Record<string, unknown> | string> = ref({});
+const reqParams: Ref<Record<string, unknown> | string> = ref({});
 
 const response: Ref<unknown> = ref('Waiting for response');
 const showResponseDialog = ref(false);
@@ -300,27 +300,32 @@ async function send() {
   const parsedId = reqId.value.length > 0 ? parseInt(reqId.value) : null;
   if (Number.isNaN(parsedId)) return toast.warning('Cannot convert id to int!');
 
+  if (typeof reqData.value === 'string') reqData.value = JSON.parse(reqData.value);
+  if (typeof reqParams.value === 'string') reqParams.value = JSON.parse(reqParams.value);
+  const data = reqData.value as Record<string, unknown>;
+  const params = reqParams.value as Record<string, unknown>;
+
   let promise: Promise<unknown> | null = null;
   switch (selectedMethod.value) {
     case 'create':
-      if (!reqData.value) return toast.error('Cannot create without data!');
-      promise = service.create(reqData.value, reqParams.value);
+      if (!data) return toast.error('Cannot create without data!');
+      promise = service.create(data, params);
       break;
 
     case 'find':
-      if (!reqParams.value) return toast.error('No Params passed! Required!');
-      promise = service.find(reqParams.value);
+      if (!params) return toast.error('No Params passed! Required!');
+      promise = service.find(params);
       break;
 
     case 'remove':
     case 'get':
       if (!parsedId) return toast.error(`Cannot call ${selectedMethod.value} without id!`);
-      promise = service[selectedMethod.value](parsedId, reqParams.value);
+      promise = service[selectedMethod.value](parsedId, params);
       break;
 
     case 'update':
     case 'patch':
-      promise = service[selectedMethod.value](parsedId, reqData.value, reqParams.value);
+      promise = service[selectedMethod.value](parsedId, data, params);
       break;
 
     default:
