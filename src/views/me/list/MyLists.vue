@@ -161,6 +161,7 @@ import { useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
 import { userInjection } from '@/helpers/injectionKeys';
 import { UserWhitelist } from '@/components/ShareDialog.vue';
+import { Route } from '@/router';
 
 const router = useRouter();
 const toast = useToast();
@@ -292,18 +293,23 @@ async function uploadImportedList(): Promise<void> {
     await populateLists();
     console.log('created list', newList.name);
 
-    openList(createdList.listid);
+    await openList(createdList.listid);
   };
 
   reader.readAsText(file);
 }
 
-function openList(id: string): void {
-  const item = lists.value?.find((i) => i.listid === id) || null;
-  if (!item) return;
+async function openList(id: string) {
+  const index = lists.value?.findIndex((i) => i.listid === id) as number;
+  if (index === -1 || !lists.value) return;
 
-  item.additional.loading = true;
-  router.push(`/me/list/${item.listid}`);
+  lists.value[index].additional.loading = true;
+  await router.push({
+    name: Route.DISPLAY_LIST,
+    params: {
+      id: lists.value[index].listid,
+    },
+  });
 }
 
 async function createList(): Promise<void> {
@@ -331,7 +337,7 @@ async function createList(): Promise<void> {
   await feathersClient.service(Service.LIST).create(list);
   await populateLists();
 
-  openList(list.listid);
+  await openList(list.listid);
 }
 </script>
 
