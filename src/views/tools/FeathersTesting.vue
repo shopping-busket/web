@@ -233,7 +233,7 @@ const form: Ref<VForm | null> = ref(null);
 const selectedService = ref('');
 const selectedMethod: Ref<Methods> = ref('find');
 
-const reqId: Ref<string> = ref('');
+const reqId: Ref<number> = ref(-1);
 const reqData: Ref<Record<string, unknown> | string> = ref({});
 const reqParams: Ref<Record<string, unknown> | string> = ref({});
 
@@ -297,8 +297,8 @@ async function send() {
   if (!isValid.value) return;
   const service = feathersClient.service(selectedService.value as Service);
 
-  const parsedId = reqId.value.length > 0 ? parseInt(reqId.value) : null;
-  if (Number.isNaN(parsedId)) return toast.warning('Cannot convert id to int!');
+  const parsedId = reqId.value > 0 ? reqId.value : null;
+  console.log(parsedId);
 
   if (typeof reqData.value === 'string') reqData.value = JSON.parse(reqData.value);
   if (typeof reqParams.value === 'string') reqParams.value = JSON.parse(reqParams.value);
