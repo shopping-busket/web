@@ -13,8 +13,8 @@
         <template #append>
           <v-icon
             color="red"
-            icon="mdi-trash-can-outline"
-            @click.stop="deleteList(item.listid)"
+            :icon="item.owner === user?.uuid ? 'mdi-trash-can-outline' : 'mdi-exit-run'"
+            @click.stop="item.owner === user?.uuid ? deleteList(item.listid) : leaveFromList(item.listid)"
           />
         </template>
       </v-list-item>
@@ -153,12 +153,15 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import feathersClient, { AuthObject, Service } from '@/feathers-client';
 import { IShoppingList } from '@/shoppinglist/ShoppingList';
-import { onMounted, ref, Ref, watch } from 'vue';
+import { inject, onMounted, ref, Ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
+import { userInjection } from '@/helpers/injectionKeys';
+import { UserWhitelist } from '@/components/ShareDialog.vue';
 
 const router = useRouter();
 const toast = useToast();
+const user = inject(userInjection);
 
 const nameRules = [
   (val: string) => val.length >= 3 || 'Name has to have at least 3 characters.',
@@ -221,7 +224,7 @@ async function populateLists(): Promise<void> {
       additional: {
         loading: false,
       },
-    }
+    };
   });
 
   localStorage.setItem('lists', JSON.stringify(lists.value));
@@ -229,20 +232,24 @@ async function populateLists(): Promise<void> {
 
 watch(auth, populateLists);
 
-async function deleteList(listid: string): Promise<void> {
-  let id = 0;
-
+async function leaveFromList(listid: string): Promise<void> {
   if (!lists.value) return;
-  lists.value.forEach((l, i) => {
-    if (l.listid === listid) {
-      id = l.id;
+  lists.value?.splice(lists.value?.findIndex((l) => l.listid === listid), 1)
 
-      if (!lists.value) return;
-      lists.value.splice(i, 1);
+  const { id } = (await feathersClient.service(Service.WHITELISTED_USERS).find({
+    query: {
+      user: user?.uuid,
+      listId: listid,
     }
-  });
+  } as Partial<UserWhitelist>) as UserWhitelist[])[0];
 
-  await feathersClient.service(Service.LIST).remove(id);
+  await feathersClient.service(Service.WHITELISTED_USERS).remove(id);
+}
+
+async function deleteList(listid: string): Promise<void> {
+  if (!lists.value) return;
+  const removed = lists.value?.splice(lists.value?.findIndex((l) => l.listid === listid), 1)
+  await feathersClient.service(Service.LIST).remove(removed[0].id);
 }
 
 async function uploadImportedList(): Promise<void> {
