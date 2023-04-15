@@ -25,7 +25,7 @@
         <v-text-field
           v-if="methodArgsMap[selectedMethod].includes('id')"
           v-model.number="reqId"
-          :rules="[rules.getRequestId, rules.hasToBeNum]"
+          :rules="[rules.requiredId, rules.hasToBeNum]"
           type="number"
           label="ID"
           variant="underlined"
@@ -180,7 +180,7 @@ type Rule = ((value: string) => boolean | string);
 interface Rules {
   hasToBeNum: Rule,
   requiredField: Rule,
-  getRequestId: Rule,
+  requiredId: Rule,
 }
 
 interface EventGenerator {
@@ -224,7 +224,7 @@ const methodArgsMap = ref({
 const rules: Ref<Rules> = ref({
   hasToBeNum: value => !Number.isNaN(value) ? true : 'Value has to be a number!',
   requiredField: value => value ? true : 'This is a required field!',
-  getRequestId: value => selectedMethod.value === 'get' && value ? true : 'get requests have to have an id!',
+  requiredId: value => value ? true : `${selectedMethod.value} requests have to have an id!`,
 });
 
 const isValid: Ref<boolean | null> = ref(true);
