@@ -2,6 +2,7 @@
   <v-card
     title="Busket Backend tester" :subtitle="`You are logged in as ${user?.fullName}`"
     class="mt-16 ma-auto" max-width="800px" variant="outlined" :style="jseThemeCSS"
+    :class="getJseTheme"
   >
     <v-card-text>
       <v-form v-model="isValid" @submit.prevent="send">
@@ -24,7 +25,7 @@
           density="compact"
         />
 
-        <div v-if="methodArgsMap[selectedMethod].includes('data')">
+        <div v-if="methodArgsMap[selectedMethod].includes('data')" class="mb-6">
           Data
           <json-editor-vue
             v-model="data" class="jse-border-rounded" mode="text" :status-bar="false"
@@ -46,16 +47,19 @@
 
         Response
         <json-editor-vue
+          ref="responseEditor"
           v-model="response" class="jse-border-rounded" mode="tree"
           style="height: 40rem" read-only
           :flatten-columns="true"
         />
+        <span style="opacity: 70%">Tip: You can view the response JSON in fullscreen mode by pressing f (close with f or esc)</span>
       </v-form>
     </v-card-text>
   </v-card>
 
-  <v-dialog v-model="showResponseDialog" fullscreen :style="jseThemeCSS">
+  <v-dialog v-model="showResponseDialog" fullscreen :style="jseThemeCSS" :class="getJseTheme">
     <json-editor-vue
+      ref="responseEditorFullscreen"
       v-model="response" mode="tree" style="height: 100%" read-only
       :flatten-columns="true"
     />
@@ -72,12 +76,14 @@ import {
   VForm,
   VTextField
 } from 'vuetify/components';
-import { computed, inject, Ref, ref } from 'vue';
+import { computed, inject, onMounted, Ref, ref } from 'vue';
 import { userInjection } from '@/helpers/injectionKeys';
 import feathersClient, { Methods, Service } from '@/feathers-client';
 import { useToast } from 'vue-toastification';
 import JsonEditorVue from 'json-editor-vue';
 import { useTheme } from 'vuetify';
+import 'vanilla-jsoneditor/themes/jse-theme-dark.css';
+import { JSONEditor } from 'vanilla-jsoneditor';
 
 const user = inject(userInjection);
 const toast = useToast();
@@ -121,12 +127,21 @@ const params: Ref<Record<string, unknown>> = ref({});
 const response: Ref<unknown> = ref('Waiting for response');
 const showResponseDialog = ref(false);
 
-const jseThemeCSS = computed(() => {
-  return {
-    '--jse-theme-color': theme.current.value.colors.primary,
-    '--jse-theme-color-highlight': theme.current.value.colors.secondary,
-    '--jse-button-primary-background': theme.current.value.colors.primary
-  };
+const responseEditor: Ref<JSONEditor | null> = ref(null);
+const responseEditorFullscreen: Ref<JSONEditor | null> = ref(null);
+
+const jseThemeCSS = computed(() => ({
+  '--jse-theme-color': theme.current.value.colors.primary,
+  '--jse-theme-color-highlight': theme.current.value.colors.secondary,
+  '--jse-button-primary-background': theme.current.value.colors.primary
+}));
+const getJseTheme = computed(() => ({
+  'jse-theme-dark': theme.current.value.dark
+}));
+
+onMounted(() => {
+  (window as unknown as Record<string, unknown>).feathersClient = feathersClient;
+  console.warn('Exposed feathersClient at window.feathersClient!');
 });
 
 window.addEventListener('keydown', (e) => {
@@ -182,10 +197,13 @@ async function send() {
     response.value = d;
   }).catch((e) => {
     toast.warning('Backend responded with an error! Check Response');
-    response.value = e;
+    response.value = JSON.parse(JSON.stringify(e)); // or jse won't recognize properties and wont load tree/table view
     logResponse(JSON.stringify(e, null, 2));
     logResponse(e, 'error');
   });
+
+  responseEditor.value?.jsonEditor.expand();
+  responseEditorFullscreen.value?.jsonEditor.expand();
 }
 </script>
 
