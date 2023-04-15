@@ -154,7 +154,7 @@ async function send() {
       break;
 
     case 'find':
-      if (!params.value) return toast.error('Params is being ignored because id got passed! Using id');
+      if (!params.value) return toast.error('No Params passed! Required!');
       promise = service.find(params.value);
       break;
 
