@@ -24,7 +24,7 @@
       class="d-flex justify-center flex-column align-center new-list-card"
       hover
       variant="outlined"
-      @click="feathersClient.io.connected ? newListDialog = true : toast('You are offline!')"
+      @click="feathersClient.io.connected ? showNewListDialog() : toast('You are offline!')"
     >
       <div class="new-list-title">
         New List
@@ -42,7 +42,9 @@
         </v-card-subtitle>
 
         <v-card-text class="mt-1">
-          <v-form ref="newListForm" v-model="incorrectEntries" @submit.stop="createList()">
+          <v-form ref="newListForm" v-model="isNewListNameValid" @submit.prevent="createList()"
+                  validate-on="input"
+          >
             <v-text-field
               v-model="newList.name"
               :rules="nameRules"
@@ -52,9 +54,9 @@
               density="compact"
               label="Name"
               variant="outlined"
+              @keyup.once="newListForm?.validate()"
             />
             <v-textarea
-              value=" "
               v-model="newList.description"
               :rules="descriptionRules"
               color="primary"
@@ -78,7 +80,7 @@
             <v-spacer />
 
             <v-btn
-              :disabled="!incorrectEntries"
+              :disabled="!isNewListNameValid"
               color="primary"
               rounded
               variant="outlined"
@@ -170,7 +172,7 @@ const nameRules = [
 const descriptionRules = [
   (val: string) => val.length <= 300 || 'Description length shouldn\'t exceed 300 characters.',
 ];
-const incorrectEntries = ref(false);
+const isNewListNameValid: Ref<boolean | null> = ref(false);
 const importDialog = ref(false);
 const newListDialog = ref(false);
 const newList = ref({
@@ -211,6 +213,15 @@ watch(['newListDialog'], () => {
   newListForm.value?.resetValidation();
 });
 
+async function showNewListDialog() {
+  newListDialog.value = true;
+
+  if (newList.value.name.length === 0 && newList.value.description.length === 0) return;
+  // Has to be called twice due to vuetify bug!
+  await newListForm.value?.validate();
+  await newListForm.value?.validate();
+}
+
 function setImportFile(file: File): void {
   importFile.value = file;
 }
@@ -234,7 +245,7 @@ watch(auth, populateLists);
 
 async function leaveFromList(listid: string): Promise<void> {
   if (!lists.value) return;
-  lists.value?.splice(lists.value?.findIndex((l) => l.listid === listid), 1)
+  lists.value?.splice(lists.value?.findIndex((l) => l.listid === listid), 1);
 
   const { id } = (await feathersClient.service(Service.WHITELISTED_USERS).find({
     query: {
@@ -248,7 +259,7 @@ async function leaveFromList(listid: string): Promise<void> {
 
 async function deleteList(listid: string): Promise<void> {
   if (!lists.value) return;
-  const removed = lists.value?.splice(lists.value?.findIndex((l) => l.listid === listid), 1)
+  const removed = lists.value?.splice(lists.value?.findIndex((l) => l.listid === listid), 1);
   await feathersClient.service(Service.LIST).remove(removed[0].id);
 }
 
@@ -298,6 +309,9 @@ function openList(id: string): void {
 
 async function createList(): Promise<void> {
   if (!auth.value) return;
+
+  if (isNewListNameValid.value == null) isNewListNameValid.value = (await newListForm.value?.validate())?.valid ?? false;
+  if (!isNewListNameValid.value) return;
 
   const {
     name,
