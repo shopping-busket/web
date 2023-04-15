@@ -153,7 +153,6 @@ import {
   VTextarea,
   VTextField,
 } from 'vuetify/components';
-import { v4 as uuidv4 } from 'uuid';
 import feathersClient, { AuthObject, Service } from '@/feathers-client';
 import { IShoppingList, LegacyShoppingListItem } from '@/shoppinglist/ShoppingList';
 import { inject, onMounted, ref, Ref, watch } from 'vue';
@@ -282,7 +281,6 @@ async function uploadImportedList(): Promise<void> {
     const newList = {
       name: list.name ?? 'placeholder name',
       description: list.description ?? '',
-      owner: auth.value?.user?.uuid,
       entries: list.entries ?? [],
       checkedEntries: list.checkedEntries ?? [],
     };
@@ -322,21 +320,17 @@ async function createList(): Promise<void> {
     name,
     description
   } = newList.value;
-  const list = {
-    listid: uuidv4(),
-    name,
-    description,
-    owner: auth.value?.user.uuid,
-    entries: [],
-    checkedEntries: [],
-  };
-
   newList.value.name = '';
   newList.value.description = '';
 
-  await feathersClient.service(Service.LIST).create(list);
-  await populateLists();
+  const list = await feathersClient.service(Service.LIST).create({
+    name,
+    description,
+    entries: [],
+    checkedEntries: [],
+  }) as IShoppingList;
 
+  await populateLists();
   await openList(list.listid);
 }
 </script>
