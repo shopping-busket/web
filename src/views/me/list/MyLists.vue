@@ -14,7 +14,7 @@
           <v-icon
             color="red"
             :icon="item.owner === user?.uuid ? 'mdi-trash-can-outline' : 'mdi-exit-run'"
-            @click.stop="item.owner === user?.uuid ? deleteList(item.listid) : leaveFromList(item.listid)"
+            @click.stop="removeListDialog = true; removeList = item"
           />
         </template>
       </v-list-item>
@@ -135,12 +135,28 @@
       </v-card>
     </v-dialog>
   </div>
+
+  <v-dialog v-model="removeListDialog" max-width="500px">
+    <v-card :title="`Are you sure that you want to ${removeList?.owner === user?.uuid ? 'delete' : 'leave'} this list?`" :subtitle="removeList?.owner === user?.uuid ? 'You won\'t be able to get it back' : 'You will not be able to access it until you get another invite'">
+      <v-card-actions>
+        <v-spacer />
+        <v-btn variant="text" color="primary">
+          Cancel
+        </v-btn>
+
+        <v-btn variant="outlined" color="primary" @click="removeList?.owner === user?.uuid ? deleteList(removeList.listid) : leaveFromList(removeList.listid)">
+          Yes, I am sure
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script lang="ts" setup>
 import {
   VBtn,
   VCard,
+  VCardActions,
   VCardSubtitle,
   VCardText,
   VCardTitle,
@@ -184,6 +200,8 @@ const auth: Ref<null | AuthObject> = ref(null);
 const lists: Ref<IShoppingList[] | null> = ref(null);
 const importFile: Ref<File[] | null> = ref([]);
 const newListForm: Ref<VForm | null> = ref(null);
+const removeListDialog = ref(false);
+const removeList: Ref<IShoppingList | null> = ref(null);
 
 export interface LibraryEntry {
   user: string,
