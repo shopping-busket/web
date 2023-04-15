@@ -3,10 +3,13 @@ import feathersClient, { AuthObject, FeathersError } from '@/feathers-client';
 import app from '@/main';
 import { authenticationInjection, userInjection } from '@/helpers/injectionKeys';
 
-type RouteRecordRawWithMeta = RouteRecordRaw & {
-  meta?: {
-    requiresAuth?: boolean,
-  },
+export interface RouteMeta {
+  requiresAuth?: boolean,
+  allowInProduction?: boolean,
+}
+
+export type RouteRecordRawWithMeta = RouteRecordRaw & {
+  meta?: RouteMeta
 }
 
 export enum Route {
@@ -19,9 +22,10 @@ export enum Route {
   PREFERENCES = 'preferences',
   HOME = 'home',
   NOT_FOUND = 'not found',
+  FEATHERS_TESTING = 'feathersjs backend testing'
 }
 
-const routes: Array<RouteRecordRawWithMeta> = [
+const routes: RouteRecordRawWithMeta[] = [
   //region authentication
   {
     path: '/signup',
@@ -103,6 +107,15 @@ const routes: Array<RouteRecordRawWithMeta> = [
   //endregion
 
   {
+    path: '/feathersjs-backend-tool',
+    name: Route.FEATHERS_TESTING,
+    meta: {
+      requiresAuth: true,
+      allowInProduction: false,
+    },
+    component: () => import('../views/tools/FeathersTesting.vue'),
+  },
+  {
     path: '/',
     name: Route.HOME,
     meta: {
@@ -125,6 +138,11 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   console.log('[Router]', to, from);
 
+  const destinationMeta: RouteMeta | null = to.meta;
+
+  // Only allow in dev mode
+  if (!destinationMeta?.allowInProduction && process.env.NODE_ENV !== 'development') await router.replace({ name: Route.NOT_FOUND });
+
   // Authentication
   if (!feathersClient.authentication.authenticated) {
     setTimeout(() => {
@@ -134,15 +152,15 @@ router.beforeEach(async (to, from, next) => {
     }, 800);
 
     await feathersClient.authenticate().then((authentication) => {
-        app.provide(authenticationInjection, authentication as AuthObject);
-        app.provide(userInjection, (authentication as AuthObject).user);
+      app.provide(authenticationInjection, authentication as AuthObject);
+      app.provide(userInjection, (authentication as AuthObject).user);
     }).catch((err: FeathersError) => {
       if (err.code === 408) {
         console.log('[Auth] Timeout while trying to authenticate. You are offline!');
         return;
       }
-      console.log(`[Auth] Not authenticated. This page requires auth: ${to.meta?.requiresAuth ? 'yes' : 'no'}`);
-      if (!Array.isArray(err.data) && !err.data?.reason && to.meta?.requiresAuth) {
+      console.log(`[Auth] Not authenticated. This page requires auth: ${destinationMeta?.requiresAuth ? 'yes' : 'no'}`);
+      if (!Array.isArray(err.data) && !err.data?.reason && destinationMeta?.requiresAuth) {
         router.replace({
           name: 'login',
           query: { redirect: to.path },
