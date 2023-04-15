@@ -109,7 +109,7 @@ const requiredRules = [
 const idRules = [
   value => selectedMethod.value === 'get' && value ? true : 'get requests have to have an id!',
 ] as Rules;
-const isValid = ref(false);
+const isValid = ref(true);
 
 const selectedService = ref('');
 const selectedMethod: Ref<Methods> = ref('find');
