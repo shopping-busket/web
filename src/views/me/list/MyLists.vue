@@ -42,8 +42,9 @@
         </v-card-subtitle>
 
         <v-card-text class="mt-1">
-          <v-form ref="newListForm" v-model="isNewListNameValid" @submit.prevent="createList()"
-                  validate-on="input"
+          <v-form
+            ref="newListForm" v-model="isNewListNameValid" validate-on="input"
+            @submit.prevent="createList()"
           >
             <v-text-field
               v-model="newList.name"
@@ -105,8 +106,8 @@
 
         <v-card-text class="mt-1">
           <v-file-input
-            ref="fileUpload" accept="application/json"
-            @change="setImportFile"
+            ref="fileUpload" v-model="importFile" accept="application/json"
+            variant="underlined"
           />
 
           <div class="d-flex flex-row">
@@ -154,7 +155,7 @@ import {
 } from 'vuetify/components';
 import { v4 as uuidv4 } from 'uuid';
 import feathersClient, { AuthObject, Service } from '@/feathers-client';
-import { IShoppingList } from '@/shoppinglist/ShoppingList';
+import { IShoppingList, LegacyShoppingListItem } from '@/shoppinglist/ShoppingList';
 import { inject, onMounted, ref, Ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
@@ -181,7 +182,7 @@ const newList = ref({
 });
 const auth: Ref<null | AuthObject> = ref(null);
 const lists: Ref<IShoppingList[] | null> = ref(null);
-const importFile: Ref<File | null> = ref(null);
+const importFile: Ref<File[] | null> = ref([]);
 const newListForm: Ref<VForm | null> = ref(null);
 
 export interface LibraryEntry {
@@ -208,11 +209,6 @@ onMounted(async () => {
   auth.value = await feathersClient.get('authentication');
 });
 
-watch(['newListDialog'], () => {
-  if (!newListForm.value) return;
-  newListForm.value?.resetValidation();
-});
-
 async function showNewListDialog() {
   newListDialog.value = true;
 
@@ -220,10 +216,6 @@ async function showNewListDialog() {
   // Has to be called twice due to vuetify bug!
   await newListForm.value?.validate();
   await newListForm.value?.validate();
-}
-
-function setImportFile(file: File): void {
-  importFile.value = file;
 }
 
 async function populateLists(): Promise<void> {
@@ -265,7 +257,9 @@ async function deleteList(listid: string): Promise<void> {
 
 async function uploadImportedList(): Promise<void> {
   if (!importFile.value) return;
-  const file = importFile.value;
+  const file = importFile.value[0];
+
+  console.log(file);
 
   if (file.type !== 'application/json') {
     console.log('Wrong file type');
@@ -277,23 +271,28 @@ async function uploadImportedList(): Promise<void> {
   reader.onload = async (e) => {
     const content = e.target?.result as string;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const list = JSON.parse(content);
+    const list = JSON.parse(content) as Partial<IShoppingList>;
+
+    // Support legacy exports
+    list.entries ??= [];
+    if (!list.checkedEntries) list.checkedEntries = list.entries.filter(e => Object.hasOwn(e, 'done') ? (e as LegacyShoppingListItem).done : false);
+    list.entries = list.entries?.filter(e => Object.hasOwn(e, 'done') ? !(e as LegacyShoppingListItem).done : true);
 
     const newList = {
-      listid: list.listid ?? uuidv4(),
       name: list.name ?? 'placeholder name',
       description: list.description ?? '',
       owner: auth.value?.user?.uuid,
       entries: list.entries ?? [],
+      checkedEntries: list.checkedEntries ?? [],
     };
 
     newListDialog.value = false;
 
-    await feathersClient.service(Service.LIST).create(newList);
+    const createdList = await feathersClient.service(Service.LIST).create(newList) as IShoppingList;
     await populateLists();
     console.log('created list', newList.name);
 
-    openList(newList.listid);
+    openList(createdList.listid);
   };
 
   reader.readAsText(file);
