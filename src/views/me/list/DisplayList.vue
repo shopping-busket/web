@@ -87,9 +87,12 @@
       </v-card-subtitle>
 
       <v-card-text v-if="!editingListInfo" class="mb-0 pb-0">
-        <v-form ref="newItemForm" :disabled="!whitelistedUserPermissions.canEditEntries">
+        <v-form ref="newItemForm" v-model="entryNameValid"
+                :disabled="!whitelistedUserPermissions.canEditEntries"
+                @submit.prevent="createEntry()"
+        >
           <v-text-field
-            v-model="newItemName"
+            v-model.trim="newItemName"
             :rules="newItemRules"
             append-inner-icon="mdi-basket-plus-outline"
             color="primary"
@@ -97,8 +100,7 @@
             placeholder="Add item"
             variant="outlined"
             @blur="newItemName.length === 0 ? newItemForm?.resetValidation() : null"
-            @click:append-inner="createEntry"
-            @keydown.enter="createEntry"
+            @click:append-inner="createEntry()"
           />
         </v-form>
         <!--        TODO: <v-autocomplete :items="suggestedItems"-->
@@ -178,7 +180,8 @@ import {
   VCard,
   VCardSubtitle,
   VCardText,
-  VCardTitle, VForm,
+  VCardTitle,
+  VForm,
   VProgressCircular,
   VTextField,
 } from 'vuetify/components';
@@ -218,11 +221,11 @@ const temporaryData = reactive({
 
 const shoppingList: Ref<ShoppingList | null> = ref(null);
 
+const entryNameValid: Ref<boolean | null> = ref(false);
 const newItemName = ref('');
-const newItemRules = [
-  (val: string) => val.trim().length >= 1 || 'Must at least have one character that isn\'t a space',
+const newItemRules = ref([
   (val: string) => val.trim().length <= 256 || 'Can\'t exceed 256 character limit!',
-];
+]);
 
 const connected = ref(feathersClient.io.connected);
 
@@ -306,8 +309,7 @@ function registerEventListener() {
 
     switch (data.eventData.event) {
       case EventType.CREATE_ENTRY:
-        newItemName.value = event.state.name;
-        await createEntry(false);
+        await createEntry(event.state.name, false, false);
         break;
 
       case EventType.MARK_ENTRY_TODO:
@@ -459,38 +461,31 @@ async function moveEntry(index: number, oldIndex: number, _recordEvent = true, m
   });
 }
 
-async function createEntry(_recordEvent = true): Promise<void> {
-  // Filters hidden characters
-  // eslint-disable-next-line no-control-regex
-  const name = (newItemName.value ?? '').trim().replaceAll(/[^\x00-\x7F(?:\u00c4,.\-\\/ \u00e4\u00d6\u00f6\u00dc\u00fc\u00df)]/g, '');
-
-  for (let i = 0; i < newItemRules.length; i++) {
-    const rule = newItemRules[i];
-    if (typeof rule(name) === 'string') {
-      toast('Name needs at least 1 character!');
-      return;
-    }
-  }
-
+async function createEntry(_entryName: string | null = null, resetVar = true, _recordEvent = true): Promise<void> {
+  const entryName = _entryName ?? newItemName.value;
+  console.warn('entryName: ', entryName, _entryName, resetVar, _recordEvent);
+  if (!entryName) return;
   if (!shoppingList.value) return;
 
-  const item = shoppingList.value.createItem(newItemName.value);
-  item.additional = {
+  if (entryNameValid.value === null) entryNameValid.value = (await newItemForm.value?.validate())?.valid ?? false;
+  if (!entryNameValid.value) return;
+
+  const entry = shoppingList.value?.createItem(entryName);
+  entry.additional = {
     edit: false,
-    editName: item.name,
+    editName: entry.name,
     focused: false,
   };
 
-  newItemName.value = '';
-  await newItemForm.value?.reset();
+  if (resetVar) newItemName.value = '';
 
   if (!_recordEvent) return;
   await recordEvent({
     event: EventType.CREATE_ENTRY,
-    entryId: item.id,
+    entryId: entry.id,
     isoDate: (new Date()).toISOString(),
     state: {
-      name: item.name,
+      name: entry.name,
     },
   });
 }
