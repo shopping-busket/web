@@ -255,6 +255,9 @@ onMounted(async () => {
     shoppingList.value = await loadListFromCache();
   }
 
+  // Reload list from remote every 5 minutes to sync everything again
+  setInterval(async () => shoppingList.value = await loadListFromRemote(), 1000 * 60 * 5 /* 5 Minutes */);
+
   viewOnlyInfoAlertHidden.value = getViewInfoAlertHideStateFromStore();
 });
 
