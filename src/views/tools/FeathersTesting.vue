@@ -5,20 +5,27 @@
     :class="getJseTheme"
   >
     <v-card-text>
-      <v-form v-model="isValid" @submit.prevent="send">
+      <v-btn
+        density="compact" color="primary" variant="outlined" block class="mb-5"
+        @click="openGenerateEventDialog"
+      >
+        Generate List Event
+      </v-btn>
+
+      <v-form ref="form" v-model="isValid" @submit.prevent="send">
         <v-autocomplete
           v-model="selectedService" required density="compact" variant="underlined"
-          label="Service" :items="services" :rules="requiredRules"
+          label="Service" :items="services" :rules="[rules.requiredField]"
         />
         <v-autocomplete
           v-model="selectedMethod" required density="compact" variant="underlined"
-          label="Method" :items="methods" :rules="requiredRules"
+          label="Method" :items="methods" :rules="[rules.requiredField]"
         />
 
         <v-text-field
           v-if="methodArgsMap[selectedMethod].includes('id')"
-          v-model.number="id"
-          :rules="idRules"
+          v-model.number="reqId"
+          :rules="[rules.getRequestId, rules.hasToBeNum]"
           type="number"
           label="ID"
           variant="underlined"
@@ -28,7 +35,7 @@
         <div v-if="methodArgsMap[selectedMethod].includes('data')" class="mb-6">
           Data
           <json-editor-vue
-            v-model="data" class="jse-border-rounded" mode="text" :status-bar="false"
+            v-model="reqData" class="jse-border-rounded" mode="text" :status-bar="false"
             style="height: 17rem"
           />
         </div>
@@ -36,7 +43,7 @@
         <div v-if="methodArgsMap[selectedMethod].includes('params')">
           Params
           <json-editor-vue
-            v-model="params" class="jse-border-rounded" mode="text" :status-bar="false"
+            v-model="reqParams" class="jse-border-rounded" mode="text" :status-bar="false"
             style="height: 17rem"
           />
         </div>
@@ -64,6 +71,80 @@
       :flatten-columns="true"
     />
   </v-dialog>
+
+  <v-dialog v-model="listEventGeneratorDialog" max-width="600px">
+    <v-card
+      title="Generate Event"
+      subtitle="Easily generate list events here without touching JSON"
+    >
+      <v-card-text>
+        <v-form ref="eventGeneratorForm" v-model="eventGenerator.inputsValid"
+                @submit.prevent="sendGeneratedEvent"
+        >
+          <v-autocomplete
+            v-model="eventGenerator.event"
+            variant="underlined"
+            density="compact"
+            label="event (Event Type)"
+            :items="Object.values(EventType)"
+            :rules="[rules.requiredField]"
+            @update:model-value="updateDisplayingStateFields"
+          />
+
+          <v-autocomplete
+            v-model="eventGenerator.listIdFormatted"
+            variant="underlined"
+            density="compact"
+            label="listId"
+            :items="library.map(l => `${l.list.listid} (${l.list.name})`)"
+            :rules="[rules.requiredField]"
+            @update:model-value="changeListIdListener"
+          />
+
+          <v-autocomplete
+            v-if="eventGenerator.activeFields.includes('entryId')"
+            v-model="eventGenerator.entryIdFormatted"
+            variant="underlined"
+            density="compact"
+            label="entryId"
+            :items="eventGenerator.globalEntries.map(e => `${e.id} (${e.name})`)"
+            :rules="[rules.requiredField]"
+          />
+
+          <v-text-field
+            v-if="eventGenerator.activeFields.includes('state.name')"
+            v-model="eventGenerator.state.name"
+            :rules="[rules.requiredField]"
+            label="state.name"
+            variant="underlined"
+            density="compact"
+          />
+          <v-text-field
+            v-if="eventGenerator.activeFields.includes('state.oldIndex')"
+            v-model="eventGenerator.state.oldIndex"
+            :rules="[rules.requiredField, rules.hasToBeNum]"
+            label="state.oldIndex"
+            variant="underlined"
+            density="compact"
+            type="number"
+          />
+          <v-text-field
+            v-if="eventGenerator.activeFields.includes('state.newIndex')"
+            v-model="eventGenerator.state.newIndex"
+            :rules="[rules.requiredField, rules.hasToBeNum]"
+            label="state.newIndex"
+            variant="underlined"
+            density="compact"
+            type="number"
+          />
+
+          <v-btn type="submit" variant="tonal" block color="primary" class="mb-2 mt-1">
+            Send
+          </v-btn>
+        </v-form>
+      </v-card-text>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script lang="ts" setup>
@@ -84,12 +165,43 @@ import JsonEditorVue from 'json-editor-vue';
 import { useTheme } from 'vuetify';
 import 'vanilla-jsoneditor/themes/jse-theme-dark.css';
 import { JSONEditor } from 'vanilla-jsoneditor';
+import { LibraryEntry } from '@/views/me/list/MyLists.vue';
+import { EventData, EventType, LogEvent } from '@/shoppinglist/events';
+import ShoppingList, { ShoppingListItem } from '@/shoppinglist/ShoppingList';
+import { DotNestedKeys, ReverseMap } from '@/helpers/TypeUtils';
+import { v4 as uuidv4 } from 'uuid';
 
 const user = inject(userInjection);
 const toast = useToast();
 const theme = useTheme();
 
-type Rules = ((value: string) => boolean | string)[];
+type Rule = ((value: string) => boolean | string);
+
+interface Rules {
+  hasToBeNum: Rule,
+  requiredField: Rule,
+  getRequestId: Rule,
+}
+
+interface EventGenerator {
+  inputsValid: boolean | null,
+  listIdFormatted: string | null,
+  entryIdFormatted: string | null,
+  event: ReverseMap<typeof EventType> | null,
+  state: {
+    name: string | null,
+    oldIndex: string | null,
+    newIndex: string | null,
+  },
+  globalEntries: ShoppingListItem[],
+  eventTypeInputMap: StateInputMap,
+  activeFields: FlattenedEventData[],
+}
+
+type FlattenedEventData = DotNestedKeys<EventData>;
+type StateInputMap = {
+  [key in ReverseMap<typeof EventType>]: FlattenedEventData[]
+}
 
 const services = ref(Object.values(Service));
 const methods = ref([
@@ -109,20 +221,21 @@ const methodArgsMap = ref({
   'remove': ['id', 'params'],
 });
 
-const requiredRules = [
-  value => value ? true : 'This is a required field!',
-] as Rules;
-const idRules = [
-  value => selectedMethod.value === 'get' && value ? true : 'get requests have to have an id!',
-] as Rules;
-const isValid = ref(true);
+const rules: Ref<Rules> = ref({
+  hasToBeNum: value => !Number.isNaN(value) ? true : 'Value has to be a number!',
+  requiredField: value => value ? true : 'This is a required field!',
+  getRequestId: value => selectedMethod.value === 'get' && value ? true : 'get requests have to have an id!',
+});
+
+const isValid: Ref<boolean | null> = ref(true);
+const form: Ref<VForm | null> = ref(null);
 
 const selectedService = ref('');
 const selectedMethod: Ref<Methods> = ref('find');
 
-const id: Ref<string> = ref('');
-const data: Ref<Record<string, unknown>> = ref({});
-const params: Ref<Record<string, unknown>> = ref({});
+const reqId: Ref<string> = ref('');
+const reqData: Ref<Record<string | number | symbol, unknown>> = ref({});
+const reqParams: Ref<Record<string | number | symbol, unknown>> = ref({});
 
 const response: Ref<unknown> = ref('Waiting for response');
 const showResponseDialog = ref(false);
@@ -139,6 +252,32 @@ const getJseTheme = computed(() => ({
   'jse-theme-dark': theme.current.value.dark
 }));
 
+// Event Generator
+const listEventGeneratorDialog = ref(false);
+const library: Ref<LibraryEntry[]> = ref([]);
+const eventGeneratorForm: Ref<VForm | null> = ref(null);
+const eventGenerator = ref({
+  inputsValid: false,
+  listIdFormatted: null,
+  entryIdFormatted: null,
+  event: null,
+  state: {
+    name: null,
+    oldIndex: null,
+    newIndex: null,
+  },
+  globalEntries: [],
+  eventTypeInputMap: {
+    MOVE_ENTRY: ['state.oldIndex', 'state.newIndex', 'entryId'],
+    DELETE_ENTRY: ['entryId'],
+    CREATE_ENTRY: ['state.name'],
+    CHANGED_ENTRY_NAME: ['state.name', 'entryId'],
+    MARK_ENTRY_DONE: ['entryId'],
+    MARK_ENTRY_TODO: ['entryId'],
+  },
+  activeFields: [],
+} as EventGenerator);
+
 onMounted(() => {
   (window as unknown as Record<string, unknown>).feathersClient = feathersClient;
   console.warn('Exposed feathersClient at window.feathersClient!');
@@ -153,37 +292,35 @@ window.addEventListener('keydown', (e) => {
 });
 
 async function send() {
+  // Fixes vuetify bug where on first validation, v-model (isValid) would be null instead of true/false, so we have to revalidate
+  if (isValid.value === null) isValid.value = (await form.value?.validate())?.valid || false;
   if (!isValid.value) return;
   const service = feathersClient.service(selectedService.value as Service);
 
-  const parsedId = id.value.length > 0 ? parseInt(id.value) : null;
+  const parsedId = reqId.value.length > 0 ? parseInt(reqId.value) : null;
   if (Number.isNaN(parsedId)) return toast.warning('Cannot convert id to int!');
-
-  const logResponse = (data: unknown, logMethod: 'log' | 'error' | 'warn' | 'table' = 'log') => {
-    console[logMethod](`${selectedService.value}.${selectedMethod.value}${id.value.length > 0 ? '{' + id.value + '}' : ''}: `, data);
-  };
 
   let promise: Promise<unknown> | null = null;
   switch (selectedMethod.value) {
     case 'create':
-      if (!data.value) return toast.error('Cannot create without data!');
-      promise = service.create(data.value, params.value);
+      if (!reqData.value) return toast.error('Cannot create without data!');
+      promise = service.create(reqData.value, reqParams.value);
       break;
 
     case 'find':
-      if (!params.value) return toast.error('No Params passed! Required!');
-      promise = service.find(params.value);
+      if (!reqParams.value) return toast.error('No Params passed! Required!');
+      promise = service.find(reqParams.value);
       break;
 
     case 'remove':
     case 'get':
       if (!parsedId) return toast.error(`Cannot call ${selectedMethod.value} without id!`);
-      promise = service[selectedMethod.value](parsedId, params.value);
+      promise = service[selectedMethod.value](parsedId, reqParams.value);
       break;
 
     case 'update':
     case 'patch':
-      promise = service[selectedMethod.value](parsedId, data.value, params.value);
+      promise = service[selectedMethod.value](parsedId, reqData.value, reqParams.value);
       break;
 
     default:
@@ -192,6 +329,14 @@ async function send() {
   }
 
   if (!promise) return;
+  await executeAndLogRequest(promise);
+}
+
+async function executeAndLogRequest(promise: Promise<unknown>) {
+  const logResponse = (data: unknown, logMethod: 'log' | 'error' | 'warn' | 'table' = 'log') => {
+    console[logMethod](`${selectedService.value}.${selectedMethod.value}${reqId.value.length > 0 ? '{' + reqId.value + '}' : ''}: `, data);
+  };
+
   await promise.then((d) => {
     logResponse(d);
     response.value = d;
@@ -204,6 +349,76 @@ async function send() {
 
   responseEditor.value?.jsonEditor.expand();
   responseEditorFullscreen.value?.jsonEditor.expand();
+}
+
+// Event Generator
+async function openGenerateEventDialog() {
+  library.value = await feathersClient.service(Service.LIBRARY).find();
+  listEventGeneratorDialog.value = true;
+}
+
+function extractUUID(s: string) {
+  return s.split(' ')[0];
+}
+
+function updateGlobalEntries(): ShoppingListItem[] {
+  if (!library.value || !eventGenerator.value.listIdFormatted) return [];
+  const list = library.value.find(l => l.list.listid === extractUUID(eventGenerator.value.listIdFormatted ?? '')).list;
+  return ShoppingList.from(list).globalEntries;
+}
+
+function changeListIdListener() {
+  eventGenerator.value.globalEntries = updateGlobalEntries();
+}
+
+function updateDisplayingStateFields() {
+  if (!eventGenerator.value.event) return;
+  const stateFields = (['state.name', 'state.oldIndex', 'state.newIndex', 'entryId'] as FlattenedEventData[]);
+  eventGenerator.value.activeFields = stateFields.filter(f => eventGenerator.value.eventTypeInputMap[eventGenerator.value.event ?? EventType.CREATE_ENTRY].includes(f));
+}
+
+async function sendGeneratedEvent() {
+  const event = eventGenerator.value;
+
+  // Fixes vuetify bug where on first validation, v-model (isValid) would be null instead of true/false, so we have to revalidate
+  if (event.inputsValid === null) eventGenerator.value.inputsValid = (await eventGeneratorForm.value?.validate())?.valid || false;
+  if (!event.inputsValid) return;
+
+  const data: LogEvent = {
+    listid: '',
+    eventData: {
+      event: EventType.CREATE_ENTRY,
+      entryId: '', // FIXME: Remove this for create entry once backend generates 'em
+      state: {
+        name: 'ERROR from Busket Backend Tester in sendGeneratedEvent.data (const not reassign)',
+      },
+
+      // FIXME: Remove once server handles this
+      isoDate: new Date().toISOString(),
+      sender: user?.uuid,
+    }
+  };
+
+  if (!event.listIdFormatted || !event.event) return;
+  data.listid = extractUUID(event.listIdFormatted);
+  data.eventData.event = event.event;
+
+  if (event.entryIdFormatted) {
+    data.eventData.entryId = extractUUID(event.entryIdFormatted);
+  } else if (event.event === EventType.CREATE_ENTRY) data.eventData.entryId = uuidv4();
+
+  if (event.activeFields.includes('state.name')) data.eventData.state.name = event.state.name ?? 'ERROR from Busket Backend Tester';
+  if (event.activeFields.includes('state.newIndex')) data.eventData.state.newIndex = parseInt(event.state.newIndex ?? '-1');
+  if (event.activeFields.includes('state.oldIndex')) data.eventData.state.oldIndex = parseInt(event.state.oldIndex ?? '-1');
+
+  toast.success('Sent event!');
+  listEventGeneratorDialog.value = false;
+
+  selectedService.value = Service.EVENT;
+  selectedMethod.value = 'create';
+  reqData.value = data as unknown as Record<string, unknown>;
+
+  await executeAndLogRequest(feathersClient.service(Service.EVENT).create(data));
 }
 </script>
 
