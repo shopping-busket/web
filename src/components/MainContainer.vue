@@ -113,12 +113,12 @@ import {
 } from 'vuetify/components';
 
 import { LocationQueryRaw, useRoute, useRouter } from 'vue-router';
-import { Md5 } from 'ts-md5';
 import feathersClient, { AuthObject } from '@/feathers-client';
 import { inject, onMounted, Ref, ref, watch } from 'vue';
 import { useToast } from 'vue-toastification';
 import img from '@/assets/avatar-placeholder.png';
 import { authenticationInjection } from '@/helpers/injectionKeys';
+import { Route } from '@/router';
 
 const props = withDefaults(defineProps<{
   appbarColor?: string
@@ -182,6 +182,11 @@ onMounted(() => {
     showInstallable = true;
   });
 
+  if (process.env.NODE_ENV === 'development') baseMenuItems.push({
+    icon: 'mdi-api',
+    title: 'Backend Tools',
+    to: { name: Route.FEATHERS_TESTING }
+  });
 
   menuItems.push(...baseMenuItems);
   menuItems.push({
