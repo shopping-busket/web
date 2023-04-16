@@ -13,7 +13,7 @@
       </v-btn>
 
       <v-form ref="form" v-model="isValid" @submit.prevent="send">
-        <v-autocomplete
+        <v-combobox
           v-model="selectedService" required density="compact" variant="underlined"
           label="Service" :items="services" :rules="[rules.requiredField]"
         />
@@ -153,6 +153,7 @@ import {
   VBtn,
   VCard,
   VCardText,
+  VCombobox,
   VDialog,
   VForm,
   VTextField
@@ -339,7 +340,7 @@ async function send() {
 
 async function executeAndLogRequest(promise: Promise<unknown>) {
   const logResponse = (data: unknown, logMethod: 'log' | 'error' | 'warn' | 'table' = 'log') => {
-    console[logMethod](`${selectedService.value}.${selectedMethod.value}${reqId.value.length > 0 ? '{' + reqId.value + '}' : ''}: `, data);
+    console[logMethod](`${selectedService.value}.${selectedMethod.value}${reqId.value !== -1 ? '{' + reqId.value + '}' : ''}: `, data);
   };
 
   await promise.then((d) => {
