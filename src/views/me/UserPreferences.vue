@@ -46,24 +46,50 @@
         </v-list-item>
       </v-list>
     </v-card>
+
+    <v-btn variant ="tonal" color="red" class="mt-4" block @click="deleteUserDialog = true">
+      Delete my Busket account
+    </v-btn>
   </div>
+
+  <v-dialog v-model="deleteUserDialog" max-width="500px">
+    <v-card
+      title="Are you sure?" subtitle="This action cannot be undone!"
+      text="Are you sure that you want to delete your Busket account? All lists and other associated information will be deleted with it!"
+    >
+      <v-card-actions>
+        <v-spacer />
+        <v-btn color="primary" variant="text" @click="deleteUserDialog = false">
+          Cancel
+        </v-btn>
+        <v-btn variant="outlined" color="primary" @click="deleteUser">
+          Yes, I am sure
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script lang="ts" setup>
 import {
   VAlert,
+  VBtn,
   VCard,
+  VCardActions,
   VCheckboxBtn,
+  VDialog,
   VList,
   VListItem,
   VListItemAction,
   VListItemSubtitle,
   VListItemTitle,
   VListSubheader,
+  VSpacer,
 } from 'vuetify/components';
 import feathersClient, { AuthObject, Service } from '@/feathers-client';
-import { onMounted, reactive, Ref, ref, watch } from 'vue';
+import { inject, onMounted, reactive, Ref, ref, watch } from 'vue';
 import { useTheme } from 'vuetify';
+import { userInjection } from '@/helpers/injectionKeys';
 
 interface SettingsObject {
   prefersDarkMode: boolean,
@@ -72,6 +98,7 @@ interface SettingsObject {
 }
 
 const theme = useTheme();
+const user = inject(userInjection);
 
 const auth: Ref<AuthObject | null> = ref(null);
 const settings: SettingsObject = reactive({
@@ -79,6 +106,7 @@ const settings: SettingsObject = reactive({
   prefersMiniDrawer: false,
   preferredLanguage: 'en',
 });
+const deleteUserDialog = ref(false);
 
 onMounted(async () => {
   auth.value = await feathersClient.get('authentication');
@@ -97,4 +125,10 @@ watch(settings, async () => {
     preferredLanguage: settings.preferredLanguage,
   } as SettingsObject);
 });
+
+async function deleteUser() {
+  if (!user?.id) return;
+  await feathersClient.service(Service.USERS).remove(user.id);
+  window.location.reload();
+}
 </script>
