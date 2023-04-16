@@ -531,7 +531,7 @@ async function recordEvent(event: EventData): Promise<unknown> {
   const lists = JSON.parse(stored || '[]') as Array<IShoppingList>;
   for (let i = 0; i < lists.length; i++) {
     if (lists[i].listid === props.id && shoppingList.value) {
-      lists[i] = shoppingList.value?.toObject(lists[i].id, true);
+      lists[i] = shoppingList.value?.toInterface(lists[i].id);
     }
   }
   localStorage.setItem('lists', JSON.stringify(lists));
