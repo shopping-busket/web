@@ -149,7 +149,7 @@ async function submit(): Promise<void> {
   })
     .then(() => {
       btnLoading.value = false;
-      toast('Logged in successfully!');
+      toast.success('Logged in successfully!');
       console.log('%c[Auth]%cLogged in', 'color: green');
 
       if (!route.query.redirect) {

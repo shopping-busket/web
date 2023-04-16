@@ -72,7 +72,6 @@ import {
   VCardText,
   VTextField
 } from 'vuetify/components';
-import { v4 as uuidv4 } from 'uuid';
 import feathersClient from '@/feathers-client';
 import { useI18n } from 'vue-i18n';
 import { useToast } from 'vue-toastification';
@@ -155,7 +154,7 @@ async function submit(): Promise<void> {
     })
     .then(() => {
       btnLoading.value = false;
-      toast.info('Created account \'{username}\'. Logging you in...');
+      toast.success(`Created account '${username.value}'. Logging you in...`);
       login();
     })
     .catch((err: Error) => {
@@ -172,7 +171,7 @@ async function login(): Promise<void> {
   })
     .then(() => {
       btnLoading.value = false;
-      toast('Logged in successfully!');
+      toast.success('Logged in successfully!');
       console.log('%c[Auth]%cLogged in', 'color: green');
 
       if (!route.query.redirect) {
