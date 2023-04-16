@@ -1,5 +1,5 @@
 <template>
-  <div class="mt-4" style="max-width: 800px; margin: auto">
+  <div class="pt-4" style="max-width: 800px; margin: auto">
     <v-alert
       :model-value="!viewOnlyInfoAlertHidden && !whitelistedUserPermissions.canEditEntries"
       text="This list is view-only because you are missing permissions!" variant="outlined"

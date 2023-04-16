@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto mt-2" style="max-width: 1200px">
+  <div class="mx-auto pt-4" style="max-width: 1200px">
     <v-alert class="mb-2" dismissible type="info" variant="tonal">
       For some settings to apply, you have to refresh the page.
     </v-alert>

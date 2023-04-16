@@ -1,5 +1,5 @@
 <template>
-  <div class="mt-16 ma-auto" style="max-width: 500px">
+  <div class="pt-16 ma-auto" style="max-width: 500px">
     <v-card
       :style="isDarkTheme ? 'border-color: #393939' : 'border-color: #e0e0e0'"
       title="Login" variant="outlined"

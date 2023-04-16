@@ -1,5 +1,5 @@
 <template>
-  <div class="ma-auto mt-4" style="max-width: 70rem">
+  <div class="ma-auto pt-4" style="max-width: 70rem">
     <v-card
       v-for="item in lists as Array<IShoppingList>"
       :key="item.listid"

@@ -1,8 +1,8 @@
 <template>
-  <div>
+  <div class="pt-16">
     <v-card
       :style="isDarkTheme ? 'border-color: #393939' : 'border-color: #e0e0e0'"
-      class="mt-16 ma-auto"
+      class="ma-auto"
       title="Signup"
       variant="outlined"
       width="500px"

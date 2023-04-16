@@ -1,6 +1,6 @@
 <template>
   <div class="d-flex justify-center align-center h-100 flex-column">
-    <span class="mb-3" style="opacity: 60%">
+    <span class="pb-3" style="opacity: 60%">
       <span v-if="invalidSecret">
         Invalid, expired or used share link.
       </span>

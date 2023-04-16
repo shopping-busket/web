@@ -1,7 +1,7 @@
 <template>
   <div
-    class="d-flex justify-center align-center flex-column ma-auto"
-    style="font-family: 'Poppins', sans-serif; max-width: 800px; height: calc(100vh - 63px)"
+    class="d-flex justify-center align-center flex-column pt-16 ma-auto"
+    style="font-family: 'Poppins', sans-serif; max-width: 800px;"
   >
     <div class="text-center">
       <div class="header">
@@ -12,7 +12,7 @@
       </div>
       <p>This page doesn't seem to exist on our servers.</p>
       <v-btn
-        block class="mt-1" color="primary" variant="outlined"
+        block color="primary" variant="outlined"
         @click="$router.push({ name: 'home' })"
       >
         Go home
