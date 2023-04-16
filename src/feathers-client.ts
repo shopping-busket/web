@@ -50,6 +50,8 @@ export interface User {
   avatarURI: string | null;
   githubId: number | null;
   googleId: number | null;
+
+  verifiedEmail: boolean;
 }
 
 export interface AuthObject {
@@ -90,6 +92,16 @@ export async function requireUser(): Promise<User> {
   const user = await getUser();
   if (!user) throw new Error('required type is not allowed to be null. something in the authentication chain went wrong!');
   return user;
+}
+
+export async function waitForUser(cb: (user: User) => void): Promise<void> {
+  const interval = setInterval(async () => {
+    const user = await getUser();
+    if (user !== null) {
+      clearInterval(interval);
+      cb(user);
+    }
+  }, 50);
 }
 
 export default feathersClient;

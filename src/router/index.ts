@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
-import feathersClient, { AuthObject, FeathersError } from '@/feathers-client';
+import feathersClient, { AuthObject, FeathersError, User, } from '@/feathers-client';
 import app from '@/main';
 import { authenticationInjection, userInjection } from '@/helpers/injectionKeys';
 
@@ -16,6 +16,7 @@ export enum Route {
   SIGNUP = 'signup',
   LOGIN = 'login',
   EMAIL_VERIFICATION = 'email verification',
+  VERIFY_EMAIL = 'verify email',
 
   MY_LISTS = 'my lists',
   JOIN_LIST = 'join list',
@@ -53,6 +54,14 @@ const routes: RouteRecordRawWithMeta[] = [
       requiresAuth: true,
     },
     component: () => import('../views/auth/EmailVerification.vue'),
+  },
+  {
+    path: '/verify-email',
+    name: Route.VERIFY_EMAIL,
+    meta: {
+      requiresAuth: true,
+    },
+    component: () => import('../views/auth/VerifyEmail.vue'),
   },
   //endregion authentication
 
@@ -146,6 +155,7 @@ const router = createRouter({
   routes,
 });
 
+let user: User | null = null;
 router.beforeEach(async (to, from, next) => {
   console.log('[Router]', to, from);
 
@@ -163,8 +173,11 @@ router.beforeEach(async (to, from, next) => {
     }, 800);
 
     await feathersClient.authenticate().then((authentication) => {
-      app.provide(authenticationInjection, authentication as AuthObject);
-      app.provide(userInjection, (authentication as AuthObject).user);
+      const auth = authentication as AuthObject;
+
+      app.provide(authenticationInjection, auth);
+      app.provide(userInjection, auth.user);
+      user = auth.user;
     }).catch((err: FeathersError) => {
       if (err.code === 408) {
         console.log('[Auth] Timeout while trying to authenticate. You are offline!');
@@ -180,6 +193,8 @@ router.beforeEach(async (to, from, next) => {
       }
     });
   }
+
+  if (feathersClient.authentication.authenticated && destinationMeta?.requiresAuth && to.name !== Route.VERIFY_EMAIL && !user?.verifiedEmail) await router.replace({ name: Route.VERIFY_EMAIL });
   next();
 });
 
