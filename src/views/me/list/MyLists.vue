@@ -137,14 +137,19 @@
   </div>
 
   <v-dialog v-model="removeListDialog" max-width="500px">
-    <v-card :title="`Are you sure that you want to ${removeList?.owner === user?.uuid ? 'delete' : 'leave'} this list?`" :subtitle="removeList?.owner === user?.uuid ? 'You won\'t be able to get it back' : 'You will not be able to access it until you get another invite'">
+    <v-card
+      :title="`Are you sure that you want to ${removeList?.owner === user?.uuid ? 'delete' : 'leave'} this list?`"
+      :subtitle="removeList?.owner === user?.uuid ? 'You won\'t be able to get it back' : 'You will not be able to access it until you get another invite'"
+    >
       <v-card-actions>
         <v-spacer />
-        <v-btn variant="text" color="primary">
+        <v-btn variant="text" color="primary" @click="removeListDialog = false">
           Cancel
         </v-btn>
 
-        <v-btn variant="outlined" color="primary" @click="removeList?.owner === user?.uuid ? deleteList(removeList.listid) : leaveFromList(removeList.listid)">
+        <v-btn variant="outlined" color="primary"
+               @click="removeList?.owner === user?.uuid ? deleteList(removeList.listid) : leaveFromList(removeList.listid); removeListDialog = false"
+        >
           Yes, I am sure
         </v-btn>
       </v-card-actions>
