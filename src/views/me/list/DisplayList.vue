@@ -531,7 +531,7 @@ async function recordEvent(event: EventData): Promise<unknown> {
   const lists = JSON.parse(stored || '[]') as Array<IShoppingList>;
   for (let i = 0; i < lists.length; i++) {
     if (lists[i].listid === props.id && shoppingList.value) {
-      lists[i] = shoppingList.value.toInterface(lists[i].id);
+      lists[i] = shoppingList.value?.toObject(lists[i].id, true);
     }
   }
   localStorage.setItem('lists', JSON.stringify(lists));
@@ -692,7 +692,7 @@ function downloadList(): void {
   name.trim().replaceAll(' ', '_');
   name += '-export';
 
-  const dataStr = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(shoppingList.value))}`;
+  const dataStr = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(shoppingList.value?.toInterface(-1)))}`;
   const downloadAnchorNode = document.createElement('a');
   downloadAnchorNode.setAttribute('href', dataStr);
   downloadAnchorNode.setAttribute('download', `${name}.${fileType}`);
