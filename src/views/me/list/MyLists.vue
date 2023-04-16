@@ -113,7 +113,7 @@
           <div class="d-flex flex-row">
             <v-btn
               color="red"
-              text
+              variant="text"
               @click="importDialog = false"
             >
               Cancel
@@ -123,7 +123,7 @@
 
             <v-btn
               color="primary"
-              outlined
+              variant="outlined"
               rounded
               width="200px"
               @click="importDialog = false; uploadImportedList()"
