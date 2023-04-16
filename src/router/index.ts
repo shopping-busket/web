@@ -15,10 +15,13 @@ export type RouteRecordRawWithMeta = RouteRecordRaw & {
 export enum Route {
   SIGNUP = 'signup',
   LOGIN = 'login',
+  EMAIL_VERIFICATION = 'email verification',
+
   MY_LISTS = 'my lists',
   JOIN_LIST = 'join list',
   LIST_NOT_FOUND = 'list not found',
   DISPLAY_LIST = 'display list',
+
   PREFERENCES = 'preferences',
   HOME = 'home',
   NOT_FOUND = 'not found',
@@ -42,6 +45,14 @@ const routes: RouteRecordRawWithMeta[] = [
       requiresAuth: false,
     },
     component: () => import('../views/auth/LoginPage.vue'),
+  },
+  {
+    path: '/email-verification',
+    name: Route.EMAIL_VERIFICATION,
+    meta: {
+      requiresAuth: true,
+    },
+    component: () => import('../views/auth/EmailVerification.vue'),
   },
   //endregion authentication
 
