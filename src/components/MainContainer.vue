@@ -171,7 +171,7 @@ const drawer = ref(false);
 const permDrawer = ref(false);
 const mini = ref(false);
 
-const auth: Ref<AuthObject | null> = ref(inject(authenticationInjection) ?? null);
+const auth: Ref<AuthObject | null> = ref(inject(authenticationInjection, null));
 let installPrompt: BeforeInstallPromptEvent | null = null;
 let showInstallable = false;
 
