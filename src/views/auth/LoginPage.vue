@@ -13,46 +13,46 @@
         </router-link>
       </v-card-subtitle>
       <v-card-text>
-        <v-text-field
-          v-model="email"
-          :rules="emailRules"
-          class="pb-3"
-          color="primary"
-          hide-details="auto"
-          label="Email"
-          type="email"
-          variant="underlined"
-        />
-        <v-text-field
-          v-model="password"
-          :append-inner-icon="showPsw ? 'mdi-eye-outline' : 'mdi-eye-off-outline'"
-          :rules="passwordRules"
-          :type="showPsw ? 'text' : 'password'"
-          color="primary"
-          hide-details="auto"
-          label="Password"
-          variant="underlined"
-          @blur="passwordBlur"
-          @click:append-inner="showPsw = !showPsw"
-          @keypress.enter="submit"
-        />
-        <span v-show="forgetHint" class="pt-1">
-          Forgot your password? Contact me at <a href="mailto:busket@bux.at">busket@bux.at</a>!
-        </span>
+        <v-form ref="form" v-model="isValid" @submit.prevent="submit()">
+          <v-text-field
+            v-model="email"
+            :rules="emailRules"
+            class="pb-3"
+            color="primary"
+            hide-details="auto"
+            label="Email"
+            type="email"
+            variant="underlined"
+          />
+          <v-text-field
+            v-model="password"
+            :append-inner-icon="showPsw ? 'mdi-eye-outline' : 'mdi-eye-off-outline'"
+            :rules="passwordRules"
+            :type="showPsw ? 'text' : 'password'"
+            color="primary"
+            hide-details="auto"
+            label="Password"
+            variant="underlined"
+            @blur="passwordBlur"
+            @click:append-inner="showPsw = !showPsw"
+            @keypress.enter="submit"
+          />
+          <span v-show="forgetHint" class="pt-1">
+            Forgot your password? Contact me at <a href="mailto:busket@bux.at">busket@bux.at</a>!
+          </span>
+
+          <v-btn
+            :loading="btnLoading"
+            block
+            class="btn-with-outline mt-4"
+            color="primary"
+            variant="tonal"
+            type="submit"
+          >
+            Login using Busket
+          </v-btn>
+        </v-form>
       </v-card-text>
-      <v-card-actions class="flex flex-column">
-        <v-btn
-          :disabled="btnDisabled"
-          :loading="btnLoading"
-          block
-          class="btn-with-outline"
-          color="primary"
-          variant="tonal"
-          @click="submit"
-        >
-          Login using Busket
-        </v-btn>
-      </v-card-actions>
     </v-card>
 
     <v-alert
@@ -71,13 +71,13 @@ import {
   VAlert,
   VBtn,
   VCard,
-  VCardActions,
   VCardSubtitle,
   VCardText,
+  VForm,
   VTextField
 } from 'vuetify/components';
 import feathersClient from '@/feathers-client';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, Ref, ref, watch } from 'vue';
 import { useToast } from 'vue-toastification';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
@@ -104,11 +104,11 @@ const showPsw = ref(false);
 const password = ref('');
 const email = ref('');
 const forgetHint = ref(false);
-const btnDisabled = ref(true);
 const btnLoading = ref(false);
+const form: Ref<VForm | null> = ref(null);
+const isValid: Ref<boolean | null> = ref(false);
 
 onMounted(() => {
-  validateInfo();
   themeWatcher();
 });
 
@@ -118,28 +118,15 @@ function themeWatcher() {
   isDarkTheme.value = theme.global.name.value === 'darkTheme';
 }
 
-watch([email, password], validateInfo);
-
-function validateInfo(): void {
-  emailRules.some((r) => {
-    const c = r(email.value) !== true;
-    btnDisabled.value = c;
-    return c;
-  });
-
-  passwordRules.some((r) => {
-    const c = r(password.value) !== true;
-    btnDisabled.value = c;
-    return c;
-  });
-}
-
 function passwordBlur(): void {
   tries.value++;
   if (tries.value >= 3) forgetHint.value = true;
 }
 
 async function submit(): Promise<void> {
+  if (isValid.value === null) isValid.value = (await form.value?.validate())?.valid ?? false;
+  if (!isValid.value) return;
+
   btnLoading.value = true;
 
   feathersClient.authentication.authenticate({

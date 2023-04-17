@@ -15,68 +15,68 @@
       </v-card-subtitle>
 
       <v-card-text>
-        <v-text-field
-          v-model="username"
-          :rules="usernameRules"
-          class="pb-3"
-          color="primary"
-          hide-details="auto"
-          label="Name"
-          type="text"
-          variant="underlined"
-        />
-        <v-text-field
-          v-model="email"
-          :rules="emailRules"
-          class="pb-3"
-          color="primary"
-          hide-details="auto"
-          label="Email"
-          type="email"
-          variant="underlined"
-        />
-        <v-text-field
-          ref="passwordField"
-          v-model="password"
-          :append-inner-icon="showPsw ? 'mdi-eye-outline' : 'mdi-eye-off-outline'"
-          :rules="passwordRules"
-          :type="showPsw ? 'text' : 'password'"
-          color="primary"
-          hide-details="auto"
-          label="Password"
-          variant="underlined"
-          @blur="passwordBlur"
-          @click:append-inner="showPsw = !showPsw"
-          @keypress.enter="submit"
-        />
-        <span v-show="forgetHint" class="pt-1">
-          Forgot your password? Contact me at <a href="mailto:busket@bux.at">busket@bux.at</a>!
-        </span>
-      </v-card-text>
+        <v-form ref="form" v-model="isValid" @submit.prevent="submit()">
+          <v-text-field
+            v-model="username"
+            :rules="usernameRules"
+            class="pb-3"
+            color="primary"
+            hide-details="auto"
+            label="Name"
+            type="text"
+            variant="underlined"
+          />
+          <v-text-field
+            v-model="email"
+            :rules="emailRules"
+            class="pb-3"
+            color="primary"
+            hide-details="auto"
+            label="Email"
+            type="email"
+            variant="underlined"
+          />
+          <v-text-field
+            ref="passwordField"
+            v-model="password"
+            :append-inner-icon="showPsw ? 'mdi-eye-outline' : 'mdi-eye-off-outline'"
+            :rules="passwordRules"
+            :type="showPsw ? 'text' : 'password'"
+            color="primary"
+            hide-details="auto"
+            label="Password"
+            variant="underlined"
+            @blur="passwordBlur"
+            @click:append-inner="showPsw = !showPsw"
+            @keypress.enter="submit"
+          />
+          <span v-show="forgetHint" class="pt-1">
+            Forgot your password? Contact me at <a href="mailto:busket@bux.at">busket@bux.at</a>!
+          </span>
 
-      <v-card-actions class="flex flex-column">
-        <v-btn block class="btn-with-outline" color="primary" variant="tonal" @click="submit">
-          Signup
-        </v-btn>
-      </v-card-actions>
+          <v-btn
+            :loading="btnLoading"
+            block
+            class="btn-with-outline mt-4"
+            color="primary"
+            variant="tonal"
+            type="submit"
+          >
+            Create Account
+          </v-btn>
+        </v-form>
+      </v-card-text>
     </v-card>
   </div>
 </template>
 
 <script lang="ts" setup>
-import {
-  VBtn,
-  VCard,
-  VCardActions,
-  VCardSubtitle,
-  VCardText,
-  VTextField
-} from 'vuetify/components';
-import feathersClient from '@/feathers-client';
+import { VBtn, VCard, VCardSubtitle, VCardText, VForm, VTextField } from 'vuetify/components';
+import feathersClient, { BadRequest, FeathersError } from '@/feathers-client';
 import { useI18n } from 'vue-i18n';
 import { useToast } from 'vue-toastification';
 import { useRoute } from 'vue-router';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, Ref, ref, watch } from 'vue';
 import { useTheme } from 'vuetify';
 
 const i18n = useI18n();
@@ -108,11 +108,11 @@ const username = ref('');
 const password = ref('');
 const email = ref('');
 const forgetHint = ref(false);
-const btnDisabled = ref(true);
 const btnLoading = ref(false);
+const form: Ref<VForm | null> = ref(null);
+const isValid: Ref<boolean | null> = ref(false);
 
 onMounted(() => {
-  validateInfo();
   themeWatcher();
 });
 
@@ -122,28 +122,15 @@ function themeWatcher() {
   isDarkTheme.value = theme.global.name.value === 'darkTheme';
 }
 
-watch([email, password], validateInfo);
-
-function validateInfo(): void {
-  emailRules.some((r) => {
-    const c = r(email.value) !== true;
-    btnDisabled.value = c;
-    return c;
-  });
-
-  passwordRules.some((r) => {
-    const c = r(password.value) !== true;
-    btnDisabled.value = c;
-    return c;
-  });
-}
-
 function passwordBlur(): void {
   tries.value++;
   if (tries.value >= 3) forgetHint.value = true;
 }
 
 async function submit(): Promise<void> {
+  if (isValid.value === null) isValid.value = (await form.value?.validate())?.valid ?? false;
+  if (!isValid.value) return;
+
   btnLoading.value = true;
 
   await feathersClient.service('users')
@@ -152,13 +139,20 @@ async function submit(): Promise<void> {
       password: password.value,
       fullName: username.value,
     })
-    .then(() => {
+    .then(async (d) => {
+      console.log(d);
       btnLoading.value = false;
       toast.success(`Created account '${username.value}'. Logging you in...`);
-      login();
+      await login();
     })
-    .catch((err: Error) => {
-      console.warn('[ERROR] Error while trying to signup:', err);
+    .catch((err: FeathersError<BadRequest>) => {
+      if (err.code === 400) {
+        toast.warning('User with this email already exists!');
+        form.value?.reset();
+        btnLoading.value = false;
+        return;
+      }
+      console.warn('[ERROR] Error while trying to signup:', JSON.stringify(err));
       toast.error('Something went wrong!');
     });
 }
