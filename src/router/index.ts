@@ -17,7 +17,7 @@ export enum Route {
   SIGNUP = 'signup',
   LOGIN = 'login',
   EMAIL_VERIFICATION = 'email verification',
-  VERIFY_EMAIL = 'verify email',
+  EMAIL_VERIFY = 'email verify',
 
   MY_LISTS = 'my lists',
   JOIN_LIST = 'join list',
@@ -58,8 +58,8 @@ const routes: RouteRecordRawWithMeta[] = [
     component: () => import('../views/auth/EmailVerification.vue'),
   },
   {
-    path: '/verify-email',
-    name: Route.VERIFY_EMAIL,
+    path: '/email-verify',
+    name: Route.EMAIL_VERIFY,
     meta: {
       requiresAuth: true,
     },
@@ -200,7 +200,7 @@ router.beforeEach(async (to, from, next) => {
     });
   }
 
-  if (feathersClient.authentication.authenticated && destinationMeta?.requiresAuth && to.name !== Route.VERIFY_EMAIL && !user?.verifiedEmail) await router.replace({ name: Route.VERIFY_EMAIL });
+  if (feathersClient.authentication.authenticated && destinationMeta?.requiresAuth && to.name !== Route.EMAIL_VERIFY && !user?.verifiedEmail) await router.replace({ name: Route.EMAIL_VERIFY });
   next();
 });
 
