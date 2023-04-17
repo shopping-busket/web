@@ -26,6 +26,7 @@ export enum Route {
   PREFERENCES = 'preferences',
   HOME = 'home',
   NOT_FOUND = 'not found',
+  GITHUB = 'github',
   FEATHERS_TESTING = 'feathersjs backend testing'
 }
 
@@ -134,6 +135,14 @@ const routes: RouteRecordRawWithMeta[] = [
       allowInProduction: false,
     },
     component: () => import('../views/tools/FeathersTesting.vue'),
+  },
+  {
+    path: '/github',
+    name: Route.GITHUB,
+    redirect: '',
+    beforeEnter() {
+      window.location.replace('https://github.com/shopping-busket');
+    }
   },
   {
     path: '/',
