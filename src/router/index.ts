@@ -2,6 +2,7 @@ import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import feathersClient, { AuthObject, FeathersError, User, } from '@/feathers-client';
 import app from '@/main';
 import { authenticationInjection, userInjection } from '@/helpers/injectionKeys';
+import { useToast } from 'vue-toastification';
 
 export interface RouteMeta {
   requiresAuth?: boolean,
@@ -164,6 +165,7 @@ const router = createRouter({
   routes,
 });
 
+const toast = useToast();
 let user: User | null = null;
 router.beforeEach(async (to, from, next) => {
   console.log('[Router]', to, from);
@@ -171,16 +173,10 @@ router.beforeEach(async (to, from, next) => {
   const destinationMeta: RouteMeta | null = to.meta;
 
   // Only allow in dev mode
-  if (!destinationMeta?.allowInProduction && process.env.NODE_ENV !== 'development') await router.replace({ name: Route.NOT_FOUND });
+  if (destinationMeta?.allowInProduction === false && process.env.NODE_ENV !== 'development') await router.replace({ name: Route.NOT_FOUND });
 
   // Authentication
   if (!feathersClient.authentication.authenticated) {
-    setTimeout(() => {
-      if (feathersClient.io.connected) return;
-      // EventBus.$emit('toast', 'Your offline.');
-      next();
-    }, 800);
-
     await feathersClient.authenticate().then((authentication) => {
       const auth = authentication as AuthObject;
 
@@ -190,6 +186,7 @@ router.beforeEach(async (to, from, next) => {
     }).catch((err: FeathersError) => {
       if (err.code === 408) {
         console.log('[Auth] Timeout while trying to authenticate. You are offline!');
+        toast('You\'re offline!')
         return;
       }
       console.log(`[Auth] Not authenticated. This page requires auth: ${destinationMeta?.requiresAuth ? 'yes' : 'no'}`);
