@@ -48,6 +48,7 @@ onMounted(() => {
   }
 
   app.config.errorHandler = (e) => {
+    console.log(JSON.stringify(e, null, 2));
     console.error(e);
     useToast().error('Something unexpected just happened!');
   };
