@@ -427,6 +427,10 @@ async function renameEntry(id: string, name: string | null = null, _recordEvent 
   if (!entry) return;
 
   if (name) entry.additional.editName = name;
+  if (entry.additional.editName.trim().length === 0) {
+    entry.additional.editName = entry.name;
+    return;
+  }
 
   shoppingList.value?.renameItem(entry.id, entry.additional.editName);
 
