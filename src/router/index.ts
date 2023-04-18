@@ -7,6 +7,7 @@ import { useToast } from 'vue-toastification';
 export interface RouteMeta {
   requiresAuth?: boolean,
   allowInProduction?: boolean,
+  allowUnverified?: boolean,
 }
 
 export type RouteRecordRawWithMeta = RouteRecordRaw & {
@@ -62,6 +63,7 @@ const routes: RouteRecordRawWithMeta[] = [
     name: Route.EMAIL_VERIFY,
     meta: {
       requiresAuth: true,
+      allowUnverified: true,
     },
     component: () => import('../views/auth/VerifyEmail.vue'),
   },
@@ -123,6 +125,7 @@ const routes: RouteRecordRawWithMeta[] = [
     name: Route.PREFERENCES,
     meta: {
       requiresAuth: true,
+      allowUnverified: true,
     },
     component: () => import('../views/me/UserPreferences.vue'),
   },
@@ -200,7 +203,7 @@ router.beforeEach(async (to, from, next) => {
     });
   }
 
-  if (feathersClient.authentication.authenticated && destinationMeta?.requiresAuth && to.name !== Route.EMAIL_VERIFY && !user?.verifiedEmail) await router.replace({ name: Route.EMAIL_VERIFY });
+  if (feathersClient.authentication.authenticated && destinationMeta?.requiresAuth && !user?.verifiedEmail && !destinationMeta.allowUnverified) await router.replace({ name: Route.EMAIL_VERIFY });
   next();
 });
 
