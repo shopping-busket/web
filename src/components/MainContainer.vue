@@ -9,10 +9,16 @@
     >
       <v-list-item
         :prepend-avatar="auth != null ? auth.user.avatarURI : img"
-        :title="auth == null ? 'Not logged in' : auth?.user?.fullName"
-        class="{'my-1': drawerdsaduhasdhuashudashu}"
         nav
       >
+        <v-list-item-title>
+          <span v-if="auth === null || auth === undefined">
+            Not logged in
+          </span>
+          <span v-else>
+            {{ auth?.user?.fullName }}
+          </span>
+        </v-list-item-title>
         <template #append>
           <v-btn
             v-if="!permDrawer"
@@ -171,7 +177,7 @@ const drawer = ref(false);
 const permDrawer = ref(false);
 const mini = ref(false);
 
-const auth: Ref<AuthObject | null> = ref(inject(authenticationInjection, null));
+const auth: Ref<AuthObject | null> = ref(inject(authenticationInjection, null) as AuthObject);
 let installPrompt: BeforeInstallPromptEvent | null = null;
 let showInstallable = false;
 
