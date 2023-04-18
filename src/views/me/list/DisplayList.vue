@@ -312,7 +312,7 @@ function registerEventListener() {
 
     switch (data.eventData.event) {
       case EventType.CREATE_ENTRY:
-        await createEntry(event.state.name, false, false);
+        await createEntry(event.state.name, event.entryId, false, false);
         break;
 
       case EventType.MARK_ENTRY_TODO:
@@ -464,16 +464,15 @@ async function moveEntry(index: number, oldIndex: number, _recordEvent = true, m
   });
 }
 
-async function createEntry(_entryName: string | null = null, resetVar = true, _recordEvent = true): Promise<void> {
+async function createEntry(_entryName: string | null = null, id = uuidv4(), resetVar = true, _recordEvent = true): Promise<void> {
   const entryName = _entryName ?? newItemName.value;
-  console.warn('entryName: ', entryName, _entryName, resetVar, _recordEvent);
   if (!entryName) return;
   if (!shoppingList.value) return;
 
   if (entryNameValid.value === null) entryNameValid.value = (await newItemForm.value?.validate())?.valid ?? false;
   if (!entryNameValid.value) return;
 
-  const entry = shoppingList.value?.createItem(entryName);
+  const entry = shoppingList.value?.createItem(entryName, id);
   entry.additional = {
     edit: false,
     editName: entry.name,
