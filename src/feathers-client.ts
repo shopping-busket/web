@@ -9,11 +9,11 @@ const socket = io(config.backend, { transports: ['websocket'] });
 export type Methods = 'create' | 'find' | 'get' | 'update' | 'patch' | 'remove';
 
 export enum Service {
-  EVENT = 'event',
-  LIST = 'list',
-  LIBRARY = 'library',
-  USERS = 'users',
-  WHITELISTED_USERS = 'whitelisted-users',
+  EVENT = 'api/event',
+  LIST = 'api/list',
+  LIBRARY = 'api/library',
+  USERS = 'api/users',
+  WHITELISTED_USERS = 'api/whitelisted-users',
 }
 
 type ServiceTypes = Record<Service, FeathersService> & {
