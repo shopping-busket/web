@@ -48,15 +48,20 @@
         </v-list-item>
       </v-list>
 
-      <div v-show="showInstallable" class="primary pa-2 white--text">
-        <span class="pb-4">You want to use Busket when you are offline without having to open your Browser?</span>
-        <v-btn block class="mt-2" color="white" outlined rounded small @click="installApp">
-          Sure!
+      <div
+        v-if="showInstallable"
+        class="primary pa-2 white--text d-flex align-center justify-center text-center flex-column"
+      >
+        <v-divider class="mb-2 w-100" />
+        <span class="pb-4">Want to use Busket offline or without having to open your Browser?</span>
+        <v-btn block class="mt-2" color="primary" variant="tonal" rounded small @click="installApp">
+          Install Busket
         </v-btn>
-        <span
+        <a
           class="white--text opacity text-decoration-underline cursor-pointer"
-          @click="showInstallable = false"
-        >Don't show me this again!</span>
+          @click.prevent="dontShowBannerAgain()"
+        >Don't show me this again!</a>
+        <v-divider class="mt-2 w-100" />
       </div>
 
       <template #append>
@@ -179,13 +184,14 @@ const mini = ref(false);
 
 const auth: Ref<AuthObject | null> = ref(inject(authenticationInjection, null) as AuthObject);
 let installPrompt: BeforeInstallPromptEvent | null = null;
-let showInstallable = true;
+let showInstallable = false;
+const SHOW_INSTALL_APP_BANNER_STORE_KEY = 'showInstallAppBanner';
 
 onMounted(() => {
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     installPrompt = e as unknown as BeforeInstallPromptEvent;
-    showInstallable = true;
+    showInstallable = getShowInstallBannerStore();
   });
 
   if (process.env.NODE_ENV === 'development') {
@@ -206,6 +212,21 @@ onMounted(() => {
 
   if (auth.value) authChangeListener();
 });
+
+function getShowInstallBannerStore() {
+  let showInstallAppBannerStr = localStorage.getItem(SHOW_INSTALL_APP_BANNER_STORE_KEY);
+  if (showInstallAppBannerStr == null) {
+    showInstallAppBannerStr = 'true';
+    localStorage.setItem(SHOW_INSTALL_APP_BANNER_STORE_KEY, showInstallAppBannerStr);
+  }
+
+  return showInstallAppBannerStr === 'true';
+}
+
+function dontShowBannerAgain() {
+  showInstallable = false;
+  localStorage.setItem(SHOW_INSTALL_APP_BANNER_STORE_KEY, 'false');
+}
 
 async function installApp(): Promise<void> {
   if (!installPrompt) return;
