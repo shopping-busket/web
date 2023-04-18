@@ -179,7 +179,7 @@ const mini = ref(false);
 
 const auth: Ref<AuthObject | null> = ref(inject(authenticationInjection, null) as AuthObject);
 let installPrompt: BeforeInstallPromptEvent | null = null;
-let showInstallable = false;
+let showInstallable = true;
 
 onMounted(() => {
   window.addEventListener('beforeinstallprompt', (e) => {
@@ -188,11 +188,13 @@ onMounted(() => {
     showInstallable = true;
   });
 
-  if (process.env.NODE_ENV === 'development') baseMenuItems.push({
-    icon: 'mdi-api',
-    title: 'Backend Tools',
-    to: { name: Route.FEATHERS_TESTING }
-  });
+  if (process.env.NODE_ENV === 'development') {
+    baseMenuItems.push({
+      icon: 'mdi-api',
+      title: 'Backend Tools',
+      to: { name: Route.FEATHERS_TESTING }
+    });
+  }
 
   menuItems.push(...baseMenuItems);
   menuItems.push({
@@ -240,36 +242,36 @@ async function clickItemAsync(item: MenuItem) {
 }
 
 function authChangeListener() {
-    console.log('watch', auth, !auth.value, !!auth.value);
+  console.log('watch', auth, !auth.value, !!auth.value);
 
-    menuItems.length = 0;
-    menuItems.push(...baseMenuItems);
+  menuItems.length = 0;
+  menuItems.push(...baseMenuItems);
 
-    if (auth.value == null) {
-      menuItems.push({
-        title: 'Log in',
-        icon: 'mdi-login-variant',
-        to: { name: 'login' },
-        divide: true,
-      });
-      return;
-    }
-    if (auth.value.user.prefersMiniDrawer) {
-      permDrawer.value = true;
-      mini.value = true;
-    }
-
+  if (auth.value == null) {
     menuItems.push({
-      title: 'Preferences',
-      icon: 'mdi-account-cog',
-      to: { name: 'preferences' },
-      divide: true,
-    }, {
-      title: 'Logout',
-      icon: 'mdi-logout-variant',
-      click: logOut,
+      title: 'Log in',
+      icon: 'mdi-login-variant',
+      to: { name: 'login' },
       divide: true,
     });
+    return;
+  }
+  if (auth.value.user.prefersMiniDrawer) {
+    permDrawer.value = true;
+    mini.value = true;
+  }
+
+  menuItems.push({
+    title: 'Preferences',
+    icon: 'mdi-account-cog',
+    to: { name: 'preferences' },
+    divide: true,
+  }, {
+    title: 'Logout',
+    icon: 'mdi-logout-variant',
+    click: logOut,
+    divide: true,
+  });
 }
 
 watch(auth, authChangeListener, { deep: true });
