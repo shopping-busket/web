@@ -17,7 +17,7 @@
       <v-card-text>
         <v-form ref="form" v-model="isValid" @submit.prevent="submit()">
           <v-text-field
-            v-model="username"
+            v-model.trim="username"
             :rules="usernameRules"
             class="pb-3"
             color="primary"
@@ -97,9 +97,7 @@ const emailRules = [
 ];
 const usernameRules = [
   (value: string) => !!value || `${i18n.t('auth.Required')}.`,
-  (value: string) => /^(\w)+ *([\w\s .]*)+$/.test(value) || i18n.t('auth.Username can only contain'),
-  (value: string) => value.length <= 16 || i18n.t('auth.Max x characters', { x: 16 }),
-  (value: string) => value.length >= 3 || i18n.t('auth.Min x characters', { x: 3 }),
+  (value: string) => value.length >= 1 || i18n.t('auth.Min x characters', { x: 1 }),
 ];
 
 const tries = ref(0);
@@ -146,13 +144,13 @@ async function submit(): Promise<void> {
       await login();
     })
     .catch((err: FeathersError<BadRequest>) => {
+      console.warn('[ERROR] Error while trying to signup:', JSON.stringify(err));
       if (err.code === 400) {
         toast.warning('User with this email already exists!');
         form.value?.reset();
         btnLoading.value = false;
         return;
       }
-      console.warn('[ERROR] Error while trying to signup:', JSON.stringify(err));
       toast.error('Something went wrong!');
     });
 }
