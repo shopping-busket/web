@@ -82,6 +82,7 @@ import { useToast } from 'vue-toastification';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useTheme } from 'vuetify';
+import { EMAIL_REGEX } from '@/helpers/regex';
 
 const toast = useToast();
 const route = useRoute();
@@ -97,7 +98,7 @@ const passwordRules = [
 const emailRules = [
   (value: string) => !!value || `${i18n.t('auth.Required')}.`,
   (value: string) => (value && value.length >= 3) || i18n.t('auth.Min x characters', { x: 3 }),
-  (value: string) => /^[-!#$%&'*+/0-9=?A-Z^_a-z{|}~](\.?[-!#$%&'*+/0-9=?A-Z^_a-z{|}~])*@[a-zA-Z](-?[a-zA-Z0-9])*(\.[a-zA-Z](-?[a-zA-Z0-9])*)+$/.test(value) || i18n.t('auth.Must be an email'),
+  (value: string) => EMAIL_REGEX.test(value) || i18n.t('auth.Must be an email'),
 ];
 const tries = ref(0);
 const showPsw = ref(false);
