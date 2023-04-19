@@ -156,7 +156,7 @@ async function submit(): Promise<void> {
 }
 
 async function login(): Promise<void> {
-  feathersClient.authentication.authenticate({
+  await feathersClient.authentication.authenticate({
     strategy: 'local',
     email: email.value,
     password: password.value,
