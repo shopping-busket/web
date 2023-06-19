@@ -3,7 +3,7 @@
     <v-navigation-drawer
       v-model="drawer"
       :rail="mini"
-      :temporary="!permDrawer"
+      :permanent="mini"
       app
       expand-on-hover
     >
@@ -21,7 +21,6 @@
         </v-list-item-title>
         <template #append>
           <v-btn
-            v-if="!permDrawer"
             icon="mdi-chevron-left"
             variant="text"
             @click.stop="drawer = !drawer"
@@ -88,9 +87,7 @@
       class="pl-3"
       dark
     >
-      <div v-if="!permDrawer">
-        <v-app-bar-nav-icon class="mr-1" @click="drawer = true" />
-      </div>
+      <v-app-bar-nav-icon class="mr-1" @click="drawer = true" />
 
       <v-toolbar-title>Busket</v-toolbar-title>
       <v-spacer />
@@ -179,7 +176,6 @@ const toast = useToast();
 
 const menuItems: MenuItem[] = [];
 const drawer = ref(false);
-const permDrawer = ref(false);
 const mini = ref(false);
 
 const auth: Ref<AuthObject | null> = ref(inject(authenticationInjection, null) as AuthObject);
@@ -278,7 +274,6 @@ function authChangeListener() {
     return;
   }
   if (auth.value.user.prefersMiniDrawer) {
-    permDrawer.value = true;
     mini.value = true;
   }
 
@@ -296,10 +291,6 @@ function authChangeListener() {
 }
 
 watch(auth, authChangeListener, { deep: true });
-
-watch(permDrawer, () => {
-  if (!permDrawer.value) mini.value = false;
-});
 </script>
 
 <style lang="scss" scoped>
