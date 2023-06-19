@@ -4,6 +4,7 @@
       v-model="drawer"
       :rail="mini"
       :permanent="mini"
+      :temporary="!mini"
       app
       expand-on-hover
     >
