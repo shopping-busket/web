@@ -69,3 +69,10 @@ async function updateAndRefreshPage(): Promise<void> {
   window.location.reload();
 }
 </script>
+
+<style>
+/*noinspection ALL*/
+.v-card-subtitle {
+  white-space: normal;
+}
+</style>
