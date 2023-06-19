@@ -423,7 +423,7 @@ async function clearDone(): Promise<void> {
 async function renameEntry(id: string, name: string | null = null, _recordEvent = true): Promise<void> {
   if (!shoppingList.value) return;
 
-  const entry = shoppingList.value.entries.find((t) => t.id === id);
+  const entry = shoppingList.value?.globalEntries.find((t) => t.id === id);
   if (!entry) return;
 
   if (name) entry.additional.editName = name;
