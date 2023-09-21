@@ -241,6 +241,12 @@ async function showNewListDialog() {
   await newListForm.value?.validate();
 }
 
+function comparatorSortAlphabetically(a: string, b: string) {
+  if (a < b) return -1;
+  if (a > b) return 1;
+  return 0;
+}
+
 async function populateLists(): Promise<void> {
   const library = await feathersClient.service(Service.LIBRARY).find() as LibraryEntry[];
 
@@ -251,7 +257,7 @@ async function populateLists(): Promise<void> {
         loading: false,
       },
     };
-  });
+  }).sort((a,b) => comparatorSortAlphabetically(a.name, b.name));
 
   localStorage.setItem('lists', JSON.stringify(lists.value));
 }

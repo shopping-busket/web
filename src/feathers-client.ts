@@ -27,7 +27,7 @@ type ServiceTypes = Record<Service, FeathersService> & {
 const feathersClient = feathers<ServiceTypes>();
 
 feathersClient.configure(socketio(socket, { timeout: 30000 }));
-feathersClient.configure(auth());
+feathersClient.configure(auth({storage: process.env.NODE_ENV !== 'development' ? localStorage : sessionStorage}));
 
 export interface DB {
   id: number;
