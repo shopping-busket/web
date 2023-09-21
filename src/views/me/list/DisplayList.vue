@@ -92,7 +92,7 @@
                 @submit.prevent="createEntry()"
         >
           <v-text-field
-            v-model.trim="newItemName"
+            v-model="newItemName"
             :rules="newItemRules"
             append-inner-icon="mdi-basket-plus-outline"
             color="primary"
@@ -469,7 +469,7 @@ async function moveEntry(index: number, oldIndex: number, _recordEvent = true, m
 }
 
 async function createEntry(_entryName: string | null = null, id = uuidv4(), resetVar = true, _recordEvent = true): Promise<void> {
-  const entryName = _entryName ?? newItemName.value;
+  const entryName = _entryName?.trim() ?? newItemName.value.trim();
   if (!entryName) return;
   if (!shoppingList.value) return;
 
