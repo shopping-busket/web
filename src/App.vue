@@ -60,6 +60,8 @@ onMounted(() => {
 
     theme.global.name.value = usr.prefersDarkMode ? 'darkTheme' : 'lightTheme';
   }, 500);
+
+  if (process.env.NODE_ENV === 'development') document.title = 'Busket Dev';
 });
 
 async function updateAndRefreshPage(): Promise<void> {
