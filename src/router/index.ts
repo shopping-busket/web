@@ -186,10 +186,12 @@ router.beforeEach(async (to, from, next) => {
       app.provide(authenticationInjection, auth);
       app.provide(userInjection, auth.user);
       user = auth.user;
+
+      if (from.name === undefined && to.name === Route.HOME) next({ name: Route.MY_LISTS });
     }).catch((err: FeathersError) => {
       if (err.code === 408) {
         console.log('[Auth] Timeout while trying to authenticate. You are offline!');
-        toast('You\'re offline!')
+        toast('You\'re offline!');
         return;
       }
       console.log(`[Auth] Not authenticated. This page requires auth: ${destinationMeta?.requiresAuth ? 'yes' : 'no'}`);
