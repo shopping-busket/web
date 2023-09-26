@@ -2,11 +2,13 @@ import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import path from 'path';
 import topLevelAwait from 'vite-plugin-top-level-await';
+import vuetify from 'vite-plugin-vuetify';
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
+    vuetify(),
     topLevelAwait({
       // The export name of top-level await promise for each chunk module
       promiseExportName: '__tla',
