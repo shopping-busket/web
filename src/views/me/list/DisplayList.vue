@@ -41,11 +41,11 @@
             />
 
             <v-btn
-              color="primary" icon="mdi-text-box" size="x-small" variant="text"
+              color="primary" icon="mdi-text-box-outline" size="x-small" variant="text"
               @click="openLogDialog = true"
             />
             <v-btn
-              color="primary" icon="mdi-download" size="x-small" variant="text"
+              color="primary" icon="mdi-download-outline" size="x-small" variant="text"
               @click="downloadList"
             />
             <v-btn
@@ -405,19 +405,16 @@ async function clearDone(): Promise<void> {
   if (!shoppingList.value) return;
 
   const deleted = shoppingList.value?.clearDone();
+  if (!deleted || deleted.length <= 0) return;
 
-// eslint-disable-next-line no-restricted-syntax
-  for (const entry of deleted) {
-    // eslint-disable-next-line no-await-in-loop
-    await recordEvent({
-      event: EventType.DELETE_ENTRY,
-      entryId: entry.id,
-      isoDate: (new Date()).toISOString(),
-      state: {
-        name: entry.name,
-      },
-    });
-  }
+  await recordEvent({
+    event: EventType.CLEAR_DONE,
+    entryId: deleted[0].id,
+    isoDate: (new Date()).toISOString(),
+    state: {
+      name: 'unknown',
+    },
+  });
 }
 
 async function renameEntry(id: string, name: string | null = null, _recordEvent = true): Promise<void> {
