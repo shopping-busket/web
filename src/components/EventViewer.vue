@@ -130,8 +130,8 @@ const map: EventTypeMap = {
   },
   /* 6 */
   CLEAR_DONE: {
-    icon: 'mdi-clock-outline',
-    color: '#c96e00'
+    icon: 'mdi-trash-can-outline',
+    color: '#FF0000'
   },
 };
 
