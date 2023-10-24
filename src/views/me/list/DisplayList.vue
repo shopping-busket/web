@@ -356,7 +356,7 @@ function registerEventListener() {
 function registerSearch() {
   window.addEventListener('keydown', (e) => {
     if (e.key === '/') {
-      e.preventDefault();
+      // e.preventDefault();
       console.log('TODO: shift+7 search open/close');
       // TODO: Implement search
     }
