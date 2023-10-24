@@ -148,16 +148,7 @@
 </template>
 
 <script lang="ts" setup>
-import {
-  VAutocomplete,
-  VBtn,
-  VCard,
-  VCardText,
-  VCombobox,
-  VDialog,
-  VForm,
-  VTextField
-} from 'vuetify/components';
+import { VAutocomplete, VBtn, VCard, VCardText, VCombobox, VDialog, VForm, VTextField } from 'vuetify/components';
 import { computed, inject, onMounted, Ref, ref } from 'vue';
 import { userInjection } from '@/helpers/injectionKeys';
 import feathersClient, { Methods, Service } from '@/feathers-client';
@@ -275,6 +266,7 @@ const eventGenerator = ref({
     CHANGED_ENTRY_NAME: ['state.name', 'entryId'],
     MARK_ENTRY_DONE: ['entryId'],
     MARK_ENTRY_TODO: ['entryId'],
+    CLEAR_DONE: [],
   },
   activeFields: [],
 } as EventGenerator);
@@ -424,7 +416,7 @@ async function sendGeneratedEvent() {
   selectedMethod.value = 'create';
   reqData.value = data as unknown as Record<string, unknown>;
 
-  await executeAndLogRequest(feathersClient.service(Service.EVENT).create(data));
+  await executeAndLogRequest(feathersClient.service(Service.EVENT).create([data]));
 }
 </script>
 
