@@ -58,6 +58,12 @@
               color="primary" icon="mdi-account-group-outline" size="x-small" variant="text"
               @click="openShareDialog = true"
             />
+
+            <v-btn
+              v-if="developmentBuild"
+              color="primary" icon="mdi-test-tube" size="x-small" variant="text"
+              @click="dummyFill"
+            />
           </div>
         </div>
       </v-card-title>
@@ -205,6 +211,7 @@ const props = defineProps<{
 const router = useRouter();
 const toast = useToast();
 
+const developmentBuild = ref(import.meta.env.DEV);
 const newItemForm: Ref<VForm | null> = ref(null);
 
 const suggestedItems: Ref<string[]> = ref([]);
@@ -584,6 +591,13 @@ async function sendEventsToServer(): Promise<unknown> {
 //endregion
 
 //region list utils
+async function dummyFill() {
+  for (let i = 0; i < 25; i++) {
+    await createEntry(i.toString());
+  }
+  return false;
+}
+
 const VIEW_ONLY_INFO_ALERT_STORE = 'viewOnlyInfoAlert';
 
 interface ViewOnlyInfoAlertStore {
