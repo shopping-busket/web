@@ -63,7 +63,7 @@
 
 <script lang="ts" setup>
 import { VCard, VCardText, VCheckbox, VDialog, VDivider, VIcon, VSheet, } from 'vuetify/components';
-import { EventData } from '@/shoppinglist/events';
+import { EventData, EventType } from '@/shoppinglist/events';
 import ColorJson from '@/components/ColorJson.vue';
 import { computed, ref } from 'vue';
 import feathersClient from '@/feathers-client';
@@ -84,6 +84,10 @@ const model = computed({
   }
 });
 
+type EventTypeMap = {
+  [eventType in (EventType)]: { icon: string; color: string; };
+};
+
 const logToConsole = ref(false);
 const displayISO = ref(false);
 const displayIndexNumber = ref(true);
@@ -94,8 +98,7 @@ const displayId = ref(true);
 const displayDate = ref(true);
 const displayJSON = ref(true);
 const displaySender = ref(true);
-const map = {
-  /* 1 */
+const map: EventTypeMap = {
   MOVE_ENTRY: {
     icon: 'mdi-cursor-move',
     color: '#B8860B'
@@ -120,8 +123,13 @@ const map = {
     icon: 'mdi-checkbox-marked-outline',
     color: '#2E8B57'
   },
-  /* 6 */
+  /* 5 */
   MARK_ENTRY_TODO: {
+    icon: 'mdi-checkbox-blank-outline',
+    color: '#2E8B57'
+  },
+  /* 6 */
+  CLEAR_DONE: {
     icon: 'mdi-clock-outline',
     color: '#c96e00'
   },
