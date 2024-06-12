@@ -4464,6 +4464,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"idb@npm:^8.0.0":
+  version: 8.0.0
+  resolution: "idb@npm:8.0.0"
+  checksum: a9c6176c176dc1a73520ae906d33fcda8a6f6068cf64027e196763d4ad70b088b7141650ed68f3604e0f0ccd1a123f6b8a435ba5e4514f42ada3460c23b6747a
+  languageName: node
+  linkType: hard
+
 "ignore@npm:^5.2.0":
   version: 5.2.1
   resolution: "ignore@npm:5.2.1"
@@ -7104,6 +7111,7 @@ __metadata:
     eslint-import-resolver-alias: ^1.1.2
     eslint-plugin-import: ^2.26.0
     eslint-plugin-vue: ^9.8.0
+    idb: ^8.0.0
     json-editor-vue: ^0.10.5
     mitt: ^3.0.1
     roboto-fontface: "*"
