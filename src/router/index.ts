@@ -3,6 +3,7 @@ import feathersClient, { AuthObject, FeathersError, User, } from '@/feathers-cli
 import app from '@/main';
 import { authenticationInjection, userInjection } from '@/helpers/injectionKeys';
 import { useToast } from 'vue-toastification';
+import emitter from '@/helpers/mitt';
 
 export interface RouteMeta {
   requiresAuth?: boolean,
@@ -172,11 +173,15 @@ const toast = useToast();
 let user: User | null = null;
 router.beforeEach(async (to, from, next) => {
   console.log('[Router]', to, from);
+  emitter.emit('navGuardLoading', true);
 
   const destinationMeta: RouteMeta | null = to.meta;
 
   // Only allow in dev mode
-  if (destinationMeta?.allowInProduction === false && process.env.NODE_ENV !== 'development') await router.replace({ name: Route.NOT_FOUND });
+  if (destinationMeta?.allowInProduction === false && process.env.NODE_ENV !== 'development') {
+    emitter.emit('navGuardLoading', false);
+    await router.replace({ name: Route.NOT_FOUND });
+  }
 
   // Authentication
   if (!feathersClient.authentication.authenticated) {
@@ -187,7 +192,10 @@ router.beforeEach(async (to, from, next) => {
       app.provide(userInjection, auth.user);
       user = auth.user;
 
-      if (from.name === undefined && to.name === Route.HOME) next({ name: Route.MY_LISTS });
+      if (from.name === undefined && to.name === Route.HOME) {
+        next({ name: Route.MY_LISTS });
+        emitter.emit('navGuardLoading', false);
+      }
     }).catch((err: FeathersError) => {
       if (err.code === 408) {
         console.log('[Auth] Timeout while trying to authenticate. You are offline!');
@@ -200,11 +208,13 @@ router.beforeEach(async (to, from, next) => {
           name: 'login',
           query: { redirect: to.path },
         });
+        emitter.emit('navGuardLoading', false);
         return;
       }
     });
   }
 
+  emitter.emit('navGuardLoading', false);
   if (feathersClient.authentication.authenticated && destinationMeta?.requiresAuth && !user?.verifiedEmail && !destinationMeta.allowUnverified) await router.replace({ name: Route.EMAIL_VERIFY });
   next();
 });

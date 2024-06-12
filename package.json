@@ -18,6 +18,7 @@
     "@vitejs/plugin-vue": "^3.2.0",
     "dotenv": "^16.0.3",
     "json-editor-vue": "^0.10.5",
+    "mitt": "^3.0.1",
     "roboto-fontface": "*",
     "socket.io": "^4.5.4",
     "socket.io-client": "^4.6.1",

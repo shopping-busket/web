@@ -17,7 +17,8 @@
             Refresh
           </v-btn>
         </v-snackbar>
-        <router-view />
+        <AuthenticationLoading v-if="routeLoading" />
+        <router-view v-else />
       </MainContainer>
     </v-main>
   </v-app>
@@ -33,14 +34,22 @@ import { useToast } from 'vue-toastification';
 import { useTheme } from 'vuetify';
 import app from '@/main';
 import MainContainer from '@/components/MainContainer.vue';
+import AuthenticationLoading from '@/views/auth/AuthenticationLoading.vue';
+import emitter from '@/helpers/mitt';
 
 const showUpdateUI = ref(true);
 const theme = useTheme();
 const wb = inject('wb') as Workbox;
+const routeLoading = ref(false);
 
 let auth: AuthObject | null = null;
 
 onMounted(() => {
+  emitter.on('navGuardLoading', (loading) => {
+    console.log(`navGuardLoading: ${loading}`);
+    routeLoading.value = loading;
+  });
+
   if (wb) {
     (wb as Workbox).addEventListener('waiting', () => {
       showUpdateUI.value = true;

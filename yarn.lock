@@ -5331,6 +5331,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"mitt@npm:^3.0.1":
+  version: 3.0.1
+  resolution: "mitt@npm:3.0.1"
+  checksum: b55a489ac9c2949ab166b7f060601d3b6d893a852515ae9eca4e11df01c013876df777ea109317622b5c1c60e8aae252558e33c8c94e14124db38f64a39614b1
+  languageName: node
+  linkType: hard
+
 "mkdirp@npm:^1.0.3, mkdirp@npm:^1.0.4":
   version: 1.0.4
   resolution: "mkdirp@npm:1.0.4"
@@ -7098,6 +7105,7 @@ __metadata:
     eslint-plugin-import: ^2.26.0
     eslint-plugin-vue: ^9.8.0
     json-editor-vue: ^0.10.5
+    mitt: ^3.0.1
     roboto-fontface: "*"
     sass: ~1.56.1
     socket.io: ^4.5.4
