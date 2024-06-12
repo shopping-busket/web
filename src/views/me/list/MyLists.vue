@@ -176,12 +176,13 @@ import {
 } from 'vuetify/components';
 import feathersClient, { AuthObject, Service } from '@/feathers-client';
 import { IShoppingList, LegacyShoppingListItem } from '@/shoppinglist/ShoppingList';
-import { inject, onMounted, ref, Ref, watch } from 'vue';
+import { inject, onMounted, ref, Ref, toRaw, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
 import { userInjection } from '@/helpers/injectionKeys';
 import { UserWhitelist } from '@/components/ShareDialog.vue';
 import { Route } from '@/router';
+import store from '@/helpers/offlineStore';
 
 const router = useRouter();
 const toast = useToast();
@@ -257,8 +258,9 @@ async function populateLists(): Promise<void> {
         loading: false,
       },
     };
-  }).sort((a,b) => comparatorSortAlphabetically(a.name, b.name));
+  }).sort((a, b) => comparatorSortAlphabetically(a.name, b.name));
 
+  lists.value.forEach((list) => store.tryPutShoppingList(toRaw(list)));
   localStorage.setItem('lists', JSON.stringify(lists.value));
 }
 

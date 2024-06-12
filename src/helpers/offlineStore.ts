@@ -28,8 +28,8 @@ export class OfflineStore {
   }
 
   async tryPutShoppingList(shoppingList: IShoppingList) {
-    const r = await this.db!!.put('shopping-list', shoppingList, shoppingList.id);
-    console.log(r);
+    const r = await this.db?.put('shopping-list', shoppingList, shoppingList.id);
+    if (r === undefined) return Promise.reject()
   }
 }
 
