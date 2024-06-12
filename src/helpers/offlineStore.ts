@@ -1,39 +1,37 @@
 import { DBSchema, IDBPDatabase, openDB } from 'idb';
+import { IShoppingList, IShoppingListItem } from '@/shoppinglist/ShoppingList';
 
-interface MyDB extends DBSchema {
-  'favourite-number': {
-    key: string;
-    value: number;
-  };
-  products: {
+export interface OfflineDB extends DBSchema {
+  'shopping-list': {
+    key: number,
     value: {
-      name: string;
-      price: number;
-      productCode: string;
-    };
-    key: string;
-    indexes: { 'by-price': number };
+      listid: string,
+      owner: string,
+      name: string,
+      description: string,
+      entries: IShoppingListItem[]
+    },
+    indexes: { 'by-listid': string };
   };
 }
 
 export class OfflineStore {
-  private db: IDBPDatabase<MyDB> | null = null;
+  private db: IDBPDatabase<OfflineDB> | null = null;
 
   async create() {
-    this.db = await openDB<MyDB>('testdb', 1, {
+    this.db = await openDB<OfflineDB>('busket-offline-store', 1, {
       upgrade(db) {
-        db.createObjectStore('favourite-number');
-
-        const productStore = db.createObjectStore('products', {
-          keyPath: 'productCode',
-        });
-        productStore.createIndex('by-price', 'price');
+        const shoppingList = db.createObjectStore('shopping-list');
+        shoppingList.createIndex('by-listid', 'listid');
       },
     });
   }
 
-  async insert() {
-    const r = await this.db!!.put('favourite-number', 7, 'Jen');
+  async tryPutShoppingList(shoppingList: IShoppingList) {
+    const r = await this.db!!.put('shopping-list', shoppingList, shoppingList.id);
     console.log(r);
   }
 }
+
+const store = new OfflineStore()
+export default store;

@@ -203,6 +203,7 @@ import { EventData, EventType, LogEvent, LogEventListenerData } from '@/shopping
 import ShareDialog, { UserPermissions, UserWhitelist } from '@/components/ShareDialog.vue';
 import { v4 as uuidv4 } from 'uuid';
 import { userInjection } from '@/helpers/injectionKeys';
+import store from '@/helpers/offlineStore';
 
 const props = defineProps<{
   id: string | undefined,
@@ -384,6 +385,7 @@ async function loadListFromRemote(): Promise<ShoppingList | null> {
 
   console.log(list);
 
+  await store.tryPutShoppingList(list[0])
   return new ShoppingList(list[0].listid, list[0].name, list[0].description, list[0].owner, list[0].entries, list[0].checkedEntries);
 }
 
