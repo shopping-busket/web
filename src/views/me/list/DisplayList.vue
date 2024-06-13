@@ -671,8 +671,8 @@ async function updatePermissions(whitelistedUser: UserWhitelist | null = null) {
     }) as UserWhitelist[];
   }
   if (whitelisted.length > 0) {
-    whitelistedUserPermissions.value.canEditEntries = whitelisted[0].canEditEntries;
-    whitelistedUserPermissions.value.canDeleteEntries = whitelisted[0].canDeleteEntries;
+    whitelistedUserPermissions.value.canEditEntries = whitelisted[0]?.canEditEntries || false;
+    whitelistedUserPermissions.value.canDeleteEntries = whitelisted[0]?.canDeleteEntries || false;
   }
 }
 
