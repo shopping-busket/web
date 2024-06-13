@@ -195,7 +195,7 @@ import EventViewer from '@/components/EventViewer.vue';
 import TodoList from '@/components/TodoList.vue';
 import feathersClient, { FeathersError, Service } from '@/feathers-client';
 import ShoppingList, { IShoppingList } from '@/shoppinglist/ShoppingList';
-import { inject, onMounted, reactive, Ref, ref, toRaw, watch } from 'vue';
+import { inject, onMounted, reactive, Ref, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { Route } from '@/router';
 import { useToast } from 'vue-toastification';
@@ -204,6 +204,7 @@ import ShareDialog, { UserPermissions, UserWhitelist } from '@/components/ShareD
 import { v4 as uuidv4 } from 'uuid';
 import { userInjection } from '@/helpers/injectionKeys';
 import store from '@/helpers/offlineStore';
+import { ReactiveVariable } from 'vue/macros';
 
 const props = defineProps<{
   id: string | undefined,
@@ -545,7 +546,7 @@ async function recordEvent(event: EventData): Promise<unknown> {
   }
 
   if (shoppingList.value !== null) {
-    await store.tryPutShoppingList(toRaw(shoppingList.value?.toInterface()));
+    await store.tryPutShoppingList(removeProxy(shoppingList.value?.toInterface()));
   }
 
   localStorage.setItem('lists', JSON.stringify(lists));
@@ -557,6 +558,10 @@ async function recordEvent(event: EventData): Promise<unknown> {
   localStorage.setItem(`events.value-${props.id}`, JSON.stringify(events.value));
 
   return sendEventsToServer();
+}
+
+function removeProxy<T>(o: ReactiveVariable<T>): T {
+  return JSON.parse(JSON.stringify(o))
 }
 
 async function sendEventsToServer(): Promise<unknown> {
