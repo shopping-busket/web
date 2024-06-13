@@ -4,6 +4,7 @@ import app from '@/main';
 import { authenticationInjection, userInjection } from '@/helpers/injectionKeys';
 import { useToast } from 'vue-toastification';
 import emitter from '@/helpers/mitt';
+import store from '@/helpers/offlineStore';
 
 export interface RouteMeta {
   requiresAuth?: boolean,
@@ -174,6 +175,8 @@ let user: User | null = null;
 router.beforeEach(async (to, from, next) => {
   console.log('[Router]', to, from);
   emitter.emit('navGuardLoading', true);
+
+  await store.create()
 
   const destinationMeta: RouteMeta | null = to.meta;
 

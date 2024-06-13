@@ -36,7 +36,6 @@ import app from '@/main';
 import MainContainer from '@/components/MainContainer.vue';
 import AuthenticationLoading from '@/views/auth/AuthenticationLoading.vue';
 import emitter from '@/helpers/mitt';
-import store from '@/helpers/offlineStore';
 
 const showUpdateUI = ref(true);
 const theme = useTheme();
@@ -46,8 +45,6 @@ const routeLoading = ref(false);
 let auth: AuthObject | null = null;
 
 onMounted(async () => {
-  await store.create()
-
   emitter.on('navGuardLoading', (loading) => {
     console.log(`navGuardLoading: ${loading}`);
     routeLoading.value = loading;
