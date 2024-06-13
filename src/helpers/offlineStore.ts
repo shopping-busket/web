@@ -44,7 +44,7 @@ export class OfflineStore {
     }
   }
 
-  async tryPutEvents(events: EventData[]) {
+  async tryPutEvents(events: EventData[]): Promise<(number | void)[]> {
     console.log(`store: ${events}`);
     const tx = this.db?.transaction('event', 'readwrite');
     if (tx === undefined) return Promise.reject();
@@ -54,6 +54,7 @@ export class OfflineStore {
     promises.push(tx.done);
     const r = await Promise.all(promises);
     console.log('promises', r);
+    return r;
   }
 }
 

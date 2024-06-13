@@ -555,7 +555,13 @@ async function recordEvent(event: EventData): Promise<unknown> {
   events.value.push(event);
   historicalEvents.value.push(event);
 
-  await store.tryPutEvents(removeProxy(events.value))
+  const eventIds = await store.tryPutEvents(removeProxy(events.value))
+  console.log('eventIDs', eventIds);
+  events.value.forEach((e, i) => {
+    if (eventIds[i] === undefined) return;
+    e.storeId = eventIds[i] as number;
+  })
+
   localStorage.setItem(`events.value-${props.id}`, JSON.stringify(events.value));
 
   return sendEventsToServer();
@@ -578,16 +584,23 @@ async function sendEventsToServer(): Promise<unknown> {
 
   console.log(data);
 
-  const removeQueueEvent = (d: LogEvent[]) => {
-    store.db!!.delete('event', );
+  const removeQueueEvent = async (d: LogEvent[]) => {
+    const tx = store.db?.transaction('event', 'readwrite')
+
+    const promises: (Promise<void> | undefined)[] = []
+    d.forEach((event) => promises.push(tx?.store.delete(event.eventData.storeId ?? -1)))
+
+    promises.push(tx?.done)
+    await Promise.all(promises)
+
     events.value.splice(0, d.length);
     localStorage.setItem(`events.value-${props.id}`, JSON.stringify(events.value));
   };
 
   return feathersClient.service(Service.EVENT).create(data)
-      .then((d) => {
+      .then(async (d) => {
         console.log('[LOG] Sent event to server');
-        removeQueueEvent(d);
+        await removeQueueEvent(d);
       })
       .catch(async (e) => {
         console.log('[LOG] Error sending events.value to server!');
@@ -595,13 +608,13 @@ async function sendEventsToServer(): Promise<unknown> {
           case 403:
             console.log('Not permitted to send this type of event!');
             toast.warning('You are not permitted to do this action!');
-            removeQueueEvent(data);
+            await removeQueueEvent(data);
             await reloadList();
             break;
 
           case 404:
             console.log('Unable to find entry. This can probably be ignored and does not affect normal usage.', e);
-            removeQueueEvent(data);
+            await removeQueueEvent(data);
             await reloadList(); // just to be sure
             break;
 
