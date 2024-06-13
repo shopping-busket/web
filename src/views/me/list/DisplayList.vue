@@ -386,7 +386,7 @@ async function loadListFromRemote(): Promise<ShoppingList | null> {
   console.log(list);
 
   await store.tryPutShoppingList(list[0])
-  return new ShoppingList(list[0].listid, list[0].name, list[0].description, list[0].owner, list[0].entries, list[0].checkedEntries);
+  return new ShoppingList(list[0].listid, list[0].name, list[0].description, list[0].owner, list[0].entries, list[0].checkedEntries, list[0].id);
 }
 
 async function loadListFromCache(): Promise<ShoppingList> {

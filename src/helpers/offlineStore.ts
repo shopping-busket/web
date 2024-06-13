@@ -3,7 +3,7 @@ import { IShoppingList, IShoppingListItem } from '@/shoppinglist/ShoppingList';
 
 export interface OfflineDB extends DBSchema {
   'shopping-list': {
-    key: number,
+    key: string,
     value: {
       listid: string,
       owner: string,
@@ -28,8 +28,19 @@ export class OfflineStore {
   }
 
   async tryPutShoppingList(shoppingList: IShoppingList) {
-    const r = await this.db?.put('shopping-list', shoppingList, shoppingList.id);
-    if (r === undefined) return Promise.reject()
+    if (await this.db?.put('shopping-list', shoppingList, shoppingList.listid) === undefined)
+      return Promise.reject()
+  }
+
+  async tryPutEvents(events: EventData[]) {
+    console.log(`store: ${events}`);
+    const tx = this.db?.transaction('event', 'readwrite')
+    if (tx === undefined) return Promise.reject()
+
+    const promises: Promise<number | void>[] = []
+    events.forEach((e) => promises.push(tx.store.put(e)))
+    promises.push(tx.done)
+    await Promise.all(promises)
   }
 }
 
