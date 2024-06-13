@@ -555,6 +555,7 @@ async function recordEvent(event: EventData): Promise<unknown> {
   events.value.push(event);
   historicalEvents.value.push(event);
 
+  await store.tryPutEvents(removeProxy(events.value))
   localStorage.setItem(`events.value-${props.id}`, JSON.stringify(events.value));
 
   return sendEventsToServer();
@@ -578,6 +579,7 @@ async function sendEventsToServer(): Promise<unknown> {
   console.log(data);
 
   const removeQueueEvent = (d: LogEvent[]) => {
+    store.db!!.delete('event', );
     events.value.splice(0, d.length);
     localStorage.setItem(`events.value-${props.id}`, JSON.stringify(events.value));
   };
