@@ -195,7 +195,7 @@ import EventViewer from '@/components/EventViewer.vue';
 import TodoList from '@/components/TodoList.vue';
 import feathersClient, { FeathersError, Service } from '@/feathers-client';
 import ShoppingList, { IShoppingList } from '@/shoppinglist/ShoppingList';
-import { inject, onMounted, reactive, Ref, ref, watch } from 'vue';
+import { inject, onMounted, reactive, Ref, ref, toRaw, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { Route } from '@/router';
 import { useToast } from 'vue-toastification';
@@ -543,6 +543,11 @@ async function recordEvent(event: EventData): Promise<unknown> {
       lists[i] = shoppingList.value?.toInterface(lists[i].id);
     }
   }
+
+  if (shoppingList.value !== null) {
+    await store.tryPutShoppingList(toRaw(shoppingList.value?.toInterface()));
+  }
+
   localStorage.setItem('lists', JSON.stringify(lists));
 
   console.log('[LOG]', event);
