@@ -46,7 +46,7 @@ export class OfflineStore {
   }
 
   async tryPutEvents(events: EventData[]): Promise<(number | void)[]> {
-    console.log(`store: ${events}`);
+    console.log('store: ', events);
     const tx = this.db?.transaction('event', 'readwrite');
     if (tx === undefined) return Promise.reject();
 
