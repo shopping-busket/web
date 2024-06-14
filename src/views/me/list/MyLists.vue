@@ -106,6 +106,7 @@
 
         <v-card-text class="mt-1">
           <v-file-input
+            v-if="importFile"
             ref="fileUpload" v-model="importFile" accept="application/json"
             variant="underlined"
           />
@@ -147,8 +148,11 @@
           Cancel
         </v-btn>
 
-        <v-btn color="primary" variant="outlined"
-               @click="removeList?.owner === user?.uuid ? deleteList(removeList.listid) : leaveFromList(removeList.listid); removeListDialog = false"
+        <v-btn
+          v-if="removeList"
+          color="primary"
+          variant="outlined"
+          @click="removeList?.owner === user?.uuid ? deleteList(removeList.listid) : leaveFromList(removeList.listid); removeListDialog = false"
         >
           Yes, I am sure
         </v-btn>
@@ -218,15 +222,14 @@ export interface LibraryEntry {
 onMounted(async () => {
   if (!feathersClient.io.connected) {
     console.log('Not connected to server! Loading lists from storage...');
-    const stored = localStorage.getItem('lists');
-    console.log(stored);
-    if (!stored) {
-      localStorage.setItem('lists', JSON.stringify([]));
+    const stored = await store.db?.getAll('shopping-list') as unknown as IShoppingList[];
+    if (stored == undefined) {
+
       console.log('No lists found in storage. Offline will not work!');
+      toast.warning('No lists in offline mode!');
       return;
     }
-
-    lists.value = JSON.parse(stored);
+    lists.value = stored;
     return;
   }
 
