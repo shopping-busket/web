@@ -248,6 +248,10 @@ const whitelistedUserPermissions = ref({
 } as UserPermissions);
 const viewOnlyInfoAlertHidden = ref(false);
 
+feathersClient.io.on('disconnect', () => {
+  connected.value = false;
+});
+
 onMounted(async () => {
   await connectionWatcher();
   registerEventListener();
@@ -258,14 +262,14 @@ onMounted(async () => {
   events.value = loadStoredEvents();
 
   if (connected.value) {
-    shoppingList.value = await loadListFromRemote();
+    shoppingList.value = await loadListFromRemoteOrStore();
     if (shoppingList.value != null) await updatePermissions();
   } else {
     shoppingList.value = await loadListFromCache();
   }
 
   // Reload list from remote every 5 minutes to sync everything again
-  setInterval(async () => shoppingList.value = await loadListFromRemote(), 1000 * 60 * 5 /* 5 Minutes */);
+  setInterval(async () => shoppingList.value = await loadListFromRemoteOrStore(), 1000 * 60 * 5 /* 5 Minutes */);
 
   viewOnlyInfoAlertHidden.value = getViewInfoAlertHideStateFromStore();
 });
@@ -369,37 +373,32 @@ function registerSearch() {
 
 //region list loaders
 async function reloadList(): Promise<void> {
-  shoppingList.value = await loadListFromRemote();
+  shoppingList.value = await loadListFromRemoteOrStore();
 }
 
-async function loadListFromRemote(): Promise<ShoppingList | null> {
+async function loadListFromRemoteOrStore(): Promise<ShoppingList | null> {
   if (!user) return null;
 
-  const list: IShoppingList[] | undefined = await feathersClient.service(Service.LIST).find({ query: { listid: props.id } })
-      .catch(() => {
-        listNotFound();
-      }) as IShoppingList[] | undefined;
-  if (list == undefined || list.length <= 0) {
-    await listNotFound();
-    return null;
-  }
+  if (!connected.value) return await loadListFromCache();
 
-  await store.tryPutShoppingList(list[0])
-  return new ShoppingList(list[0].listid, list[0].name, list[0].description, list[0].owner, list[0].entries, list[0].checkedEntries, list[0].id);
+  try {
+    const list: IShoppingList[] | undefined = await feathersClient.service(Service.LIST)
+      .find({ query: { listid: props.id } })
+      .catch(console.error);
+    if (list == undefined || list.length <= 0) return await loadListFromCache();
+
+    await store.tryPutShoppingList(list[0]);
+    return new ShoppingList(list[0].listid, list[0].name, list[0].description, list[0].owner, list[0].entries, list[0].checkedEntries, list[0].id);
+  } catch (e) {
+    return await loadListFromCache();
+  }
 }
 
 async function loadListFromCache(): Promise<ShoppingList> {
-  const lists = localStorage.getItem('lists');
-  if (!lists) {
-    console.log('Lists not found');
-    localStorage.setItem('lists', JSON.stringify([]));
-    throw await listNotFound();
-  }
-
-  const list = (JSON.parse(lists) as Array<IShoppingList>).find((l) => l.listid === props.id);
-  if (!list) throw await listNotFound();
-
-  return new ShoppingList(list.listid, list.name, list.description, list.owner, list.entries, list.checkedEntries);
+  console.log('[STORE] Loading list from store');
+  const cachedList = await store.db?.getFromIndex('shopping-list', 'by-listid', props.id ?? ''); //localStorage.getItem('lists');
+  if (cachedList === undefined) throw await listNotFound();
+  return new ShoppingList(cachedList.listid, cachedList.name, cachedList.description, cachedList.owner, cachedList.entries, cachedList.checkedEntries);
 }
 
 async function listNotFound() {
@@ -559,12 +558,12 @@ async function recordEvent(event: Omit<EventData, 'storeId'>): Promise<unknown> 
     ...event
   });
 
-  const eventIds = await store.tryPutEvents(removeProxy(events.value))
+  const eventIds = await store.tryPutEvents(removeProxy(events.value));
   console.log('eventIDs', eventIds);
   events.value.forEach((e, i) => {
     if (eventIds[i] === undefined) return;
     e.storeId = eventIds[i] as number;
-  })
+  });
 
   localStorage.setItem(`events.value-${props.id}`, JSON.stringify(events.value));
 
@@ -572,7 +571,7 @@ async function recordEvent(event: Omit<EventData, 'storeId'>): Promise<unknown> 
 }
 
 function removeProxy<T>(o: ReactiveVariable<T>): T {
-  return JSON.parse(JSON.stringify(o))
+  return JSON.parse(JSON.stringify(o));
 }
 
 async function sendEventsToServer(): Promise<unknown> {
