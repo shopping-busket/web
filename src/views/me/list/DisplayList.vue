@@ -394,7 +394,7 @@ async function loadListFromRemoteOrStore(): Promise<ShoppingList | null> {
 
 async function loadListFromCache(): Promise<ShoppingList> {
   console.log('[STORE] Loading list from store');
-  const cachedList = await store.db?.getFromIndex('shopping-list', 'by-listid', props.id ?? ''); //localStorage.getItem('lists');
+  const cachedList = await store.db?.getFromIndex('shopping-list', 'by-listid', props.id ?? '');
   if (cachedList === undefined) throw await listNotFound();
   return new ShoppingList(cachedList.listid, cachedList.name, cachedList.description, cachedList.owner, cachedList.entries, cachedList.checkedEntries);
 }
@@ -530,21 +530,9 @@ function loadStoredEvents(): Array<EventData> {
 }
 
 async function recordEvent(event: Omit<EventData, 'storeId'>): Promise<unknown> {
-  const stored = localStorage.getItem('lists');
-  if (!stored) localStorage.setItem('lists', JSON.stringify([]));
-
-  const lists = JSON.parse(stored || '[]') as Array<IShoppingList>;
-  for (let i = 0; i < lists.length; i++) {
-    if (lists[i].listid === props.id && shoppingList.value) {
-      lists[i] = shoppingList.value?.toInterface(lists[i].id);
-    }
-  }
-
   if (shoppingList.value !== null) {
     await store.tryPutShoppingList(removeProxy(shoppingList.value?.toInterface()));
   }
-
-  localStorage.setItem('lists', JSON.stringify(lists));
 
   console.log('[EVENT]', event);
   events.value.push({
@@ -562,8 +550,6 @@ async function recordEvent(event: Omit<EventData, 'storeId'>): Promise<unknown> 
     if (eventIds[i] === undefined) return;
     e.storeId = eventIds[i] as number;
   });
-
-  localStorage.setItem(`events.value-${props.id}`, JSON.stringify(events.value));
 
   return sendEventsToServer();
 }
@@ -595,7 +581,6 @@ async function sendEventsToServer(): Promise<unknown> {
     await Promise.all(promises);
 
     events.value.splice(0, d.length);
-    localStorage.setItem(`events.value-${props.id}`, JSON.stringify(events.value));
   };
 
   return feathersClient.service(Service.EVENT).create(data)
