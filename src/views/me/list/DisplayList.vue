@@ -377,9 +377,7 @@ async function reloadList(): Promise<void> {
 }
 
 async function loadListFromRemoteOrStore(): Promise<ShoppingList | null> {
-  if (!user) return null;
-
-  if (!connected.value) return await loadListFromCache();
+  if (!user || !connected.value) return await loadListFromCache();
 
   try {
     const list: IShoppingList[] | undefined = await feathersClient.service(Service.LIST)
