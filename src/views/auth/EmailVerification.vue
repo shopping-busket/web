@@ -1,10 +1,10 @@
 <template>
   <div class="w-100 pa-16">
     <v-card
-      variant="outlined"
-      max-width="500px"
-      class="ma-auto"
       :title="route.query.expired ? 'Email verification failed!' : 'Email verification successful!'"
+      class="ma-auto"
+      max-width="500px"
+      variant="outlined"
     >
       <v-card-text>
         <span v-if="route.query.expired">
@@ -15,7 +15,7 @@
         </span>
       </v-card-text>
       <v-card-actions>
-        <v-btn block color="primary" variant="tonal" :to="{ name: Route.MY_LISTS }">
+        <v-btn :to="{ name: Route.MY_LISTS }" block color="primary" variant="tonal">
           Ok
         </v-btn>
       </v-card-actions>

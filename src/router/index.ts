@@ -176,7 +176,7 @@ router.beforeEach(async (to, from, next) => {
   console.log('[Router]', to, from);
   emitter.emit('navGuardLoading', true);
 
-  await store.create()
+  await store.create();
 
   const destinationMeta: RouteMeta | null = to.meta;
 

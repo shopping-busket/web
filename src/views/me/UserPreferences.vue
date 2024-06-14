@@ -47,22 +47,22 @@
       </v-list>
     </v-card>
 
-    <v-btn variant ="tonal" color="red" class="mt-4" block @click="deleteUserDialog = true">
+    <v-btn block class="mt-4" color="red" variant="tonal" @click="deleteUserDialog = true">
       Delete my Busket account
     </v-btn>
   </div>
 
   <v-dialog v-model="deleteUserDialog" max-width="500px">
     <v-card
-      title="Are you sure?" subtitle="This action cannot be undone!"
-      text="Are you sure that you want to delete your Busket account? All lists and other associated information will be deleted with it!"
+      subtitle="This action cannot be undone!" text="Are you sure that you want to delete your Busket account? All lists and other associated information will be deleted with it!"
+      title="Are you sure?"
     >
       <v-card-actions>
         <v-spacer />
         <v-btn color="primary" variant="text" @click="deleteUserDialog = false">
           Cancel
         </v-btn>
-        <v-btn variant="outlined" color="primary" @click="deleteUser">
+        <v-btn color="primary" variant="outlined" @click="deleteUser">
           Yes, I am sure
         </v-btn>
       </v-card-actions>

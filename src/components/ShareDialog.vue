@@ -9,10 +9,10 @@
           <v-list-item
             v-for="(whitelist, i) in whitelistedUsers"
             :key="whitelist.listId"
+            :prepend-avatar="getGravatar(whitelist)"
+            :ripple="true"
             :title="whitelist.inviteEmail"
             append-icon="mdi-pencil-outline"
-            :ripple="true"
-            :prepend-avatar="getGravatar(whitelist)"
             @click="editUserDialog = true; editUserIndex = i"
           >
             <v-list-item-subtitle>
@@ -33,8 +33,8 @@
 
         <div class="d-flex align-center mt-4">
           <v-text-field
-            v-model="email" variant="underlined" density="compact"
-            style="height: 2.3rem; margin-right: 1rem" color="primary" label="E-Mail"
+            v-model="email" color="primary" density="compact"
+            label="E-Mail" style="height: 2.3rem; margin-right: 1rem" variant="underlined"
             @keydown.enter="addToWhitelist"
           />
 
@@ -49,14 +49,14 @@
         </div>
       </v-card-text>
       <v-card-actions>
-        <v-btn color="primary" variant="text" block @click="openDialog = false">
+        <v-btn block color="primary" variant="text" @click="openDialog = false">
           Close
         </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
 
-  <v-dialog v-model="editUserDialog" width="500px" persistent>
+  <v-dialog v-model="editUserDialog" persistent width="500px">
     <v-card
       v-if="editUserIndex != -1"
       :title="`Edit ${whitelistedUsers[editUserIndex].inviteEmail}'s Permissions`"
@@ -65,9 +65,9 @@
       <v-card-text>
         <v-list select-strategy="classic">
           <v-list-item
-            value="edit"
-            title="Move, Rename and Check Entries"
             subtitle="Deleting entries is not included"
+            title="Move, Rename and Check Entries"
+            value="edit"
             @click="whitelistedUsers[editUserIndex].canEditEntries = !whitelistedUsers[editUserIndex].canEditEntries"
           >
             <template #prepend>
@@ -80,9 +80,9 @@
           </v-list-item>
 
           <v-list-item
-            value="delete"
-            title="Delete Entries"
             subtitle="Moving, renaming and checking entries is not included"
+            title="Delete Entries"
+            value="delete"
             @click="whitelistedUsers[editUserIndex].canDeleteEntries = !whitelistedUsers[editUserIndex].canDeleteEntries"
           >
             <template #prepend>
@@ -99,8 +99,8 @@
           <v-btn
             class="flex-grow-1"
             color="red"
-            variant="tonal"
             size="small"
+            variant="tonal"
             @click="kickUserIndex = editUserIndex; kickUserConfirmationDialog = true"
           >
             Kick User
@@ -109,7 +109,7 @@
       </v-card-text>
       <v-card-actions>
         <v-btn
-          color="primary" variant="text" block
+          block color="primary" variant="text"
           @click="updateUserPermissions(whitelistedUsers[editUserIndex]); editUserDialog = false"
         >
           Save
@@ -120,8 +120,8 @@
 
   <v-dialog v-model="kickUserConfirmationDialog" width="500px">
     <v-card
-      title="Confirmation"
       text="Are you sure that you want to kick this user off your list? They will be unable to access this list!"
+      title="Confirmation"
     >
       <v-card-actions>
         <v-spacer />
@@ -140,17 +140,17 @@
 <script lang="ts" setup>
 import {
   VBtn,
-  VIcon,
-  VSpacer,
   VCard,
   VCardActions,
   VCardText,
+  VCheckboxBtn,
   VDialog,
+  VIcon,
   VList,
   VListItem,
-  VListItemSubtitle,
   VListItemAction,
-  VCheckboxBtn,
+  VListItemSubtitle,
+  VSpacer,
   VTextField,
 } from 'vuetify/components';
 import { computed, onMounted, reactive, Ref, ref } from 'vue';
@@ -224,11 +224,17 @@ async function addToWhitelist() {
     whitelistedUsers.push(whitelisted);
   }).catch((err: FeathersError<BadRequest>) => {
     let emailFormatErr = false;
-    if (Array.isArray(err.data)) emailFormatErr = err.data[0].keyword === 'format';
-    else emailFormatErr = err.data.keyword === 'format';
+    if (Array.isArray(err.data)) {
+      emailFormatErr = err.data[0].keyword === 'format';
+    } else {
+      emailFormatErr = err.data.keyword === 'format';
+    }
 
-    if (emailFormatErr) toast('Input has to be an email!');
-    else toast.error('Unexpected Error! Try again.')
+    if (emailFormatErr) {
+      toast('Input has to be an email!');
+    } else {
+      toast.error('Unexpected Error! Try again.');
+    }
   });
 
   inviteButtonLoading.value = false;

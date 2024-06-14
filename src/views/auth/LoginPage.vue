@@ -46,8 +46,8 @@
             block
             class="btn-with-outline mt-4"
             color="primary"
-            variant="tonal"
             type="submit"
+            variant="tonal"
           >
             Login using Busket
           </v-btn>

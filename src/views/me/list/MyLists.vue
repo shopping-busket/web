@@ -12,8 +12,8 @@
       <v-list-item :subtitle="item.description" :title="item.name" class="pb-2">
         <template #append>
           <v-icon
-            color="red"
             :icon="item.owner === user?.uuid ? 'mdi-trash-can-outline' : 'mdi-exit-run'"
+            color="red"
             @click.stop="removeListDialog = true; removeList = item"
           />
         </template>
@@ -123,8 +123,8 @@
 
             <v-btn
               color="primary"
-              variant="outlined"
               rounded
+              variant="outlined"
               width="200px"
               @click="importDialog = false; uploadImportedList()"
             >
@@ -138,16 +138,16 @@
 
   <v-dialog v-model="removeListDialog" max-width="500px">
     <v-card
-      :title="`Are you sure that you want to ${removeList?.owner === user?.uuid ? 'delete' : 'leave'} this list?`"
       :subtitle="removeList?.owner === user?.uuid ? 'You won\'t be able to get it back' : 'You will not be able to access it until you get another invite'"
+      :title="`Are you sure that you want to ${removeList?.owner === user?.uuid ? 'delete' : 'leave'} this list?`"
     >
       <v-card-actions>
         <v-spacer />
-        <v-btn variant="text" color="primary" @click="removeListDialog = false">
+        <v-btn color="primary" variant="text" @click="removeListDialog = false">
           Cancel
         </v-btn>
 
-        <v-btn variant="outlined" color="primary"
+        <v-btn color="primary" variant="outlined"
                @click="removeList?.owner === user?.uuid ? deleteList(removeList.listid) : leaveFromList(removeList.listid); removeListDialog = false"
         >
           Yes, I am sure

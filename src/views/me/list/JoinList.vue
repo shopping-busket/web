@@ -11,11 +11,11 @@
         Joining...
       </span>
     </span>
-    <v-progress-circular v-if="!(invalidSecret || error)" indeterminate color="primary" size="40" />
+    <v-progress-circular v-if="!(invalidSecret || error)" color="primary" indeterminate size="40" />
   </div>
 </template>
 
-<script setup lang="ts">
+<script lang="ts" setup>
 import { VProgressCircular } from 'vuetify/components';
 import { inject, onMounted, ref } from 'vue';
 import feathersClient, { FeathersError, Service } from '@/feathers-client';

@@ -1,14 +1,16 @@
 <template>
   <div class="pt-16">
     <v-card
-      max-width="500px"
-      variant="outlined"
-      class="ma-auto"
-      title="List not found"
       :text="`The requested list with id ${props.id} was not found in our database or you don't have sufficient permissions to access it. Should the problem persist please contact us.`"
+      class="ma-auto"
+      max-width="500px"
+      title="List not found"
+      variant="outlined"
     >
       <v-card-actions>
-        <v-btn variant="elevated" elevation="0" color="primary" block @click="router.push({ name: Route.MY_LISTS })">
+        <v-btn block color="primary" elevation="0" variant="elevated"
+               @click="router.push({ name: Route.MY_LISTS })"
+        >
           Navigate back to My Lists
         </v-btn>
       </v-card-actions>
