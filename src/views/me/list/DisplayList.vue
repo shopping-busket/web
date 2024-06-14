@@ -532,7 +532,7 @@ function loadStoredEvents(): Array<EventData> {
   return ls as unknown as Array<EventData>;
 }
 
-async function recordEvent(event: EventData): Promise<unknown> {
+async function recordEvent(event: Omit<EventData, 'storeId'>): Promise<unknown> {
   const stored = localStorage.getItem('lists');
   if (!stored) localStorage.setItem('lists', JSON.stringify([]));
 
@@ -549,9 +549,15 @@ async function recordEvent(event: EventData): Promise<unknown> {
 
   localStorage.setItem('lists', JSON.stringify(lists));
 
-  console.log('[LOG]', event);
-  events.value.push(event);
-  historicalEvents.value.push(event);
+  console.log('[EVENT]', event);
+  events.value.push({
+    storeId: undefined,
+    ...event
+  });
+  historicalEvents.value.push({
+    storeId: undefined,
+    ...event
+  });
 
   const eventIds = await store.tryPutEvents(removeProxy(events.value))
   console.log('eventIDs', eventIds);
