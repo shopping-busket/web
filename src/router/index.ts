@@ -171,6 +171,7 @@ const router = createRouter({
 });
 
 const toast = useToast();
+let lastNavigationWasOnline = true;
 let user: User | null = null;
 router.beforeEach(async (to, from, next) => {
   console.log('[Router]', to, from);
@@ -188,6 +189,17 @@ router.beforeEach(async (to, from, next) => {
 
   // Authentication
   if (!feathersClient.authentication.authenticated) {
+    if (!feathersClient.io.connected) {
+      console.log('[Auth] WS not connected!');
+      if (lastNavigationWasOnline) toast('You\'re offline!');
+      emitter.emit('navGuardLoading', false);
+
+      lastNavigationWasOnline = false;
+      return next();
+    }
+    if (!lastNavigationWasOnline) toast.success('Back online!');
+    lastNavigationWasOnline = true;
+
     await feathersClient.authenticate().then((authentication) => {
       const auth = authentication as AuthObject;
 
