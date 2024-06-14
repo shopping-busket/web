@@ -11,6 +11,7 @@ export interface OfflineDB extends DBSchema {
       name: string,
       description: string,
       entries: IShoppingListItem[]
+      checkedEntries: IShoppingListItem[]
     },
     indexes: { 'by-listid': string };
   };
