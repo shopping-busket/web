@@ -3,7 +3,8 @@
     <v-alert
       :model-value="!viewOnlyInfoAlertHidden && !whitelistedUserPermissions.canEditEntries"
       class="mb-4" closable
-      density="compact" text="This list is view-only because you are missing permissions!" type="info" variant="outlined"
+      density="compact" text="This list is view-only because you are missing permissions!"
+      type="info" variant="outlined"
       @click:close="hideViewOnlyInfoAlert(true)"
     />
 
@@ -261,12 +262,8 @@ onMounted(async () => {
 
   events.value = loadStoredEvents();
 
-  if (connected.value) {
-    shoppingList.value = await loadListFromRemoteOrStore();
-    if (shoppingList.value != null) await updatePermissions();
-  } else {
-    shoppingList.value = await loadListFromCache();
-  }
+  shoppingList.value = await loadListFromRemoteOrStore();
+  if (shoppingList.value != null) await updatePermissions();
 
   // Reload list from remote every 5 minutes to sync everything again
   setInterval(async () => shoppingList.value = await loadListFromRemoteOrStore(), 1000 * 60 * 5 /* 5 Minutes */);

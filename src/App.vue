@@ -36,9 +36,12 @@ import app from '@/main';
 import MainContainer from '@/components/MainContainer.vue';
 import AuthenticationLoading from '@/views/auth/AuthenticationLoading.vue';
 import emitter from '@/helpers/mitt';
+import { useRoute, useRouter } from 'vue-router';
 
 const showUpdateUI = ref(true);
 const theme = useTheme();
+const router = useRouter();
+const route = useRoute();
 const wb = inject('wb') as Workbox;
 const routeLoading = ref(false);
 
@@ -56,7 +59,14 @@ onMounted(async () => {
     });
   }
 
-  app.config.errorHandler = (e) => {
+  app.config.errorHandler = async (e) => {
+    (window as unknown as { e: unknown }).e = e;
+    if (Object.prototype.hasOwnProperty.call(e, 'code') && e.code === 401) {
+      console.log('Error caught by global App.vue errorhandler: NotAuthenticated. Redirecting to login');
+      console.error(e);
+      await feathersClient.authenticate().catch(async () => await router.push({ name: 'login', query: { redirect: route.path } }));
+      return;
+    }
     console.log(JSON.stringify(e, null, 2));
     console.error(e);
     useToast().error('Something unexpected just happened!');
