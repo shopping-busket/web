@@ -7,7 +7,7 @@
           <v-checkbox v-model="displayIcons" class="ml-5" label="Icons" />
           <v-checkbox v-model="colorCode" class="ml-5" label="Color" />
           <v-checkbox v-model="logToConsole" class="ml-5" label="Console log" />
-          <v-checkbox v-model="wrapContent" class="ml-5" label="Wrap" style="width: 20rem" />
+          <v-checkbox v-model="wrapContent" class="ml-5" style="width: 20rem" label="Wrap" />
           <v-checkbox v-model="displayISO" class="" label="Show ISO string" />
           <v-checkbox v-model="displayId" class="ml-5" label="Show ID" />
           <v-checkbox v-model="displayDate" class="ml-5" label="Show Date" />
@@ -42,9 +42,7 @@
               <ColorJson :is="ColorJson" v-if="colorCode" :input="JSON.stringify(event.state)" />
               <span v-else>{{ JSON.stringify(event.state) }}</span>
             </span>
-            <span v-if="displayId" :class="colorCode ? 'itemId mr-1' : 'mr-1'">{{
-                event.entryId
-              }}</span>
+            <span v-if="displayId" :class="colorCode ? 'itemId mr-1' : 'mr-1'">{{ event.entryId }}</span>
 
             <span v-if="displayISO || displayDate" :class="colorCode ? 'at mr-1' : 'mr-1'">at</span>
             <span v-if="event.isoDate" :class="{ 'date': colorCode }">
@@ -53,8 +51,7 @@
             </span>
 
             <span v-if="displaySender" :class="colorCode ? 'at mr-1' : 'mr-1'">by</span>
-            <span v-if="displaySender" :class="{ 'sender': colorCode }"
-            >{{ event.sender ?? 'us (this client)' }}</span>
+            <span v-if="displaySender" :class="{ 'sender': colorCode }">{{ event.sender ?? 'us (this client)' }}</span>
 
             <v-divider />
           </div>
@@ -178,7 +175,7 @@ async function getSenderNameById(id: string): Promise<void> {
   color: #625b83;
 }
 
-.checkbox-wrapper > div {
+.checkbox-wrapper>div {
   height: 3.5rem;
   margin-bottom: -1.5rem;
 }

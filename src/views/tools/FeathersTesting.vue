@@ -1,12 +1,12 @@
 <template>
   <v-card
-    :class="getJseTheme" :style="jseThemeCSS"
-    :subtitle="`You are logged in as ${user?.fullName}`" class="mt-16 ma-auto" max-width="800px" title="Busket Backend tester"
-    variant="outlined"
+    title="Busket Backend tester" :subtitle="`You are logged in as ${user?.fullName}`"
+    class="mt-16 ma-auto" max-width="800px" variant="outlined" :style="jseThemeCSS"
+    :class="getJseTheme"
   >
     <v-card-text>
       <v-btn
-        block class="mb-5" color="primary" density="compact" variant="outlined"
+        density="compact" color="primary" variant="outlined" block class="mb-5"
         @click="openGenerateEventDialog"
       >
         Generate List Event
@@ -14,28 +14,28 @@
 
       <v-form ref="form" v-model="isValid" @submit.prevent="send">
         <v-combobox
-          v-model="selectedService" :items="services" :rules="[rules.requiredField]" density="compact"
-          label="Service" required variant="underlined"
+          v-model="selectedService" required density="compact" variant="underlined"
+          label="Service" :items="services" :rules="[rules.requiredField]"
         />
         <v-autocomplete
-          v-model="selectedMethod" :items="methods" :rules="[rules.requiredField]" density="compact"
-          label="Method" required variant="underlined"
+          v-model="selectedMethod" required density="compact" variant="underlined"
+          label="Method" :items="methods" :rules="[rules.requiredField]"
         />
 
         <v-text-field
           v-if="methodArgsMap[selectedMethod].includes('id')"
           v-model.number="reqId"
           :rules="[rules.requiredId, rules.hasToBeNum]"
-          density="compact"
-          label="ID"
           type="number"
+          label="ID"
           variant="underlined"
+          density="compact"
         />
 
         <div v-if="methodArgsMap[selectedMethod].includes('data')" class="mb-6">
           Data
           <json-editor-vue
-            v-model="reqData" :status-bar="false" class="jse-border-rounded" mode="text"
+            v-model="reqData" class="jse-border-rounded" mode="text" :status-bar="false"
             style="height: 17rem"
           />
         </div>
@@ -43,39 +43,39 @@
         <div v-if="methodArgsMap[selectedMethod].includes('params')">
           Params
           <json-editor-vue
-            v-model="reqParams" :status-bar="false" class="jse-border-rounded" mode="text"
+            v-model="reqParams" class="jse-border-rounded" mode="text" :status-bar="false"
             style="height: 17rem"
           />
         </div>
 
-        <v-btn block class="my-4" color="primary" type="submit" variant="tonal">
+        <v-btn type="submit" color="primary" block variant="tonal" class="my-4">
           Send
         </v-btn>
 
         Response
         <json-editor-vue
           ref="responseEditor"
-          v-model="response" :flatten-columns="true" class="jse-border-rounded"
-          mode="tree" read-only
-          style="height: 40rem"
+          v-model="response" class="jse-border-rounded" mode="tree"
+          style="height: 40rem" read-only
+          :flatten-columns="true"
         />
         <span style="opacity: 70%">Tip: You can view the response JSON in fullscreen mode by pressing f (close with f or esc)</span>
       </v-form>
     </v-card-text>
   </v-card>
 
-  <v-dialog v-model="showResponseDialog" :class="getJseTheme" :style="jseThemeCSS" fullscreen>
+  <v-dialog v-model="showResponseDialog" fullscreen :style="jseThemeCSS" :class="getJseTheme">
     <json-editor-vue
       ref="responseEditorFullscreen"
-      v-model="response" :flatten-columns="true" mode="tree" read-only
-      style="height: 100%"
+      v-model="response" mode="tree" style="height: 100%" read-only
+      :flatten-columns="true"
     />
   </v-dialog>
 
   <v-dialog v-model="listEventGeneratorDialog" max-width="600px">
     <v-card
-      subtitle="Easily generate list events here without touching JSON"
       title="Generate Event"
+      subtitle="Easily generate list events here without touching JSON"
     >
       <v-card-text>
         <v-form ref="eventGeneratorForm" v-model="eventGenerator.inputsValid"
@@ -83,62 +83,62 @@
         >
           <v-autocomplete
             v-model="eventGenerator.event"
-            :items="Object.values(EventType)"
-            :rules="[rules.requiredField]"
+            variant="underlined"
             density="compact"
             label="event (Event Type)"
-            variant="underlined"
+            :items="Object.values(EventType)"
+            :rules="[rules.requiredField]"
             @update:model-value="updateDisplayingStateFields"
           />
 
           <v-autocomplete
             v-model="eventGenerator.listIdFormatted"
-            :items="library.map(l => `${l.list.listid} (${l.list.name})`)"
-            :rules="[rules.requiredField]"
+            variant="underlined"
             density="compact"
             label="listId"
-            variant="underlined"
+            :items="library.map(l => `${l.list.listid} (${l.list.name})`)"
+            :rules="[rules.requiredField]"
             @update:model-value="changeListIdListener"
           />
 
           <v-autocomplete
             v-if="eventGenerator.activeFields.includes('entryId')"
             v-model="eventGenerator.entryIdFormatted"
-            :items="eventGenerator.globalEntries.map(e => `${e.id} (${e.name})`)"
-            :rules="[rules.requiredField]"
+            variant="underlined"
             density="compact"
             label="entryId"
-            variant="underlined"
+            :items="eventGenerator.globalEntries.map(e => `${e.id} (${e.name})`)"
+            :rules="[rules.requiredField]"
           />
 
           <v-text-field
             v-if="eventGenerator.activeFields.includes('state.name')"
             v-model="eventGenerator.state.name"
             :rules="[rules.requiredField]"
-            density="compact"
             label="state.name"
             variant="underlined"
+            density="compact"
           />
           <v-text-field
             v-if="eventGenerator.activeFields.includes('state.oldIndex')"
             v-model="eventGenerator.state.oldIndex"
             :rules="[rules.requiredField, rules.hasToBeNum]"
-            density="compact"
             label="state.oldIndex"
-            type="number"
             variant="underlined"
+            density="compact"
+            type="number"
           />
           <v-text-field
             v-if="eventGenerator.activeFields.includes('state.newIndex')"
             v-model="eventGenerator.state.newIndex"
             :rules="[rules.requiredField, rules.hasToBeNum]"
-            density="compact"
             label="state.newIndex"
-            type="number"
             variant="underlined"
+            density="compact"
+            type="number"
           />
 
-          <v-btn block class="mb-2 mt-1" color="primary" type="submit" variant="tonal">
+          <v-btn type="submit" variant="tonal" block color="primary" class="mb-2 mt-1">
             Send
           </v-btn>
         </v-form>

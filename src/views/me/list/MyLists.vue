@@ -12,8 +12,8 @@
       <v-list-item :subtitle="item.description" :title="item.name" class="pb-2">
         <template #append>
           <v-icon
-            :icon="item.owner === user?.uuid ? 'mdi-trash-can-outline' : 'mdi-exit-run'"
             color="red"
+            :icon="item.owner === user?.uuid ? 'mdi-trash-can-outline' : 'mdi-exit-run'"
             @click.stop="removeListDialog = true; removeList = item"
           />
         </template>
@@ -124,8 +124,8 @@
 
             <v-btn
               color="primary"
-              rounded
               variant="outlined"
+              rounded
               width="200px"
               @click="importDialog = false; uploadImportedList()"
             >
@@ -139,12 +139,12 @@
 
   <v-dialog v-model="removeListDialog" max-width="500px">
     <v-card
-      :subtitle="removeList?.owner === user?.uuid ? 'You won\'t be able to get it back' : 'You will not be able to access it until you get another invite'"
       :title="`Are you sure that you want to ${removeList?.owner === user?.uuid ? 'delete' : 'leave'} this list?`"
+      :subtitle="removeList?.owner === user?.uuid ? 'You won\'t be able to get it back' : 'You will not be able to access it until you get another invite'"
     >
       <v-card-actions>
         <v-spacer />
-        <v-btn color="primary" variant="text" @click="removeListDialog = false">
+        <v-btn variant="text" color="primary" @click="removeListDialog = false">
           Cancel
         </v-btn>
 
@@ -180,13 +180,12 @@ import {
 } from 'vuetify/components';
 import feathersClient, { AuthObject, Service } from '@/feathers-client';
 import { IShoppingList, LegacyShoppingListItem } from '@/shoppinglist/ShoppingList';
-import { inject, onMounted, ref, Ref, toRaw, watch } from 'vue';
+import { inject, onMounted, ref, Ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
 import { userInjection } from '@/helpers/injectionKeys';
 import { UserWhitelist } from '@/components/ShareDialog.vue';
 import { Route } from '@/router';
-import store from '@/helpers/offlineStore';
 
 const router = useRouter();
 const toast = useToast();
@@ -222,14 +221,15 @@ export interface LibraryEntry {
 onMounted(async () => {
   if (!feathersClient.io.connected) {
     console.log('Not connected to server! Loading lists from storage...');
-    const stored = await store.db?.getAll('shopping-list') as unknown as IShoppingList[];
-    if (stored == undefined) {
-
+    const stored = localStorage.getItem('lists');
+    console.log(stored);
+    if (!stored) {
+      localStorage.setItem('lists', JSON.stringify([]));
       console.log('No lists found in storage. Offline will not work!');
-      toast.warning('No lists in offline mode!');
       return;
     }
-    lists.value = stored;
+
+    lists.value = JSON.parse(stored);
     return;
   }
 
@@ -261,9 +261,8 @@ async function populateLists(): Promise<void> {
         loading: false,
       },
     };
-  }).sort((a, b) => comparatorSortAlphabetically(a.name, b.name));
+  }).sort((a,b) => comparatorSortAlphabetically(a.name, b.name));
 
-  lists.value.forEach((list) => store.tryPutShoppingList(toRaw(list)));
   localStorage.setItem('lists', JSON.stringify(lists.value));
 }
 

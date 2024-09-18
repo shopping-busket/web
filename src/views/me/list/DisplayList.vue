@@ -14,16 +14,16 @@
           <div v-if="shoppingList !== null" :class="{ 'w-100': editingListInfo }">
             <div v-if="editingListInfo" style="width: 100%">
               <v-text-field
-                v-model="temporaryData.listName"
-                append-inner-icon="mdi-content-save"
-                class="mt-2"
-                color="primary"
-                density="compact"
-                label="List Name"
-                style="width: 100%; height: 2.9rem"
-                variant="outlined"
-                @click:append-inner="setListInfo()"
-                @keydown.enter="setListInfo()"
+                  v-model="temporaryData.listName"
+                  class="mt-2"
+                  style="width: 100%; height: 2.9rem"
+                  variant="outlined"
+                  label="List Name"
+                  density="compact"
+                  color="primary"
+                  append-inner-icon="mdi-content-save"
+                  @click:append-inner="setListInfo()"
+                  @keydown.enter="setListInfo()"
               />
             </div>
             <span v-else>
@@ -36,34 +36,34 @@
 
           <div v-if="!editingListInfo">
             <v-btn
-              v-show="shoppingList != null && user != undefined && shoppingList.owner === user.uuid"
-              color="primary" icon="mdi-pencil-outline" size="x-small" variant="text"
-              @click="enterListInfoEditState()"
+                v-show="shoppingList != null && user != undefined && shoppingList.owner === user.uuid"
+                color="primary" icon="mdi-pencil-outline" size="x-small" variant="text"
+                @click="enterListInfoEditState()"
             />
 
             <v-btn
-              color="primary" icon="mdi-text-box-outline" size="x-small" variant="text"
-              @click="openLogDialog = true"
+                color="primary" icon="mdi-text-box-outline" size="x-small" variant="text"
+                @click="openLogDialog = true"
             />
             <v-btn
-              color="primary" icon="mdi-download-outline" size="x-small" variant="text"
-              @click="downloadList"
+                color="primary" icon="mdi-download-outline" size="x-small" variant="text"
+                @click="downloadList"
             />
             <v-btn
-              color="primary" icon="mdi-refresh" size="x-small" variant="text"
-              @click="reloadList"
-            />
-
-            <v-btn
-              v-show="shoppingList != null && user != undefined && shoppingList.owner === user.uuid"
-              color="primary" icon="mdi-account-group-outline" size="x-small" variant="text"
-              @click="openShareDialog = true"
+                color="primary" icon="mdi-refresh" size="x-small" variant="text"
+                @click="reloadList"
             />
 
             <v-btn
-              v-if="developmentBuild"
-              color="primary" icon="mdi-test-tube" size="x-small" variant="text"
-              @click="dummyFill"
+                v-show="shoppingList != null && user != undefined && shoppingList.owner === user.uuid"
+                color="primary" icon="mdi-account-group-outline" size="x-small" variant="text"
+                @click="openShareDialog = true"
+            />
+
+            <v-btn
+                v-if="developmentBuild"
+                color="primary" icon="mdi-test-tube" size="x-small" variant="text"
+                @click="dummyFill"
             />
           </div>
         </div>
@@ -72,16 +72,16 @@
         <div v-if="shoppingList !== null">
           <div v-if="editingListInfo" style="width: 100%">
             <v-text-field
-              v-model="temporaryData.listDescription"
-              append-inner-icon="mdi-content-save"
-              class="mt-2 mb-2"
-              color="primary"
-              density="compact"
-              label="List Description"
-              style="width: 100%; height: 2.9rem"
-              variant="outlined"
-              @click:append-inner="setListInfo()"
-              @keydown.enter="setListInfo()"
+                v-model="temporaryData.listDescription"
+                class="mt-2 mb-2"
+                style="width: 100%; height: 2.9rem"
+                variant="outlined"
+                label="List Description"
+                density="compact"
+                color="primary"
+                append-inner-icon="mdi-content-save"
+                @click:append-inner="setListInfo()"
+                @keydown.enter="setListInfo()"
             />
           </div>
           <div v-else>
@@ -99,15 +99,15 @@
                 @submit.prevent="createEntry()"
         >
           <v-text-field
-            v-model="newItemName"
-            :rules="newItemRules"
-            append-inner-icon="mdi-basket-plus-outline"
-            color="primary"
-            density="comfortable"
-            placeholder="Add item"
-            variant="outlined"
-            @blur="newItemName.length === 0 ? newItemForm?.resetValidation() : null"
-            @click:append-inner="createEntry()"
+              v-model="newItemName"
+              :rules="newItemRules"
+              append-inner-icon="mdi-basket-plus-outline"
+              color="primary"
+              density="comfortable"
+              placeholder="Add item"
+              variant="outlined"
+              @blur="newItemName.length === 0 ? newItemForm?.resetValidation() : null"
+              @click:append-inner="createEntry()"
           />
         </v-form>
         <!--        TODO: <v-autocomplete :items="suggestedItems"-->
@@ -126,56 +126,56 @@
 
     <v-card class="mt-3 pa-2" rounded variant="outlined">
       <div
-        v-if="shoppingList === null"
-        class="d-flex justify-center align-items"
+          v-if="shoppingList === null"
+          class="d-flex justify-center align-items"
       >
         Loading
         <v-progress-circular
-          :size="25" :width="3" class="ml-2" color="primary"
-          indeterminate
+            :size="25" :width="3" class="ml-2" color="primary"
+            indeterminate
         />
       </div>
       <div v-else>
         <TodoList
-          v-model="shoppingList.entries"
-          :user-permissions="whitelistedUserPermissions"
-          class="mb-4"
-          is-movable
-          label="Todo"
-          show-count
-          @clear-done="clearDone"
-          @check-entry="checkEntry"
-          @rename-entry="renameEntry"
-          @move-entry="moveEntry"
+            v-model="shoppingList.entries"
+            class="mb-4"
+            is-movable
+            label="Todo"
+            show-count
+            :user-permissions="whitelistedUserPermissions"
+            @clear-done="clearDone"
+            @check-entry="checkEntry"
+            @rename-entry="renameEntry"
+            @move-entry="moveEntry"
         />
 
         <TodoList
-          v-model="shoppingList.checkedEntries"
-          :user-permissions="whitelistedUserPermissions"
-          checked-state
-          is-clearable
-          label="Done"
-          @clear-done="clearDone"
-          @check-entry="checkEntry"
-          @rename-entry="renameEntry"
-          @move-entry="moveEntry"
+            v-model="shoppingList.checkedEntries"
+            checked-state
+            is-clearable
+            label="Done"
+            :user-permissions="whitelistedUserPermissions"
+            @clear-done="clearDone"
+            @check-entry="checkEntry"
+            @rename-entry="renameEntry"
+            @move-entry="moveEntry"
         />
       </div>
     </v-card>
 
     <!-- TODO: Change list name   -->
     <EventViewer
-      v-if="shoppingList !== null"
-      id="eventViewer"
-      v-model="openLogDialog"
-      :events="historicalEvents"
-      :list-name="shoppingList.name"
+        v-if="shoppingList !== null"
+        id="eventViewer"
+        v-model="openLogDialog"
+        :events="historicalEvents"
+        :list-name="shoppingList.name"
     />
 
     <ShareDialog
-      v-if="shoppingList != null && user != undefined && shoppingList.owner === user.uuid"
-      v-model="openShareDialog"
-      :list-id="(shoppingList as ShoppingList).listid"
+        v-if="shoppingList != null && user != undefined && shoppingList.owner === user.uuid"
+        v-model="openShareDialog"
+        :list-id="(shoppingList as ShoppingList).listid"
     />
   </div>
 </template>
@@ -204,8 +204,6 @@ import { EventData, EventType, LogEvent, LogEventListenerData } from '@/shopping
 import ShareDialog, { UserPermissions, UserWhitelist } from '@/components/ShareDialog.vue';
 import { v4 as uuidv4 } from 'uuid';
 import { userInjection } from '@/helpers/injectionKeys';
-import store from '@/helpers/offlineStore';
-import { ReactiveVariable } from 'vue/macros';
 
 const props = defineProps<{
   id: string | undefined,
@@ -262,11 +260,15 @@ onMounted(async () => {
 
   events.value = loadStoredEvents();
 
-  shoppingList.value = await loadListFromRemoteOrStore();
-  if (shoppingList.value != null) await updatePermissions();
+  if (connected.value) {
+    shoppingList.value = await loadListFromRemote();
+    if (shoppingList.value != null) await updatePermissions();
+  } else {
+    shoppingList.value = await loadListFromCache();
+  }
 
   // Reload list from remote every 5 minutes to sync everything again
-  setInterval(async () => shoppingList.value = await loadListFromRemoteOrStore(), 1000 * 60 * 5 /* 5 Minutes */);
+  setInterval(async () => shoppingList.value = await loadListFromRemote(), 1000 * 60 * 5 /* 5 Minutes */);
 
   viewOnlyInfoAlertHidden.value = getViewInfoAlertHideStateFromStore();
 });
@@ -370,30 +372,38 @@ function registerSearch() {
 
 //region list loaders
 async function reloadList(): Promise<void> {
-  shoppingList.value = await loadListFromRemoteOrStore();
+  shoppingList.value = await loadListFromRemote();
 }
 
-async function loadListFromRemoteOrStore(): Promise<ShoppingList | null> {
-  if (!user || !connected.value) return await loadListFromCache();
+async function loadListFromRemote(): Promise<ShoppingList | null> {
+  if (!user) return null;
 
-  try {
-    const list: IShoppingList[] | undefined = await feathersClient.service(Service.LIST)
-      .find({ query: { listid: props.id } })
-      .catch(console.error);
-    if (list == undefined || list.length <= 0) return await loadListFromCache();
-
-    await store.tryPutShoppingList(list[0]);
-    return new ShoppingList(list[0].listid, list[0].name, list[0].description, list[0].owner, list[0].entries, list[0].checkedEntries, list[0].id);
-  } catch (e) {
-    return await loadListFromCache();
+  const list: IShoppingList[] | undefined = await feathersClient.service(Service.LIST).find({ query: { listid: props.id } })
+      .catch(() => {
+        listNotFound();
+      }) as IShoppingList[] | undefined;
+  if (list == undefined || list.length <= 0) {
+    await listNotFound();
+    return null;
   }
+
+  console.log(list);
+
+  return new ShoppingList(list[0].listid, list[0].name, list[0].description, list[0].owner, list[0].entries, list[0].checkedEntries);
 }
 
 async function loadListFromCache(): Promise<ShoppingList> {
-  console.log('[STORE] Loading list from store');
-  const cachedList = await store.db?.getFromIndex('shopping-list', 'by-listid', props.id ?? '');
-  if (cachedList === undefined) throw await listNotFound();
-  return new ShoppingList(cachedList.listid, cachedList.name, cachedList.description, cachedList.owner, cachedList.entries, cachedList.checkedEntries);
+  const lists = localStorage.getItem('lists');
+  if (!lists) {
+    console.log('Lists not found');
+    localStorage.setItem('lists', JSON.stringify([]));
+    throw await listNotFound();
+  }
+
+  const list = (JSON.parse(lists) as Array<IShoppingList>).find((l) => l.listid === props.id);
+  if (!list) throw await listNotFound();
+
+  return new ShoppingList(list.listid, list.name, list.description, list.owner, list.entries, list.checkedEntries);
 }
 
 async function listNotFound() {
@@ -526,33 +536,25 @@ function loadStoredEvents(): Array<EventData> {
   return ls as unknown as Array<EventData>;
 }
 
-async function recordEvent(event: Omit<EventData, 'storeId'>): Promise<unknown> {
-  if (shoppingList.value !== null) {
-    await store.tryPutShoppingList(removeProxy(shoppingList.value?.toInterface()));
+async function recordEvent(event: EventData): Promise<unknown> {
+  const stored = localStorage.getItem('lists');
+  if (!stored) localStorage.setItem('lists', JSON.stringify([]));
+
+  const lists = JSON.parse(stored || '[]') as Array<IShoppingList>;
+  for (let i = 0; i < lists.length; i++) {
+    if (lists[i].listid === props.id && shoppingList.value) {
+      lists[i] = shoppingList.value?.toInterface(lists[i].id);
+    }
   }
+  localStorage.setItem('lists', JSON.stringify(lists));
 
-  console.log('[EVENT]', event);
-  events.value.push({
-    storeId: undefined,
-    ...event
-  });
-  historicalEvents.value.push({
-    storeId: undefined,
-    ...event
-  });
+  console.log('[LOG]', event);
+  events.value.push(event);
+  historicalEvents.value.push(event);
 
-  const eventIds = await store.tryPutEvents(removeProxy(events.value));
-  console.log('eventIDs', eventIds);
-  events.value.forEach((e, i) => {
-    if (eventIds[i] === undefined) return;
-    e.storeId = eventIds[i] as number;
-  });
+  localStorage.setItem(`events.value-${props.id}`, JSON.stringify(events.value));
 
   return sendEventsToServer();
-}
-
-function removeProxy<T>(o: ReactiveVariable<T>): T {
-  return JSON.parse(JSON.stringify(o));
 }
 
 async function sendEventsToServer(): Promise<unknown> {
@@ -568,16 +570,9 @@ async function sendEventsToServer(): Promise<unknown> {
 
   console.log(data);
 
-  const removeQueueEvent = async (d: LogEvent[]) => {
-    const tx = store.db?.transaction('event', 'readwrite');
-
-    const promises: (Promise<void> | undefined)[] = [];
-    d.forEach((event) => promises.push(tx?.store.delete(event.eventData.storeId ?? -1)));
-
-    promises.push(tx?.done);
-    await Promise.all(promises);
-
+  const removeQueueEvent = (d: LogEvent[]) => {
     events.value.splice(0, d.length);
+    localStorage.setItem(`events.value-${props.id}`, JSON.stringify(events.value));
   };
 
   return feathersClient.service(Service.EVENT).create(data)

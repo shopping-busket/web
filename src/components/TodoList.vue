@@ -44,8 +44,8 @@
           <v-text-field
             v-if="element.additional.edit"
             v-model="element.additional.editName"
-            autofocus
             class="w-100"
+            autofocus
             color="primary"
             density="compact"
             hide-details
@@ -61,8 +61,8 @@
           <v-spacer />
 
           <v-btn
-            v-if="element.additional.editName === element.name"
             v-show="userPermissions.canEditEntries"
+            v-if="element.additional.editName === element.name"
             :icon="element.additional.edit ? 'mdi-pencil-outline' : 'mdi-pencil'"
             size="x-small"
             variant="text"

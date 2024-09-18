@@ -8,9 +8,7 @@
       variant="outlined"
     >
       <v-card-actions>
-        <v-btn block color="primary" elevation="0" variant="elevated"
-               @click="router.push({ name: Route.MY_LISTS })"
-        >
+        <v-btn variant="elevated" elevation="0" color="primary" block @click="router.push({ name: Route.MY_LISTS })">
           Navigate back to My Lists
         </v-btn>
       </v-card-actions>

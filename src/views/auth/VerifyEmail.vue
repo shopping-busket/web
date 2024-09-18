@@ -1,14 +1,14 @@
 <template>
   <div class="w-100 pa-16">
     <v-card
-      :text="`Please verify your email using the link we sent you to ${user?.email ?? 'error'}! You cannot access this page without verifying first.`"
-      class="ma-auto"
-      max-width="500px"
-      title="Verify Email"
       variant="outlined"
+      max-width="500px"
+      class="ma-auto"
+      title="Verify Email"
+      :text="`Please verify your email using the link we sent you to ${user?.email ?? 'error'}! You cannot access this page without verifying first.`"
     >
       <v-card-actions>
-        <v-btn :to="{ name: Route.HOME }" block color="primary" variant="tonal">
+        <v-btn block color="primary" variant="tonal" :to="{ name: Route.HOME }">
           Ok
         </v-btn>
       </v-card-actions>

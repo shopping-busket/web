@@ -2,8 +2,8 @@
   <div style="height: 100%">
     <v-navigation-drawer
       v-model="drawer"
-      :permanent="mini"
       :rail="mini"
+      :permanent="mini"
       :temporary="!mini"
       app
       expand-on-hover
@@ -54,7 +54,7 @@
       >
         <v-divider class="mb-2 w-100" />
         <span class="pb-4">Want to use Busket offline or without having to open your Browser?</span>
-        <v-btn block class="mt-2" color="primary" rounded small variant="tonal" @click="installApp">
+        <v-btn block class="mt-2" color="primary" variant="tonal" rounded small @click="installApp">
           Install Busket
         </v-btn>
         <a

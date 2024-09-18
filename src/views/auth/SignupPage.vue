@@ -59,8 +59,8 @@
             block
             class="btn-with-outline mt-4"
             color="primary"
-            type="submit"
             variant="tonal"
+            type="submit"
           >
             Create Account
           </v-btn>

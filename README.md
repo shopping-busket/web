@@ -32,7 +32,6 @@ yarn build
 ```
 
 ### Preview the latest build
-
 ```
 yarn serve
 ```

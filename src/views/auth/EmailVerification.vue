@@ -15,7 +15,7 @@
         </span>
       </v-card-text>
       <v-card-actions>
-        <v-btn :to="{ name: Route.MY_LISTS }" block color="primary" variant="tonal">
+        <v-btn block color="primary" variant="tonal" :to="{ name: Route.MY_LISTS }">
           Ok
         </v-btn>
       </v-card-actions>
