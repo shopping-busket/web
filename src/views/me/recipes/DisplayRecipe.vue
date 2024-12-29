@@ -26,66 +26,11 @@
 
 
         <v-card-text>
-          <div class="d-flex flex-row align-center">
-            Ingredients for
-            <v-number-input style="max-width: 5rem" class="mx-2"
-                            variant="outlined" control-variant="stacked"
-                            hide-details
-                            density="compact"
-                            :max="99" :min="1"
-                            v-model="portions"
-                            @update:model-value="recalculatePortions"
-            />
-            portions
-          </div>
-
           <div class="mb-2">
             {{ recipe.description }}
           </div>
 
-          <v-table>
-            <thead>
-            <tr>
-              <th class="text-left">
-                Ingredient
-              </th>
-              <th class="text-left">
-                Amount
-              </th>
-              <th class="text-left">
-                Add to list
-              </th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr v-for="ingredient in ingredients" :key="ingredient.id">
-              <td>{{ ingredient.name }}</td>
-              <td>{{ ingredient.amount }} {{ ingredient.unit }}</td>
-              <td>
-                <v-menu>
-                  <template v-slot:activator="{ props }">
-                    <v-btn
-                      variant="text"
-                      v-bind="props"
-                      icon="mdi-basket-plus-outline"
-                    />
-                  </template>
-                  <v-list>
-                    <v-list-item
-                      v-for="(library, index) in shoppingListLibary"
-                      :key="index"
-                      :value="index"
-                      @click="addIngredientToList(ingredient, library.listId)"
-                    >
-                      <v-list-item-title>{{ library.list.name }}</v-list-item-title>
-                      <v-list-item-subtitle>{{ library.list.description }}</v-list-item-subtitle>
-                    </v-list-item>
-                  </v-list>
-                </v-menu>
-              </td>
-            </tr>
-            </tbody>
-          </v-table>
+          <RecipeIngredientTable :recipe-id="props.id"/>
         </v-card-text>
       </v-card>
     </div>
@@ -93,17 +38,13 @@
 </template>
 
 <script lang="ts" setup>
-import { IIngredient, IRecipe } from '@/shoppinglist/recipes/types';
+import { IRecipe } from '@/shoppinglist/recipes/types';
 import { onMounted, ref, Ref } from 'vue';
 import feathersClient, { Service } from '@/feathers-client';
 import { Route } from '@/router';
 import { useToast } from 'vue-toastification';
 import { useRouter } from 'vue-router';
-import { VNumberInput } from 'vuetify/labs/components';
-import { LibraryEntry } from '@/views/me/list/MyLists.vue';
-import { comparatorSortAlphabetically } from '@/helpers/utils';
-import { EventType, LogEvent } from '@/shoppinglist/events';
-import { v4 as uuidv4 } from 'uuid';
+import RecipeIngredientTable from '@/components/RecipeIngredientTable.vue';
 
 const toast = useToast();
 const router = useRouter();
@@ -112,17 +53,11 @@ const props = defineProps<{
   id: number,
 }>();
 
-const shoppingListLibary: Ref<LibraryEntry[]> = ref([]);
 // These ingredients are not displayed but also not altered (for portions)
-const baseIngredients: Ref<IIngredient[]> = ref([]);
-const ingredients: Ref<IIngredient[]> = ref([]);
 const recipe: Ref<IRecipe | null> = ref(null);
-const portions = ref(4);
-const BASE_PORTION_SIZE = 4;
 
 onMounted(async () => {
   await fetchRecipe();
-  await fetchShoppingListLibrary();
 });
 
 async function fetchRecipe() {
@@ -133,46 +68,5 @@ async function fetchRecipe() {
     await router.push({ name: Route.MY_RECIPES });
     console.error(`Failed to fetch recipe with id ${props.id}`);
   }
-
-  baseIngredients.value = await feathersClient.service(Service.INGREDIENTS).find({
-    query: {
-      recipeId: props.id
-    }
-  });
-  recalculatePortions();
 }
-
-function recalculatePortions() {
-  ingredients.value = baseIngredients.value.map((ingredient) => {
-    return {
-      ...ingredient,
-      amount: (ingredient.amount ?? 1) * (portions.value / BASE_PORTION_SIZE),
-    };
-  });
-  console.log(portions, ingredients.value);
-}
-
-//region shopping list library (add to basket)
-async function fetchShoppingListLibrary() {
-  const library = (await feathersClient.service(Service.LIBRARY).find()) as LibraryEntry[];
-  // TODO: FILTER OUT LISTS WHERE USER DOES NOT HAVE ADD ITEM PERMISSION
-  shoppingListLibary.value = library.sort((a, b) => comparatorSortAlphabetically(a.list.name, b.list.name));
-}
-
-async function addIngredientToList(ingredient: IIngredient, listId: string) {
-  await feathersClient.service(Service.EVENT).create([{
-    listid: listId,
-    eventData: {
-      event: EventType.CREATE_ENTRY,
-      entryId: uuidv4(),
-      isoDate: (new Date()).toISOString(),
-      state: {
-        name: `${ingredient.name} (${ingredient.amount} ${ingredient.unit})`,
-      },
-      sender: uuidv4(),
-    }
-  }] as LogEvent[]);
-}
-
-//endregion
 </script>
