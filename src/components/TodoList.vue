@@ -35,6 +35,7 @@
           @click="focusEntry(element.id)"
         >
           <v-checkbox-btn
+            style="flex: 0 0"
             v-show="userPermissions.canEditEntries"
             :model-value="checkedState"
             density="comfortable"

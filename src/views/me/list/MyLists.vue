@@ -186,6 +186,7 @@ import { useToast } from 'vue-toastification';
 import { userInjection } from '@/helpers/injectionKeys';
 import { UserWhitelist } from '@/components/ShareDialog.vue';
 import { Route } from '@/router';
+import { comparatorSortAlphabetically } from '@/helpers/utils';
 
 const router = useRouter();
 const toast = useToast();
@@ -243,12 +244,6 @@ async function showNewListDialog() {
   // Has to be called twice due to vuetify bug!
   await newListForm.value?.validate();
   await newListForm.value?.validate();
-}
-
-function comparatorSortAlphabetically(a: string, b: string) {
-  if (a < b) return -1;
-  if (a > b) return 1;
-  return 0;
 }
 
 async function populateLists(): Promise<void> {

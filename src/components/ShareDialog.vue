@@ -153,9 +153,8 @@ import {
   VSpacer,
   VTextField,
 } from 'vuetify/components';
-import { computed, onMounted, reactive, Ref, ref } from 'vue';
+import { computed, onMounted, Reactive, reactive, Ref, ref } from 'vue';
 import feathersClient, { BadRequest, DB, FeathersError, Service } from '@/feathers-client';
-import { ReactiveVariable } from 'vue/macros';
 import { Params } from '@feathersjs/feathers';
 import md5 from '@/helpers/md5';
 import { useToast } from 'vue-toastification';
@@ -198,7 +197,7 @@ export interface UserWhitelist extends DB {
 
 export type UserPermissions = Pick<UserWhitelist, 'canDeleteEntries' | 'canEditEntries'>;
 
-const whitelistedUsers: ReactiveVariable<UserWhitelist[]> = reactive([]);
+const whitelistedUsers: Reactive<UserWhitelist[]> = reactive([]);
 
 onMounted(async () => {
   const links = await feathersClient.service(Service.WHITELISTED_USERS).find({
