@@ -14,6 +14,9 @@ export enum Service {
   LIBRARY = 'library',
   USERS = 'users',
   WHITELISTED_USERS = 'whitelisted-users',
+  RECIPE = 'recipe',
+  RECIPE_COMPONENT = 'recipe-component',
+  INGREDIENTS = 'ingredients',
 }
 
 type ServiceTypes = Record<Service, FeathersService> & {
@@ -22,6 +25,9 @@ type ServiceTypes = Record<Service, FeathersService> & {
   library: FeathersService,
   users: FeathersService,
   'whitelisted-users': FeathersService,
+  recipe: FeathersService,
+  'recipe-component': FeathersService,
+  ingredients: FeathersService,
 }
 
 const feathersClient = feathers<ServiceTypes>();

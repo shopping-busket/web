@@ -33,7 +33,7 @@
 
       <v-list nav>
         <v-list-item
-          v-for="item in menuItems.filter((it) => !it.divide)"
+          v-for="item in menuItems.filter((it: MenuItem) => !it.divide)"
           :key="item.title"
           link
           @click.stop="item.to === undefined ? item!!.click() : tryRouteTo(item.to)"
@@ -68,7 +68,7 @@
         <v-divider />
         <v-list nav>
           <v-list-item
-            v-for="item in menuItems.filter((it) => it.divide)"
+            v-for="item in menuItems.filter((it: MenuItem) => it.divide)"
             :key="item.title"
             link
             @click.stop="item.to == null ? clickItemAsync(item) : tryRouteTo(item.to)"
@@ -153,7 +153,7 @@ interface MenuItem {
   divide?: boolean,
 }
 
-const baseMenuItems = [
+const baseMenuItems: MenuItem[] = [
   {
     title: 'Home',
     icon: 'mdi-home-city',
@@ -163,6 +163,11 @@ const baseMenuItems = [
     title: 'My lists',
     icon: 'mdi-clipboard-list-outline',
     to: { name: 'my lists' }
+  },
+  {
+    title: 'Recipes',
+    icon: 'mdi-chef-hat',
+    to: { name: Route.MY_RECIPES }
   },
   {
     title: 'Github',

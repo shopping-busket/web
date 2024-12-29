@@ -26,6 +26,9 @@ export enum Route {
   LIST_NOT_FOUND = 'list not found',
   DISPLAY_LIST = 'display list',
 
+  MY_RECIPES = 'my recipes',
+  DISPLAY_RECIPE = 'display recipe',
+
   PREFERENCES = 'preferences',
   HOME = 'home',
   NOT_FOUND = 'not found',
@@ -113,6 +116,20 @@ const routes: RouteRecordRawWithMeta[] = [
   {
     path: '/me/list',
     redirect: { name: Route.MY_LISTS },
+  },
+  //endregion
+
+  //region recipes
+  {
+    path: '/me/recipes',
+    name: Route.MY_RECIPES,
+    component: () => import('../views/me/recipes/MyRecipes.vue'),
+  },
+  {
+    path: '/me/recipe/:id',
+    name: Route.DISPLAY_RECIPE,
+    props: true,
+    component: () => import('../views/me/recipes/DisplayRecipe.vue'),
   },
   //endregion
 
