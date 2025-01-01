@@ -6,6 +6,12 @@
 
   <transition name="bounce">
     <div v-if="!loading">
+      <v-alert v-if="!addToListAvailable"
+               density="compact" color="primary" variant="outlined"
+               class="my-2" icon="mdi-basket-off-outline">
+        "Add to list" is not available when not logged in.
+      </v-alert>
+
       <div class="d-flex flex-row align-center">
         Ingredients for
         <v-number-input style="max-width: 5rem" class="mx-2"
@@ -28,7 +34,7 @@
           <th class="text-left">
             Amount
           </th>
-          <th class="text-left">
+          <th class="text-left" v-if="addToListAvailable">
             Add to list
           </th>
         </tr>
@@ -41,7 +47,7 @@
             </span>
           </td>
           <td>{{ ingredient.amount }} {{ ingredient.unit }}</td>
-          <td>
+          <td  v-if="addToListAvailable">
             <v-menu>
               <template v-slot:activator="{ props }">
                 <v-btn
@@ -73,7 +79,7 @@
 <script lang="ts" setup>
 import { onMounted, ref, Ref } from 'vue';
 import { IIngredient } from '@/shoppinglist/recipes/types';
-import feathersClient, { Service } from '@/feathers-client';
+import feathersClient, { FeathersError, Service } from '@/feathers-client';
 import { comparatorSortAlphabetically } from '@/helpers/utils';
 import { EventType, LogEvent } from '@/shoppinglist/events';
 import { v4 as uuidv4 } from 'uuid';
@@ -91,10 +97,20 @@ const ingredients: Ref<IIngredient[]> = ref([]);
 const portions = ref(4);
 const BASE_PORTION_SIZE = 4;
 const loading = ref(true);
+const addToListAvailable = ref(true);
 
 onMounted(async () => {
   await fetchIngredients();
-  await fetchShoppingListLibrary();
+  try {
+    await fetchShoppingListLibrary();
+  } catch (e) {
+    const err = e as FeathersError;
+    if (err.code && err.code === 401 /* Unauthorized */) {
+      // User is not logged in, we skip fetching "library"
+      // and instead show an alert that "add to basket" is not available
+      addToListAvailable.value = false;
+    }
+  }
   loading.value = false;
 });
 

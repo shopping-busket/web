@@ -7,6 +7,7 @@ import emitter from '@/helpers/mitt';
 
 export interface RouteMeta {
   requiresAuth?: boolean,
+  requireConnection?: boolean,
   allowInProduction?: boolean,
   allowUnverified?: boolean,
 }
@@ -33,7 +34,9 @@ export enum Route {
   HOME = 'home',
   NOT_FOUND = 'not found',
   GITHUB = 'github',
-  FEATHERS_TESTING = 'feathersjs backend testing'
+  FEATHERS_TESTING = 'feathersjs backend testing',
+
+  NO_CONNECTION = 'no connection',
 }
 
 const routes: RouteRecordRawWithMeta[] = [
@@ -123,11 +126,17 @@ const routes: RouteRecordRawWithMeta[] = [
   {
     path: '/me/recipes',
     name: Route.MY_RECIPES,
+    meta: {
+      requireConnection: true,
+    },
     component: () => import('../views/me/recipes/MyRecipes.vue'),
   },
   {
     path: '/me/recipe/:id',
     name: Route.DISPLAY_RECIPE,
+    meta: {
+      requireConnection: true,
+    },
     props: true,
     component: () => import('../views/me/recipes/DisplayRecipe.vue'),
   },
@@ -157,6 +166,11 @@ const routes: RouteRecordRawWithMeta[] = [
       allowInProduction: false,
     },
     component: () => import('../views/tools/FeathersTesting.vue'),
+  },
+  {
+    path: '/no-connection',
+    name: Route.NO_CONNECTION,
+    component: () => import('../views/NoConnection.vue'),
   },
   {
     path: '/github',
@@ -230,6 +244,8 @@ router.beforeEach(async (to, from, next) => {
       }
     });
   }
+
+  // if (destinationMeta?.requireConnection && !feathersClient.io.connected) await router.replace({ name: Route.NO_CONNECTION })
 
   emitter.emit('navGuardLoading', false);
   if (feathersClient.authentication.authenticated && destinationMeta?.requiresAuth && !user?.verifiedEmail && !destinationMeta.allowUnverified) await router.replace({ name: Route.EMAIL_VERIFY });

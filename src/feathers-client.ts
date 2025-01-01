@@ -15,7 +15,7 @@ export enum Service {
   USERS = 'users',
   WHITELISTED_USERS = 'whitelisted-users',
   RECIPE = 'recipe',
-  RECIPE_COMPONENT = 'recipe-component',
+  RECIPE_STEPS = 'recipe-steps',
   INGREDIENTS = 'ingredients',
 }
 
@@ -26,7 +26,7 @@ type ServiceTypes = Record<Service, FeathersService> & {
   users: FeathersService,
   'whitelisted-users': FeathersService,
   recipe: FeathersService,
-  'recipe-component': FeathersService,
+  'recipe-steps': FeathersService,
   ingredients: FeathersService,
 }
 

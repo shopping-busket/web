@@ -197,11 +197,13 @@ onMounted(() => {
   });
 
   if (process.env.NODE_ENV === 'development') {
-    baseMenuItems.push({
-      icon: 'mdi-api',
-      title: 'Backend Tools',
-      to: { name: Route.FEATHERS_TESTING }
-    });
+    baseMenuItems.push(
+      {
+        icon: 'mdi-api',
+        title: 'Backend Tools',
+        to: { name: Route.FEATHERS_TESTING }
+      },
+    );
   }
 
   menuItems.push(...baseMenuItems);
