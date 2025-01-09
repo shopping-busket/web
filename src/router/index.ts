@@ -137,7 +137,11 @@ const routes: RouteRecordRawWithMeta[] = [
     meta: {
       requireConnection: true,
     },
-    props: true,
+    props(r) {
+      return {
+        id: Number.parseInt(r.params.id as string),
+      };
+    },
     component: () => import('../views/me/recipes/DisplayRecipe.vue'),
   },
   //endregion

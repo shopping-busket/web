@@ -1,11 +1,36 @@
 <template>
-  <div class="pt-4 w-100" style="max-width: 800px; margin: auto">
-    <div v-if="!recipe" class="d-flex flex-column align-center justify-center w-100 mt-16">
-      <v-progress-circular indeterminate color="primary" />
-      <div class="text-sm-subtitle-1 text-disabled mt-1">Looking for ingredients</div>
+  <v-dialog v-model="loading" class="w-100 h-100" fullscreen persistent>
+    <div class="d-flex align-center justify-center w-screen h-screen">
+      <v-sheet rounded class="d-flex flex-column align-center justify-center pa-2">
+        <v-progress-circular indeterminate color="primary" />
+        <div class="text-sm-subtitle-1 text-disabled mt-1">Searching for the cookbook</div>
+      </v-sheet>
     </div>
+  </v-dialog>
 
-    <div v-else class="w-100">
+  <div class="pt-4 w-100" style="max-width: 800px; margin: auto">
+    <div v-if="recipe" class="w-100">
+      <v-alert v-if="isEditing"
+               density="compact" color="primary" variant="outlined"
+               class="my-2" icon="mdi-text-box-edit-outline"
+      >
+        <div class="d-flex flex-row justify-space-between align-center">
+          <div>
+            You are editing this recipe!
+          </div>
+          <v-btn variant="text" color="primary" @click="exitEditMode" density="compact">Exit
+            Edit Mode
+          </v-btn>
+        </div>
+      </v-alert>
+
+      <v-btn v-if="isEditing" block class="mb-2" variant="tonal"
+             @click="dialogPropertiesOpen = true"
+      >
+        <v-icon icon="mdi-cog" class="mr-2" />
+        Recipe Properties
+      </v-btn>
+
       <v-card variant="flat" class="border">
         <v-img
           color="surface-variant"
@@ -15,8 +40,16 @@
         />
 
         <v-card-title class="d-flex flex-row justify-space-between align-center">
-          <div>
-            {{ recipe.title }}
+          <div class="d-flex align-center w-100">
+            <v-btn icon="mdi-pencil" variant="text" density="compact"
+                   @click="isEditing ? exitEditMode() : isEditing = true"
+            />
+            <div v-if="!isEditing">{{ recipe.title }}</div>
+            <div v-else class="w-100">
+              <v-text-field class="w-100" hide-details density="compact" color="primary"
+                            variant="underlined" label="Title" v-model="recipe.title"
+              />
+            </div>
           </div>
           <div class="d-flex align-center">
             <div class="font-weight-regular text-sm-body-1 mr-2">{{ recipe.owner.fullName }}</div>
@@ -29,7 +62,9 @@
             {{ recipe.description }}
           </div>
 
-          <RecipeIngredientTable :recipe-id="props.id" />
+          <RecipeIngredientTable ref="ingredient-table" :recipe-id="props.id"
+                                 :is-editing="isEditing"
+          />
 
           <v-card v-for="step in recipeSteps" :key="step.id" variant="outlined">
             <v-img
@@ -50,11 +85,75 @@
       </v-card>
     </div>
   </div>
+
+  <v-dialog v-model="dialogPropertiesOpen"
+            fullscreen
+            transition="dialog-bottom-transition"
+            persistent
+            close-on-back
+  >
+    <v-card>
+      <v-toolbar color="primary" density="compact">
+        <v-btn
+          icon="mdi-close"
+          @click="dialogPropertiesOpen = false"
+        />
+
+        <v-toolbar-title>Recipe Properties</v-toolbar-title>
+
+        <v-spacer></v-spacer>
+
+        <v-toolbar-items>
+          <v-btn
+            text="Save"
+            variant="text"
+            @click="dialogPropertiesOpen = false"
+          ></v-btn>
+        </v-toolbar-items>
+      </v-toolbar>
+
+      <div class="mx-2">
+        <div class="my-2">Properties let you change aspects about the recipe</div>
+
+        <div class="d-flex flex-row align-center">
+          <v-btn-toggle density="compact" variant="flat" color="primary">
+            <v-btn>
+              <v-icon icon="mdi-pot-steam-outline" />
+              Cooking
+            </v-btn>
+            <v-btn>
+              <v-icon icon="mdi-chef-hat" />
+              Baking
+            </v-btn>
+          </v-btn-toggle>
+
+          <div class="ml-2">Choose recipe type</div>
+        </div>
+      </div>
+    </v-card>
+  </v-dialog>
+
+  <v-dialog v-model="dialogSaveOpen" max-width="400">
+    <v-card title="Save?" text="Do you want to save the changes or discard them?">
+      <v-card-actions>
+        <v-btn variant="text" color="red"
+               @click="dialogSaveOpen = false; discardRecipeChanges()"
+        >
+          Discard
+        </v-btn>
+        <v-btn variant="tonal" color="primary"
+               @click="dialogSaveOpen = false; saveRecipeChangesToServer()"
+        >
+          Save
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script lang="ts" setup>
 import { IRecipe, IRecipeStep } from '@/shoppinglist/recipes/types';
-import { onMounted, ref, Ref } from 'vue';
+import { onMounted, ref, Ref, useTemplateRef, watchEffect } from 'vue';
 import feathersClient, { Service } from '@/feathers-client';
 import { Route } from '@/router';
 import { useToast } from 'vue-toastification';
@@ -68,12 +167,25 @@ const props = defineProps<{
   id: number,
 }>();
 
-// These ingredients are not displayed but also not altered (for portions)
+const loading = ref(true);
 const recipe: Ref<IRecipe | null> = ref(null);
 const recipeSteps: Ref<IRecipeStep[]> = ref([]);
+const isEditing = ref(false);
+const dialogPropertiesOpen = ref(false);
+const dialogSaveOpen = ref(false);
+const ingredientTable = useTemplateRef('ingredient-table');
+
+watchEffect(() => {
+  if (ingredientTable.value) {
+    console.log('watch', ingredientTable.value);
+  } else {
+    // not mounted yet, or the element was unmounted (e.g. by v-if)
+  }
+});
 
 onMounted(async () => {
   await fetchRecipe();
+  loading.value = false;
   console.log(recipeSteps.value);
 });
 
@@ -91,5 +203,34 @@ async function fetchRecipe() {
     console.log(e);
     console.error(`Failed to fetch recipe with id ${props.id}`);
   }
+}
+
+function exitEditMode() {
+  isEditing.value = false;
+  dialogSaveOpen.value = true;
+}
+
+async function discardRecipeChanges() {
+  loading.value = true;
+  ingredientTable.value?.discardEdit();
+  await fetchRecipe();
+  loading.value = false;
+}
+
+async function saveRecipeChangesToServer() {
+  console.log('saveRecipeChangesToServer');
+  if (!recipe.value) throw new Error('Recipe should not be null at this point: saveRecipeChangesToServer!');
+  loading.value = true;
+  console.log('loading...');
+  await feathersClient.service(Service.RECIPE).patch(recipe.value.id, {
+    title: recipe.value.title,
+    description: recipe.value.description,
+  });
+  await ingredientTable.value?.save();
+
+  console.log('aft upd...');
+  await fetchRecipe();
+  console.log('aft fetch...');
+  loading.value = false;
 }
 </script>

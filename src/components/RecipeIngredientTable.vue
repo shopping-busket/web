@@ -1,14 +1,15 @@
 <template>
   <div v-if="loading" class="d-flex w-100 flex-column my-8 align-center">
     <v-progress-circular indeterminate color="primary" class="mb-2" />
-    <div>Searching for the salt</div>
+    <div>Gatherig ingredients</div>
   </div>
 
   <transition name="bounce">
     <div v-if="!loading">
       <v-alert v-if="!addToListAvailable"
                density="compact" color="primary" variant="outlined"
-               class="my-2" icon="mdi-basket-off-outline">
+               class="my-2" icon="mdi-basket-off-outline"
+      >
         "Add to list" is not available when not logged in.
       </v-alert>
 
@@ -34,12 +35,60 @@
           <th class="text-left">
             Amount
           </th>
-          <th class="text-left" v-if="addToListAvailable">
-            Add to list
+          <th class="text-left" style="max-width: 5.5rem;" v-if="addToListAvailable">
+            <span v-if="props.isEditing">Proportional to portion size?</span>
+            <span v-else>Add to list</span>
+          </th>
+          <th v-if="props.isEditing" style="max-width: 2rem">
+            <v-icon icon="mdi-trash-can-outline" />
           </th>
         </tr>
         </thead>
-        <tbody>
+        <tbody v-if="isEditing">
+        <tr v-for="(ingredient, i) in ingredients.filter(ing => ing.flag !== CrudFlag.DELETE)"
+            :key="ingredient.id"
+        >
+          <td>
+            <v-text-field density="compact" label="Ingredient" variant="underlined" hide-details
+                          v-model="ingredient.name"
+            />
+          </td>
+          <td class="d-flex flex-row w-full align-center">
+            <div class="flex-grow-1">
+              <v-text-field type="number" density="compact" hide-details color="primary"
+                            variant="underlined" hide-spin-buttons label="Amount" reverse
+                            v-model="ingredient.amount"
+              />
+            </div>
+            <div style="width: 2rem" class="ml-1">
+              <v-text-field density="compact" label="Unit"
+                            variant="underlined" hide-details
+                            v-model="ingredient.unit"
+              />
+            </div>
+          </td>
+          <td>
+            <!-- TODO: IMPLEMENT -->
+            <v-checkbox hide-details density="compact" color="primary" />
+          </td>
+          <td style="max-width: 2rem">
+            <v-btn icon="mdi-trash-can-outline" variant="text" density="compact" color="red"
+                   @click="e_deleteIngredient(ingredient, i)"
+            />
+          </td>
+        </tr>
+
+        <tr>
+          <td colspan="4">
+            <v-btn block variant="tonal" color="primary" @click="e_addEmptyIngredient">
+              <v-icon icon="mdi-text-box-plus-outline" class="mr-2" />
+              Add Ingredient
+            </v-btn>
+          </td>
+        </tr>
+        </tbody>
+
+        <tbody v-else>
         <tr v-for="ingredient in ingredients" :key="ingredient.id">
           <td :title="ingredient.hint">
             <span :style="ingredient.hint ? 'border-bottom: 1px dotted #000;' : ''">
@@ -47,7 +96,8 @@
             </span>
           </td>
           <td>{{ ingredient.amount }} {{ ingredient.unit }}</td>
-          <td  v-if="addToListAvailable">
+
+          <td v-if="addToListAvailable">
             <v-menu>
               <template v-slot:activator="{ props }">
                 <v-btn
@@ -58,7 +108,7 @@
               </template>
               <v-list>
                 <v-list-item
-                  v-for="(library, index) in shoppingListLibary"
+                  v-for="(library, index) in shoppingListLibrary"
                   :key="index"
                   :value="index"
                   @click="addIngredientToList(ingredient, library.listId)"
@@ -78,19 +128,21 @@
 
 <script lang="ts" setup>
 import { onMounted, ref, Ref } from 'vue';
-import { IIngredient } from '@/shoppinglist/recipes/types';
+import { CrudFlag, IIngredient } from '@/shoppinglist/recipes/types';
 import feathersClient, { FeathersError, Service } from '@/feathers-client';
 import { comparatorSortAlphabetically } from '@/helpers/utils';
 import { EventType, LogEvent } from '@/shoppinglist/events';
 import { v4 as uuidv4 } from 'uuid';
 import { LibraryEntry } from '@/views/me/list/MyLists.vue';
 import { VNumberInput } from 'vuetify/labs/components';
+import _ from 'lodash';
 
 const props = defineProps<{
   recipeId: number,
+  isEditing: boolean,
 }>();
 
-const shoppingListLibary: Ref<LibraryEntry[]> = ref([]);
+const shoppingListLibrary: Ref<LibraryEntry[]> = ref([]);
 
 const baseIngredients: Ref<IIngredient[]> = ref([]);
 const ingredients: Ref<IIngredient[]> = ref([]);
@@ -133,11 +185,47 @@ function recalculatePortions() {
   console.log(portions, ingredients.value);
 }
 
+function discardEdit() {
+  ingredients.value = baseIngredients.value;
+}
+
+async function save() {
+  loading.value = true;
+
+  // calling "create" with an array does not work for some reason, so we iterate
+  await Promise.all(
+    ingredients.value
+      .filter(ing => ing.flag == CrudFlag.CREATE)
+      .map(ing => _.omit(ing, ['id', 'flag']))
+      .map(ing => feathersClient.service(Service.INGREDIENTS).create(ing))
+  );
+
+  await Promise.all(
+    ingredients.value
+      .filter(ing => ing.flag === undefined || (ing.flag !== CrudFlag.CREATE && ing.flag !== CrudFlag.DELETE))
+      .map(ing => _.omit(ing, ['flag']))
+      .map(ing => feathersClient.service(Service.INGREDIENTS).patch(ing.id, _.omit(ing, ['id'])))
+  );
+
+  await feathersClient.service(Service.INGREDIENTS).remove(null, {
+    query: {
+      id: {
+        $in: ingredients.value
+          .filter(ing => ing.flag == CrudFlag.DELETE)
+          .map(ing => ing.id)
+      }
+    }
+  });
+
+  await fetchIngredients();
+  loading.value = false;
+}
+
 //region shopping list library (add to basket)
 async function fetchShoppingListLibrary() {
   const library = (await feathersClient.service(Service.LIBRARY).find()) as LibraryEntry[];
   // TODO: FILTER OUT LISTS WHERE USER DOES NOT HAVE ADD ITEM PERMISSION
-  shoppingListLibary.value = library.sort((a, b) => comparatorSortAlphabetically(a.list.name, b.list.name));
+  shoppingListLibrary.value = library.sort((a, b) => comparatorSortAlphabetically(a.list.name, b.list.name));
 }
 
 async function addIngredientToList(ingredient: IIngredient, listId: string) {
@@ -154,8 +242,35 @@ async function addIngredientToList(ingredient: IIngredient, listId: string) {
     }
   }] as LogEvent[]);
 }
+//endregion
+
+//region editing
+function e_addEmptyIngredient() {
+  ingredients.value.push({
+    name: '',
+    amount: 0,
+    unit: '?',
+    id: random(Number.MAX_VALUE - 100_000, Number.MAX_VALUE),
+    recipeId: props.recipeId,
+    flag: CrudFlag.CREATE,
+  });
+}
+
+function e_deleteIngredient(ingredient: IIngredient, index: number) {
+  if (ingredient.flag == CrudFlag.CREATE) ingredients.value.splice(index, 1);
+  else ingredient.flag = CrudFlag.DELETE;
+}
+
+function random(min: number, max: number) {
+  return Math.floor(Math.random() * (max - min)) + min;
+}
 
 //endregion
+
+defineExpose({
+  save,
+  discardEdit,
+});
 </script>
 
 <style scoped>
