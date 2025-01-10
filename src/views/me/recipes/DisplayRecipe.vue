@@ -8,7 +8,7 @@
     </div>
   </v-dialog>
 
-  <div class="pt-4 w-100" style="max-width: 800px; margin: auto">
+  <div class="pt-4 w-100 mb-16" style="max-width: 800px; margin: auto">
     <div v-if="recipe" class="w-100">
       <v-alert v-if="isEditing"
                density="compact" color="primary" variant="outlined"
@@ -66,21 +66,15 @@
                                  :is-editing="isEditing"
           />
 
-          <v-card v-for="step in recipeSteps" :key="step.id" variant="outlined">
-            <v-img
-              color="surface-variant"
-              height="150"
-              src="https://cdn.vuetifyjs.com/docs/images/cards/purple-flowers.jpg"
-              cover
-            />
-
-            <v-card-title>
-              Step {{ step.stepNumber }}: {{ step.title }}
-            </v-card-title>
-
-            <v-card-text v-html="step.content" />
-          </v-card>
-
+          <RecipeStep v-for="(step, i) in recipeSteps" :key="step.id"
+                      v-model="recipeSteps[i]" @deleted="() => recipeSteps.splice(i, 1)"
+                      :number="i+1"
+                      class="mt-2"
+          />
+          <v-btn variant="tonal" block color="primary" class="mt-2" @click="recipeStepAdd()">
+            <v-icon icon="mdi-format-list-bulleted-type" />
+            Add Step
+          </v-btn>
         </v-card-text>
       </v-card>
     </div>
@@ -108,7 +102,7 @@
             text="Save"
             variant="text"
             @click="dialogPropertiesOpen = false"
-          ></v-btn>
+          />
         </v-toolbar-items>
       </v-toolbar>
 
@@ -159,6 +153,8 @@ import { Route } from '@/router';
 import { useToast } from 'vue-toastification';
 import { useRouter } from 'vue-router';
 import RecipeIngredientTable from '@/components/RecipeIngredientTable.vue';
+import RecipeStep from '@/components/RecipeStep.vue';
+import _ from 'lodash';
 
 const toast = useToast();
 const router = useRouter();
@@ -231,6 +227,17 @@ async function saveRecipeChangesToServer() {
   console.log('aft upd...');
   await fetchRecipe();
   console.log('aft fetch...');
+  loading.value = false;
+}
+
+async function recipeStepAdd() {
+  loading.value = true;
+  recipeSteps.value.push(await feathersClient.service(Service.RECIPE_STEPS).create({
+    title: 'Title',
+    content: '...',
+    recipeId: props.id,
+    stepNumber: (_.last(recipeSteps.value)?.stepNumber ?? 0) + 1,
+  } as Partial<IRecipeStep>));
   loading.value = false;
 }
 </script>
