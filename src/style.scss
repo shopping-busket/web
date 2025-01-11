@@ -6,3 +6,28 @@ a {
   color: #01916d !important;
 }
 
+.tiptap {
+  padding: 0.5rem;
+  border-radius: 3px;
+
+  &.ProseMirror-focused {
+    outline: solid rgb(var(--v-theme-primary)) 2px;
+  }
+
+  ul, ol {
+    margin-left: 1.5rem;
+  }
+
+  blockquote::before {
+    width: 20px;
+    height: 20px;
+    background: red;
+    color: red;
+    display: block;
+  }
+  blockquote {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    margin-left: 2rem;
+  }
+}

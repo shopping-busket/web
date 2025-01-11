@@ -19,6 +19,8 @@
                         variant="outlined" control-variant="stacked"
                         hide-details
                         density="compact"
+                        :step="1"
+                        persistent-counter
                         :max="99" :min="1"
                         v-model="portions"
                         @update:model-value="recalculatePortions"
@@ -176,13 +178,13 @@ async function fetchIngredients() {
 }
 
 function recalculatePortions() {
+  portions.value = Math.round(portions.value);
   ingredients.value = baseIngredients.value.map((ingredient) => {
     return {
       ...ingredient,
       amount: (ingredient.amount ?? 1) * (portions.value / BASE_PORTION_SIZE),
     };
   });
-  console.log(portions, ingredients.value);
 }
 
 function discardEdit() {
@@ -242,6 +244,7 @@ async function addIngredientToList(ingredient: IIngredient, listId: string) {
     }
   }] as LogEvent[]);
 }
+
 //endregion
 
 //region editing
@@ -257,8 +260,11 @@ function e_addEmptyIngredient() {
 }
 
 function e_deleteIngredient(ingredient: IIngredient, index: number) {
-  if (ingredient.flag == CrudFlag.CREATE) ingredients.value.splice(index, 1);
-  else ingredient.flag = CrudFlag.DELETE;
+  if (ingredient.flag == CrudFlag.CREATE) {
+    ingredients.value.splice(index, 1);
+  } else {
+    ingredient.flag = CrudFlag.DELETE;
+  }
 }
 
 function random(min: number, max: number) {

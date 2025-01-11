@@ -9,7 +9,7 @@
       expand-on-hover
     >
       <v-list-item
-        :prepend-avatar="auth != null ? auth.user.avatarURI : img"
+        :prepend-avatar="auth?.user.avatarURI ?? img"
         nav
       >
         <v-list-item-title>
@@ -36,7 +36,7 @@
           v-for="item in menuItems.filter((it: MenuItem) => !it.divide)"
           :key="item.title"
           link
-          @click.stop="item.to === undefined ? item!!.click() : tryRouteTo(item.to)"
+          @click.stop="item.to === undefined ? item.click?.call(null) : tryRouteTo(item.to)"
         >
           <template #prepend>
             <v-icon :icon="item.icon" />
@@ -121,7 +121,7 @@ import {
   VToolbarTitle,
 } from 'vuetify/components';
 
-import { LocationQueryRaw, useRoute, useRouter } from 'vue-router';
+import { RouteLocationAsRelativeGeneric, useRoute, useRouter } from 'vue-router';
 import feathersClient, { AuthObject } from '@/feathers-client';
 import { inject, onMounted, Ref, ref, watch } from 'vue';
 import { useToast } from 'vue-toastification';
@@ -148,7 +148,7 @@ interface BeforeInstallPromptEvent extends Event {
 interface MenuItem {
   title: string,
   icon: string,
-  to?: LocationQueryRaw,
+  to?:  RouteLocationAsRelativeGeneric,
   click?: () => void | Promise<void>,
   divide?: boolean,
 }
@@ -210,7 +210,7 @@ onMounted(() => {
   menuItems.push({
     title: 'Log in',
     icon: 'mdi-login-variant',
-    to: { name: 'login' },
+    to: { name: 'login', query: { redirect: route.path } },
     divide: true,
   });
 
@@ -256,7 +256,7 @@ async function logOut(): Promise<void> {
     });
 }
 
-function tryRouteTo(loc: LocationQueryRaw): Promise<void> | void {
+function tryRouteTo(loc: RouteLocationAsRelativeGeneric): Promise<void> | void {
   const matchedLoc = router.resolve(loc);
   if (route.name === matchedLoc.name || route.path === matchedLoc.path) return;
   router.push(loc);

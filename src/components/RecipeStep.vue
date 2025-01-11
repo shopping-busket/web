@@ -20,19 +20,23 @@
           Step {{ props.number }}: {{ model.title }}
         </div>
 
-        <v-btn icon="mdi-pencil" variant="text" density="compact"
-               @click="toggleEditModeAndSave()"
-        />
-        <v-btn icon="mdi-trash-can-outline" variant="text" density="compact" class="ml-2"
-               @click="deleteStep()"
-        />
+        <template v-if="props.editable">
+          <v-btn icon="mdi-pencil" variant="text" density="compact"
+                 @click="toggleEditModeAndSave()"
+          />
+          <v-btn icon="mdi-trash-can-outline" variant="text" density="compact" class="ml-2"
+                 @click="deleteStep()"
+          />
+        </template>
       </div>
     </v-card-title>
 
     <v-card-text v-if="model.frontend?.isEditing">
-      <RichTextEditor v-model="content"/>
+      <RichTextEditor v-model="model.content" />
     </v-card-text>
-    <v-card-text v-else v-html="model.content" />
+    <v-card-text v-else class="tiptap ml-2" style="margin-top: -0.5rem">
+      <div v-html="model.content" />
+    </v-card-text>
   </v-card>
 </template>
 
@@ -46,6 +50,7 @@ const model = defineModel<IRecipeStep>({ required: true });
 const emit = defineEmits(['deleted']);
 const props = defineProps<{
   number: number;
+  editable: boolean;
 }>();
 
 async function toggleEditModeAndSave() {

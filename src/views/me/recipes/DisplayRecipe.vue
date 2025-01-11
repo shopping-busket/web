@@ -18,8 +18,8 @@
           <div>
             You are editing this recipe!
           </div>
-          <v-btn variant="text" color="primary" @click="exitEditMode" density="compact">Exit
-            Edit Mode
+          <v-btn variant="text" color="primary" @click="exitEditMode" density="compact">
+            Exit Edit Mode
           </v-btn>
         </div>
       </v-alert>
@@ -42,6 +42,7 @@
         <v-card-title class="d-flex flex-row justify-space-between align-center">
           <div class="d-flex align-center w-100">
             <v-btn icon="mdi-pencil" variant="text" density="compact"
+                   v-if="editable"
                    @click="isEditing ? exitEditMode() : isEditing = true"
             />
             <div v-if="!isEditing">{{ recipe.title }}</div>
@@ -68,10 +69,13 @@
 
           <RecipeStep v-for="(step, i) in recipeSteps" :key="step.id"
                       v-model="recipeSteps[i]" @deleted="() => recipeSteps.splice(i, 1)"
+                      :editable="editable"
                       :number="i+1"
                       class="mt-2"
           />
-          <v-btn variant="tonal" block color="primary" class="mt-2" @click="recipeStepAdd()">
+          <v-btn v-if="editable" @click="recipeStepAdd()"
+                 variant="tonal" block color="primary" class="mt-2"
+          >
             <v-icon icon="mdi-format-list-bulleted-type" />
             Add Step
           </v-btn>
@@ -147,7 +151,7 @@
 
 <script lang="ts" setup>
 import { IRecipe, IRecipeStep } from '@/shoppinglist/recipes/types';
-import { onMounted, ref, Ref, useTemplateRef, watchEffect } from 'vue';
+import { inject, onMounted, ref, Ref, useTemplateRef } from 'vue';
 import feathersClient, { Service } from '@/feathers-client';
 import { Route } from '@/router';
 import { useToast } from 'vue-toastification';
@@ -155,6 +159,7 @@ import { useRouter } from 'vue-router';
 import RecipeIngredientTable from '@/components/RecipeIngredientTable.vue';
 import RecipeStep from '@/components/RecipeStep.vue';
 import _ from 'lodash';
+import { userInjection } from '@/helpers/injectionKeys';
 
 const toast = useToast();
 const router = useRouter();
@@ -170,18 +175,16 @@ const isEditing = ref(false);
 const dialogPropertiesOpen = ref(false);
 const dialogSaveOpen = ref(false);
 const ingredientTable = useTemplateRef('ingredient-table');
-
-watchEffect(() => {
-  if (ingredientTable.value) {
-    console.log('watch', ingredientTable.value);
-  } else {
-    // not mounted yet, or the element was unmounted (e.g. by v-if)
-  }
-});
+const user = inject(userInjection);
+const editable = ref(false);
 
 onMounted(async () => {
   await fetchRecipe();
   loading.value = false;
+  if (recipe.value?.owner.uuid == user?.uuid) {
+    console.log('recipe owner is authed user');
+    editable.value = true;
+  }
   console.log(recipeSteps.value);
 });
 
