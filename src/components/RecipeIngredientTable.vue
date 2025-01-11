@@ -1,7 +1,7 @@
 <template>
   <div v-if="loading" class="d-flex w-100 flex-column my-8 align-center">
     <v-progress-circular indeterminate color="primary" class="mb-2" />
-    <div>Gatherig ingredients</div>
+    <div>Gathering ingredients</div>
   </div>
 
   <transition name="bounce">
@@ -37,9 +37,8 @@
           <th class="text-left">
             Amount
           </th>
-          <th class="text-left" style="max-width: 5.5rem;" v-if="addToListAvailable">
-            <span v-if="props.isEditing">Proportional to portion size?</span>
-            <span v-else>Add to list</span>
+          <th class="text-left" style="max-width: 5.5rem;" v-if="addToListAvailable && !props.isEditing">
+            <span>Add to list</span>
           </th>
           <th v-if="props.isEditing" style="max-width: 2rem">
             <v-icon icon="mdi-trash-can-outline" />
@@ -68,10 +67,6 @@
                             v-model="ingredient.unit"
               />
             </div>
-          </td>
-          <td>
-            <!-- TODO: IMPLEMENT -->
-            <v-checkbox hide-details density="compact" color="primary" />
           </td>
           <td style="max-width: 2rem">
             <v-btn icon="mdi-trash-can-outline" variant="text" density="compact" color="red"
@@ -206,7 +201,11 @@ async function save() {
     ingredients.value
       .filter(ing => ing.flag === undefined || (ing.flag !== CrudFlag.CREATE && ing.flag !== CrudFlag.DELETE))
       .map(ing => _.omit(ing, ['flag']))
-      .map(ing => feathersClient.service(Service.INGREDIENTS).patch(ing.id, _.omit(ing, ['id'])))
+      .map(ing => feathersClient.service(Service.INGREDIENTS).patch(
+          ing.id,
+          _(ing).omitBy(_.isNull).omit(ing, ['id', 'recipeId']).value()
+        )
+      )
   );
 
   await feathersClient.service(Service.INGREDIENTS).remove(null, {

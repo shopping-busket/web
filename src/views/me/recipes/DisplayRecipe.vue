@@ -10,19 +10,25 @@
 
   <div class="pt-4 w-100 mb-16" style="max-width: 800px; margin: auto">
     <div v-if="recipe" class="w-100">
-      <v-alert v-if="isEditing"
-               density="compact" color="primary" variant="outlined"
-               class="my-2" icon="mdi-text-box-edit-outline"
-      >
-        <div class="d-flex flex-row justify-space-between align-center">
-          <div>
-            You are editing this recipe!
+      <transition>
+        <v-alert v-if="isEditing"
+                 density="compact" color="primary" variant="outlined"
+                 class="my-2" icon="mdi-text-box-edit-outline"
+        >
+          <div class="d-flex flex-row align-center">
+            <div>
+              You are editing this recipe!
+            </div>
+            <v-spacer/>
+            <v-btn variant="text" color="primary" @click="exitEditMode" density="compact">
+              Exit Edit Mode
+            </v-btn>
+            <v-btn variant="flat" color="primary" @click="exitEditMode" density="compact">
+              Save
+            </v-btn>
           </div>
-          <v-btn variant="text" color="primary" @click="exitEditMode" density="compact">
-            Exit Edit Mode
-          </v-btn>
-        </div>
-      </v-alert>
+        </v-alert>
+      </transition>
 
       <v-btn v-if="isEditing" block class="mb-2" variant="tonal"
              @click="dialogPropertiesOpen = true"
@@ -73,12 +79,14 @@
                       :number="i+1"
                       class="mt-2"
           />
-          <v-btn v-if="editable" @click="recipeStepAdd()"
-                 variant="tonal" block color="primary" class="mt-2"
-          >
-            <v-icon icon="mdi-format-list-bulleted-type" />
-            Add Step
-          </v-btn>
+          <transition appear>
+            <v-btn v-if="editable" @click="recipeStepAdd()"
+                   variant="tonal" block color="primary" class="mt-2"
+            >
+              <v-icon icon="mdi-format-list-bulleted-type" />
+              Add Step
+            </v-btn>
+          </transition>
         </v-card-text>
       </v-card>
     </div>
@@ -131,7 +139,7 @@
     </v-card>
   </v-dialog>
 
-  <v-dialog v-model="dialogSaveOpen" max-width="400">
+  <v-dialog v-model="dialogSaveOpen" max-width="400" persistant>
     <v-card title="Save?" text="Do you want to save the changes or discard them?">
       <v-card-actions>
         <v-btn variant="text" color="red"
@@ -176,7 +184,7 @@ const dialogPropertiesOpen = ref(false);
 const dialogSaveOpen = ref(false);
 const ingredientTable = useTemplateRef('ingredient-table');
 const user = inject(userInjection);
-const editable = ref(false);
+const editable = ref(true);
 
 onMounted(async () => {
   await fetchRecipe();
@@ -217,19 +225,15 @@ async function discardRecipeChanges() {
 }
 
 async function saveRecipeChangesToServer() {
-  console.log('saveRecipeChangesToServer');
   if (!recipe.value) throw new Error('Recipe should not be null at this point: saveRecipeChangesToServer!');
   loading.value = true;
-  console.log('loading...');
   await feathersClient.service(Service.RECIPE).patch(recipe.value.id, {
     title: recipe.value.title,
     description: recipe.value.description,
   });
   await ingredientTable.value?.save();
 
-  console.log('aft upd...');
   await fetchRecipe();
-  console.log('aft fetch...');
   loading.value = false;
 }
 
@@ -244,3 +248,18 @@ async function recipeStepAdd() {
   loading.value = false;
 }
 </script>
+
+<style scoped>
+.v-enter-active,
+.v-leave-active {
+  transition: all 0.3s ease;
+}
+
+.v-enter-from {
+  transform: translateY(-100px);
+}
+
+.v-leave-to {
+  opacity: 0;
+}
+</style>
