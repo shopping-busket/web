@@ -11,23 +11,29 @@
   <div class="pt-4 w-100 mb-16" style="max-width: 800px; margin: auto">
     <div v-if="recipe" class="w-100">
       <transition>
-        <v-alert v-if="isEditing"
-                 density="compact" color="primary" variant="outlined"
-                 class="my-2" icon="mdi-text-box-edit-outline"
-        >
-          <div class="d-flex flex-row align-center">
-            <div>
-              You are editing this recipe!
-            </div>
-            <v-spacer/>
-            <v-btn variant="text" color="primary" @click="exitEditMode" density="compact">
-              Exit Edit Mode
-            </v-btn>
-            <v-btn variant="flat" color="primary" @click="exitEditMode" density="compact">
-              Save
-            </v-btn>
-          </div>
-        </v-alert>
+        <div v-if="isEditing" class="my-2">
+          <v-alert
+            class="mb-2"
+            density="compact" color="primary" variant="outlined"
+            icon="mdi-text-box-edit-outline"
+            text="You are editing this recipe!"
+          />
+
+          <v-btn variant="text" color="primary" @click="exitEditMode" class="mb-2" block>
+            Exit Edit Mode
+          </v-btn>
+          <v-btn variant="flat" color="primary" @click="exitEditMode" block>
+            Save
+          </v-btn>
+        </div>
+      </transition>
+
+      <transition appear>
+        <v-btn v-if="!isEditing"
+               @click="isEditing = true"
+               block color="primary" variant="outlined" text="Edit"
+               class="mb-2"
+        />
       </transition>
 
       <v-btn v-if="isEditing" block class="mb-2" variant="tonal"
@@ -47,10 +53,6 @@
 
         <v-card-title class="d-flex flex-row justify-space-between align-center">
           <div class="d-flex align-center w-100">
-            <v-btn icon="mdi-pencil" variant="text" density="compact"
-                   v-if="editable"
-                   @click="isEditing ? exitEditMode() : isEditing = true"
-            />
             <div v-if="!isEditing">{{ recipe.title }}</div>
             <div v-else class="w-100">
               <v-text-field class="w-100" hide-details density="compact" color="primary"
@@ -184,7 +186,7 @@ const dialogPropertiesOpen = ref(false);
 const dialogSaveOpen = ref(false);
 const ingredientTable = useTemplateRef('ingredient-table');
 const user = inject(userInjection);
-const editable = ref(true);
+const editable = ref(false);
 
 onMounted(async () => {
   await fetchRecipe();

@@ -10,7 +10,7 @@
                density="compact" color="primary" variant="outlined"
                class="my-2" icon="mdi-basket-off-outline"
       >
-        "Add to list" is not available when not logged in.
+        "Add to list" is not available when logged out.
       </v-alert>
 
       <div class="d-flex flex-row align-center">
@@ -58,7 +58,7 @@
             <div class="flex-grow-1">
               <v-text-field type="number" density="compact" hide-details color="primary"
                             variant="underlined" hide-spin-buttons label="Amount" reverse
-                            v-model="ingredient.amount"
+                            v-model.number="ingredient.amount"
               />
             </div>
             <div style="width: 2rem" class="ml-1">
