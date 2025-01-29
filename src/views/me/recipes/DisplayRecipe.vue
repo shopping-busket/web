@@ -50,6 +50,7 @@
         >
           <v-img
             color="surface-variant"
+            height="400px"
             v-if="(headerImageBase64 ?? recipe.headerImagePath)"
             :src="headerImageBase64 ?? `${config.getBackendURL()}${recipe.headerImagePath}`"
             cover
