@@ -14,17 +14,20 @@
                      :prepend-avatar="recipe.owner.avatarURI ?? defaultUserImg"
         >
           <template #append>
-            <!--          <v-icon-->
-            <!--            color="red"-->
-            <!--            :icon="recipe.owner === user?.uuid ? 'mdi-trash-can-outline' : 'mdi-exit-run'"-->
-            <!--            @click.stop="removeListDialog = true; removeList = recipe"-->
-            <!--          />-->
+            <v-icon
+              v-if="recipe.owner.uuid === user?.uuid"
+              color="red"
+              icon="mdi-trash-can-outline"
+              @click.stop="removeRecipeDialog = {show: true, id: recipe.id}"
+            />
           </template>
           <template #subtitle>
-            <div>by {{ recipe.owner.fullName }}</div>
-            <div v-if="recipe.description">
-              <div class="mx-2">•</div>
-              <div>{{ recipe.description }}</div>
+            <div class="d-flex">
+              <div v-if="recipe.description">
+                <span>{{ recipe.description }}</span>
+                <span class="mx-1">•</span>
+              </div>
+              <div>by {{ recipe.owner.fullName }}</div>
             </div>
           </template>
         </v-list-item>
@@ -123,29 +126,28 @@
     </div>
   </v-dialog>
 
-
-  <!--<v-dialog v-model="removeListDialog" max-width="500px">
+  <v-dialog v-model="removeRecipeDialog.show" max-width="500px">
     <v-card
-      :title="`Are you sure that you want to ${removeList?.owner === user?.uuid ? 'delete' : 'leave'} this list?`"
-      :subtitle="removeList?.owner === user?.uuid ? 'You won\'t be able to get it back' : 'You will not be able to access it until you get another invite'"
+      :title="`Are you sure that you want to delete this recipe?`"
+      subtitle="You won't be able to get it back"
     >
       <v-card-actions>
         <v-spacer />
-        <v-btn variant="text" color="primary" @click="removeListDialog = false">
+        <v-btn variant="text" color="primary" @click="removeRecipeDialog = {show: false, id: null}">
           Cancel
         </v-btn>
 
         <v-btn
-          v-if="removeList"
+          v-if="removeRecipeDialog.id"
           color="primary"
           variant="outlined"
-          @click="removeList?.owner === user?.uuid ? deleteList(removeList.listid) : leaveFromList(removeList.listid); removeListDialog = false"
+          @click="deleteRecipe(removeRecipeDialog.id); removeRecipeDialog = {show: false, id: null}"
         >
           Yes, I am sure
         </v-btn>
       </v-card-actions>
     </v-card>
-  </v-dialog>-->
+  </v-dialog>
 </template>
 
 <script lang="ts" setup>
@@ -175,6 +177,13 @@ import { userInjection } from '@/helpers/injectionKeys';
 const router = useRouter();
 const toast = useToast();
 const user = inject(userInjection);
+const removeRecipeDialog: Ref<{
+  show: boolean;
+  id: number | null;
+}> = ref({
+  show: false,
+  id: null,
+});
 
 const rulesRecipeTitle = [
   (val: string) => val.length >= 1 || 'Name has to have at least 1 character!',
@@ -228,6 +237,13 @@ async function createRecipe() {
   } as IRecipe) as IRecipe;
 
   await openRecipe(recipe);
+  loading.value = false;
+}
+
+async function deleteRecipe(id: number) {
+  loading.value = true;
+  await feathersClient.service(Service.RECIPE).remove(id);
+  await fetchRecipes();
   loading.value = false;
 }
 </script>
