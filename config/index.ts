@@ -6,6 +6,7 @@ export interface GlobalConfig {
   stableURI: string,
   supportFocus: boolean,
   httpProtocol: string,
+  getBackendURL: () => URL,
 }
 
 export interface LocalConfig {
@@ -24,5 +25,8 @@ export default {
   supportFocus: false,
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  httpProtocol: this?.ssl ? 'https' : 'http'
+  httpProtocol: this?.ssl ? 'https' : 'http',
+  getBackendURL: () => {
+    return new URL(`${localConfig.ssl ? 'https' : 'http'}://${localConfig.backend}/`);
+  }
 } as Config;

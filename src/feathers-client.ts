@@ -17,18 +17,10 @@ export enum Service {
   RECIPE = 'recipe',
   RECIPE_STEPS = 'recipe-steps',
   INGREDIENTS = 'ingredients',
+  FILE_UPLOAD = 'file-upload',
 }
 
-type ServiceTypes = Record<Service, FeathersService> & {
-  event: FeathersService,
-  list: FeathersService,
-  library: FeathersService,
-  users: FeathersService,
-  'whitelisted-users': FeathersService,
-  recipe: FeathersService,
-  'recipe-steps': FeathersService,
-  ingredients: FeathersService,
-}
+type ServiceTypes = Record<Service, FeathersService> & Record<string, FeathersService>
 
 const feathersClient = feathers<ServiceTypes>();
 

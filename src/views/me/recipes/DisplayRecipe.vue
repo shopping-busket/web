@@ -29,7 +29,7 @@
       </transition>
 
       <transition appear>
-        <v-btn v-if="!isEditing"
+        <v-btn v-if="editable && !isEditing"
                @click="isEditing = true"
                block color="primary" variant="outlined" text="Edit"
                class="mb-2"
@@ -44,12 +44,24 @@
       </v-btn>
 
       <v-card variant="flat" class="border">
-        <v-img
-          color="surface-variant"
-          height="200"
-          src="https://cdn.vuetifyjs.com/docs/images/cards/purple-flowers.jpg"
-          cover
-        />
+        <div
+          v-if="recipe.headerImagePath || isEditing"
+          style="height: 400px;" class="w-100 position-relative" @click="chooseHeaderImage"
+        >
+          <v-img
+            color="surface-variant"
+            v-if="(headerImageBase64 ?? recipe.headerImagePath)"
+            :src="headerImageBase64 ?? `${config.getBackendURL()}${recipe.headerImagePath}`"
+            cover
+          />
+
+          <transition appear name="fade">
+            <div v-if="isEditing" class="img-overlay d-flex flex-column">
+              <div style="text-shadow: 0 0 5px black">Click to upload</div>
+              <v-btn color="red" @click.stop="deleteHeaderImage">Remove Image</v-btn>
+            </div>
+          </transition>
+        </div>
 
         <v-card-title class="d-flex flex-row justify-space-between align-center">
           <div class="d-flex align-center w-100">
@@ -170,6 +182,7 @@ import RecipeIngredientTable from '@/components/RecipeIngredientTable.vue';
 import RecipeStep from '@/components/RecipeStep.vue';
 import _ from 'lodash';
 import { userInjection } from '@/helpers/injectionKeys';
+import config from '../../../../config';
 
 const toast = useToast();
 const router = useRouter();
@@ -187,6 +200,8 @@ const dialogSaveOpen = ref(false);
 const ingredientTable = useTemplateRef('ingredient-table');
 const user = inject(userInjection);
 const editable = ref(false);
+const headerImageFile: Ref<File | null> = ref(null);
+const headerImageBase64: Ref<string | null> = ref(null);
 
 onMounted(async () => {
   await fetchRecipe();
@@ -235,6 +250,8 @@ async function saveRecipeChangesToServer() {
   });
   await ingredientTable.value?.save();
 
+  await saveHeaderImage();
+
   await fetchRecipe();
   loading.value = false;
 }
@@ -249,9 +266,89 @@ async function recipeStepAdd() {
   } as Partial<IRecipeStep>));
   loading.value = false;
 }
+
+async function toBase64(file: Blob): Promise<string | null> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string | null);
+    reader.onerror = error => reject(error);
+  });
+}
+
+async function chooseHeaderImage() {
+  if (!isEditing.value) return;
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/jpeg';
+  input.click();
+
+  input.onchange = async () => {
+    if ((input.files ?? []).length <= 0) return;
+    headerImageFile.value = input.files?.item(0) ?? null;
+    if (headerImageFile.value) {
+      headerImageBase64.value = await toBase64(headerImageFile.value);
+    }
+  };
+}
+
+async function saveHeaderImage() {
+  if (headerImageFile.value == null) return;
+  const formData = new FormData();
+  formData.append('file', headerImageFile.value);
+  formData.append('category', 'recipe-header');
+  formData.append('alt', 'Test Alt');
+  formData.append('note', 'Test Note');
+  formData.append('recipeId', props.id.toString());
+
+  await fetch(`${config.httpProtocol}://${config.backend}/file-upload`, {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'Authorization': `Bearer ${await feathersClient.authentication.getAccessToken()}`,
+    }
+  });
+
+  headerImageFile.value = null;
+  // We don't clear headerImageBase64 here, because the server takes some time to create the file
+  // and serve it.
+  // Before the server serves the new file, the old, cached one is returned.
+  // We fake instantly updating the image by using the base64 version
+}
+
+async function deleteHeaderImage() {
+  try {
+    await feathersClient.service('file-upload').remove(props.id, {
+      query: {
+        category: 'recipe-header',
+      }
+    });
+  } catch (e) {
+    console.warn(e);
+    console.warn('Attempted to delete a header, which is not on the server!');
+  }
+
+  if (!recipe.value) return;
+  recipe.value.headerImagePath = null;
+  recipe.value.headerImageNote = null;
+  recipe.value.headerImageAlt = null;
+
+  headerImageFile.value = null;
+  headerImageBase64.value = null;
+}
 </script>
 
 <style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 700ms ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
 .v-enter-active,
 .v-leave-active {
   transition: all 0.3s ease;
@@ -263,5 +360,22 @@ async function recipeStepAdd() {
 
 .v-leave-to {
   opacity: 0;
+}
+
+.img-overlay {
+  cursor: pointer;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(var(--v-theme-primary), 20%);
+  border: rgb(var(--v-theme-primary)) 5px dashed;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2rem;
+  color: white;
+  font-weight: bold;
 }
 </style>
