@@ -1,36 +1,41 @@
 <template>
   <div class="ma-auto pt-4" style="max-width: 70rem">
-    <v-card
-      v-for="recipe in recipes as IRecipe[]"
-      :key="recipe.id"
-      :ripple="true"
-      class="mb-2 v-ripple pb-1 pt-1"
-      hover
-      variant="outlined"
-      @click="openRecipe(recipe)"
-    >
-      <v-list-item :title="recipe.title" class="pb-2" :prepend-avatar="recipe.owner.avatarURI ?? defaultUserImg">
-        <template #append>
-          <!--          <v-icon-->
-          <!--            color="red"-->
-          <!--            :icon="recipe.owner === user?.uuid ? 'mdi-trash-can-outline' : 'mdi-exit-run'"-->
-          <!--            @click.stop="removeListDialog = true; removeList = recipe"-->
-          <!--          />-->
-        </template>
-        <template #subtitle>
-          <div>by {{ recipe.owner.fullName }}</div>
-          <div v-if="recipe.description">
-            <div class="mx-2">•</div>
-            <div>{{ recipe.description }}</div>
-          </div>
-        </template>
-      </v-list-item>
-    </v-card>
+    <transition-group>
+      <v-card
+        v-for="recipe in recipes as IRecipe[]"
+        :key="recipe.id"
+        :ripple="true"
+        class="mb-2 v-ripple pb-1 pt-1"
+        hover
+        variant="outlined"
+        @click="openRecipe(recipe)"
+      >
+        <v-list-item :title="recipe.title" class="pb-2"
+                     :prepend-avatar="recipe.owner.avatarURI ?? defaultUserImg"
+        >
+          <template #append>
+            <!--          <v-icon-->
+            <!--            color="red"-->
+            <!--            :icon="recipe.owner === user?.uuid ? 'mdi-trash-can-outline' : 'mdi-exit-run'"-->
+            <!--            @click.stop="removeListDialog = true; removeList = recipe"-->
+            <!--          />-->
+          </template>
+          <template #subtitle>
+            <div>by {{ recipe.owner.fullName }}</div>
+            <div v-if="recipe.description">
+              <div class="mx-2">•</div>
+              <div>{{ recipe.description }}</div>
+            </div>
+          </template>
+        </v-list-item>
+      </v-card>
+    </transition-group>
     <v-card
       :ripple="true"
       class="d-flex justify-center flex-column align-center new-recipe-card"
       hover
       variant="outlined"
+      v-if="feathersClient.io.connected && user"
       @click="feathersClient.io.connected ? showNewListDialog() : toast('You are offline!')"
     >
       <div class="new-recipe-title">
@@ -38,6 +43,11 @@
       </div>
       <v-icon icon="mdi-plus-circle-outline" />
     </v-card>
+    <transition appear>
+      <v-alert variant="tonal" color="primary" icon="mdi-information-outline" v-if="!user">
+        Log in to create recipes
+      </v-alert>
+    </transition>
 
     <v-dialog v-model="dialogNewRecipe" max-width="550px">
       <v-card>
@@ -104,6 +114,16 @@
     </v-dialog>
   </div>
 
+  <v-dialog v-model="loading" class="w-100 h-100" fullscreen persistent>
+    <div class="d-flex align-center justify-center w-screen h-screen">
+      <v-sheet rounded class="d-flex flex-column align-center justify-center pa-2">
+        <v-progress-circular indeterminate color="primary" />
+        <div class="text-sm-subtitle-1 text-disabled mt-1">Loading</div>
+      </v-sheet>
+    </div>
+  </v-dialog>
+
+
   <!--<v-dialog v-model="removeListDialog" max-width="500px">
     <v-card
       :title="`Are you sure that you want to ${removeList?.owner === user?.uuid ? 'delete' : 'leave'} this list?`"
@@ -144,15 +164,17 @@ import {
   VTextarea,
   VTextField
 } from 'vuetify/components';
-import { nextTick, onMounted, Ref, ref } from 'vue';
+import { inject, nextTick, onMounted, Ref, ref } from 'vue';
 import { IRecipe } from '@/shoppinglist/recipes/types';
 import { useRouter } from 'vue-router';
 import { Route } from '@/router';
 import { useToast } from 'vue-toastification';
 import defaultUserImg from '@/assets/avatar-placeholder.png';
+import { userInjection } from '@/helpers/injectionKeys';
 
 const router = useRouter();
 const toast = useToast();
+const user = inject(userInjection);
 
 const rulesRecipeTitle = [
   (val: string) => val.length >= 1 || 'Name has to have at least 1 character!',
@@ -166,9 +188,11 @@ const dialogNewRecipeData = ref({
 const dialogNewRecipeForm: Ref<VForm | null> = ref(null);
 const dialogNewRecipeFormValid = ref(false);
 const recipes = ref([]);
+const loading = ref(true);
 
 onMounted(async () => {
   await fetchRecipes();
+  loading.value = false;
 });
 
 async function fetchRecipes() {
@@ -194,8 +218,17 @@ async function showNewListDialog() {
 }
 
 async function createRecipe() {
-  // TODO
-  toast('TODO');
+  await dialogNewRecipeForm.value?.validate();
+  if (!dialogNewRecipeFormValid.value) return;
+  loading.value = true;
+
+  const recipe = await feathersClient.service(Service.RECIPE).create({
+    title: dialogNewRecipeData.value.title,
+    description: dialogNewRecipeData.value.description,
+  } as IRecipe) as IRecipe;
+
+  await openRecipe(recipe);
+  loading.value = false;
 }
 </script>
 
@@ -215,5 +248,19 @@ async function createRecipe() {
 
 .icon-height {
   height: 24px;
+}
+
+.v-enter-active,
+.v-leave-active {
+  transition: all 0.3s ease;
+}
+
+.v-enter-from {
+  opacity: 0;
+  transform: translateY(-100px);
+}
+
+.v-leave-to {
+  opacity: 0;
 }
 </style>
