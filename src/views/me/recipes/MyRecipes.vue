@@ -82,9 +82,9 @@
             <v-textarea
               v-model="dialogNewRecipeData.description"
               color="primary"
-              counter
               height="80px"
               label="Description"
+              :counter="255"
               no-resize
               variant="outlined"
             />

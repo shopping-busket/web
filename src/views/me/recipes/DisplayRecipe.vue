@@ -46,15 +46,19 @@
       <v-card variant="flat" class="border">
         <div
           v-if="recipe.headerImagePath || isEditing"
-          style="height: 400px;" class="w-100 position-relative" @click="chooseHeaderImage"
+          :style="{height: `${headerImageHeight}px`}" class="w-100 position-relative"
+          @click="chooseHeaderImage"
         >
-          <v-img
-            color="surface-variant"
-            height="400px"
-            v-if="(headerImageBase64 ?? recipe.headerImagePath)"
-            :src="headerImageBase64 ?? `${config.getBackendURL()}${recipe.headerImagePath}`"
-            cover
-          />
+          <transition appear name="fade">
+            <v-img
+              :lazy-src="img"
+              color="surface-variant"
+              :height="headerImageHeight"
+              v-if="(headerImageBase64 ?? recipe.headerImagePath)"
+              :src="headerImageBase64 ?? `${config.getBackendURL()}${recipe.headerImagePath}`"
+              cover
+            />
+          </transition>
 
           <transition appear name="fade">
             <div v-if="isEditing" class="img-overlay d-flex flex-column">
@@ -67,9 +71,11 @@
         <v-card-title class="d-flex flex-row justify-space-between align-center">
           <div class="d-flex align-center w-100">
             <div v-if="!isEditing">{{ recipe.title }}</div>
-            <div v-else class="w-100">
-              <v-text-field class="w-100" hide-details density="compact" color="primary"
+            <div v-else class="w-100 mr-4">
+              <v-text-field class="w-100" density="compact" color="primary"
                             variant="underlined" label="Title" v-model="recipe.title"
+                            @update:model-value="recipe.title = truncate(recipe.title, {length: 32, omission: '…'})"
+                            :counter="32"
               />
             </div>
           </div>
@@ -80,7 +86,21 @@
         </v-card-title>
 
         <v-card-text>
-          <div class="mb-2">
+          <v-textarea
+            v-if="isEditing"
+            v-model="recipe.description"
+            color="primary"
+            height="80px"
+            label="Description"
+            :counter="255"
+            @update:model-value="recipe.description = truncate(recipe.description,
+            {length: 255, omission: '…'}
+            )"
+            no-resize
+            variant="outlined"
+            class="mb-2"
+          />
+          <div v-else class="mb-2">
             {{ recipe.description }}
           </div>
 
@@ -174,16 +194,18 @@
 
 <script lang="ts" setup>
 import { IRecipe, IRecipeStep } from '@/shoppinglist/recipes/types';
-import { inject, onMounted, ref, Ref, useTemplateRef } from 'vue';
+import { inject, onMounted, onUnmounted, ref, Ref, useTemplateRef } from 'vue';
 import feathersClient, { Service } from '@/feathers-client';
 import { Route } from '@/router';
 import { useToast } from 'vue-toastification';
 import { useRouter } from 'vue-router';
 import RecipeIngredientTable from '@/components/RecipeIngredientTable.vue';
 import RecipeStep from '@/components/RecipeStep.vue';
-import _ from 'lodash';
+import _, { clamp, truncate } from 'lodash';
 import { userInjection } from '@/helpers/injectionKeys';
 import config from '../../../../config';
+import img from '@/assets/recipe-header-placeholder.jpg';
+import { VTextarea } from 'vuetify/components';
 
 const toast = useToast();
 const router = useRouter();
@@ -203,6 +225,7 @@ const user = inject(userInjection);
 const editable = ref(false);
 const headerImageFile: Ref<File | null> = ref(null);
 const headerImageBase64: Ref<string | null> = ref(null);
+const headerImageHeight = ref(300);
 
 onMounted(async () => {
   await fetchRecipe();
@@ -212,6 +235,17 @@ onMounted(async () => {
     editable.value = true;
   }
   console.log(recipeSteps.value);
+
+  resizeObserver.observe(document.body);
+});
+
+onUnmounted(() => {
+  resizeObserver.disconnect();
+});
+
+const resizeObserver = new ResizeObserver(() => {
+  headerImageHeight.value = clamp((window.innerWidth / 800) * 300, 150, 300);
+  console.log(headerImageHeight.value);
 });
 
 async function fetchRecipe() {
