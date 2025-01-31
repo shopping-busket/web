@@ -1,12 +1,5 @@
 <template>
   <v-card :variant="model.frontend?.isEditing ? 'elevated' : 'outlined'">
-    <v-img
-      color="surface-variant"
-      height="150"
-      src="https://cdn.vuetifyjs.com/docs/images/cards/purple-flowers.jpg"
-      cover
-    />
-
     <v-card-title class="w-100">
       <div class="d-flex flex-row w-100">
         <v-text-field
