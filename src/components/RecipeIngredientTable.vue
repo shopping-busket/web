@@ -23,6 +23,7 @@
                         persistent-counter
                         :max="99" :min="1"
                         v-model="portions"
+                        :disabled="isEditing"
                         @update:model-value="recalculatePortions"
         />
         portions
@@ -124,7 +125,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, Ref } from 'vue';
+import { onMounted, ref, Ref, watch } from 'vue';
 import { CrudFlag, IIngredient } from '@/shoppinglist/recipes/types';
 import feathersClient, { FeathersError, Service } from '@/feathers-client';
 import { comparatorSortAlphabetically } from '@/helpers/utils';
@@ -161,6 +162,10 @@ onMounted(async () => {
     }
   }
   loading.value = false;
+});
+
+watch(() => props.isEditing, () => {
+  portions.value = 4;
 });
 
 async function fetchIngredients() {

@@ -234,7 +234,6 @@ onMounted(async () => {
     console.log('recipe owner is authed user');
     editable.value = true;
   }
-  console.log(recipeSteps.value);
 
   resizeObserver.observe(document.body);
 });
@@ -245,7 +244,6 @@ onUnmounted(() => {
 
 const resizeObserver = new ResizeObserver(() => {
   headerImageHeight.value = clamp((window.innerWidth / 800) * 300, 150, 300);
-  console.log(headerImageHeight.value);
 });
 
 async function fetchRecipe() {
