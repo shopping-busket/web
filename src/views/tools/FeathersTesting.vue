@@ -35,7 +35,7 @@
         <div v-if="methodArgsMap[selectedMethod].includes('data')" class="mb-6">
           Data
           <json-editor-vue
-            v-model="reqData" class="jse-border-rounded" mode="text" :status-bar="false"
+            v-model="reqData" class="jse-border-rounded" :mode="Mode.tree" :status-bar="false"
             style="height: 17rem"
           />
         </div>
@@ -43,7 +43,7 @@
         <div v-if="methodArgsMap[selectedMethod].includes('params')">
           Params
           <json-editor-vue
-            v-model="reqParams" class="jse-border-rounded" mode="text" :status-bar="false"
+            v-model="reqParams" class="jse-border-rounded" :mode="Mode.tree" :status-bar="false"
             style="height: 17rem"
           />
         </div>
@@ -55,7 +55,7 @@
         Response
         <json-editor-vue
           ref="responseEditor"
-          v-model="response" class="jse-border-rounded" mode="tree"
+          v-model="response" class="jse-border-rounded" :mode="Mode.tree"
           style="height: 40rem" read-only
           :flatten-columns="true"
         />
@@ -67,7 +67,7 @@
   <v-dialog v-model="showResponseDialog" fullscreen :style="jseThemeCSS" :class="getJseTheme">
     <json-editor-vue
       ref="responseEditorFullscreen"
-      v-model="response" mode="tree" style="height: 100%" read-only
+      v-model="response" :mode="Mode.tree" style="height: 100%" read-only
       :flatten-columns="true"
     />
   </v-dialog>
@@ -164,7 +164,7 @@ import { useToast } from 'vue-toastification';
 import JsonEditorVue from 'json-editor-vue';
 import { useTheme } from 'vuetify';
 import 'vanilla-jsoneditor/themes/jse-theme-dark.css';
-import { JSONEditor } from 'vanilla-jsoneditor';
+import { JsonEditor, Mode } from 'vanilla-jsoneditor';
 import { LibraryEntry } from '@/views/me/list/MyLists.vue';
 import { EventData, EventType, LogEvent } from '@/shoppinglist/events';
 import ShoppingList, { ShoppingListItem } from '@/shoppinglist/ShoppingList';
@@ -241,8 +241,8 @@ const reqParams: Ref<Record<string, unknown> | string> = ref({});
 const response: Ref<unknown> = ref('Waiting for response');
 const showResponseDialog = ref(false);
 
-const responseEditor: Ref<JSONEditor | null> = ref(null);
-const responseEditorFullscreen: Ref<JSONEditor | null> = ref(null);
+const responseEditor: Ref<JsonEditor | null> = ref(null);
+const responseEditorFullscreen: Ref<JsonEditor | null> = ref(null);
 
 const jseThemeCSS = computed(() => ({
   '--jse-theme-color': theme.current.value.colors.primary,
@@ -370,8 +370,8 @@ function extractUUID(s: string) {
 
 function updateGlobalEntries(): ShoppingListItem[] {
   if (!library.value || !eventGenerator.value.listIdFormatted) return [];
-  const list = library.value.find(l => l.list.listid === extractUUID(eventGenerator.value.listIdFormatted ?? '')).list;
-  return ShoppingList.from(list).globalEntries;
+  const list = library.value.find(l => l.list.listid === extractUUID(eventGenerator.value.listIdFormatted ?? ''))?.list;
+  return ShoppingList.from(list!).globalEntries;
 }
 
 function changeListIdListener() {
