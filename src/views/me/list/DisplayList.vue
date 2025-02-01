@@ -251,11 +251,18 @@ const whitelistedUserPermissions = ref({
 const viewOnlyInfoAlertHidden = ref(false);
 
 feathersClient.io.on('disconnect', () => {
+  console.log('[feathersClient] disconnected!');
   connected.value = false;
 });
 
+feathersClient.io.on('connect', async () => {
+  console.log('[feathersClient] connected!');
+  connected.value = true;
+  await sendEventsToServer();
+})
+
 onMounted(async () => {
-  await connectionWatcher();
+  await sendEventsToServer();
   registerEventListener();
   registerListInfoChangeListener();
   registerWhitelistListeners();
@@ -268,15 +275,6 @@ onMounted(async () => {
 
   viewOnlyInfoAlertHidden.value = getViewInfoAlertHideStateFromStore();
 });
-
-//region register listeners
-watch(connected, connectionWatcher);
-
-async function connectionWatcher() {
-  if (feathersClient.io.connected) {
-    await sendEventsToServer();
-  }
-}
 
 function registerListInfoChangeListener() {
   feathersClient.service(Service.LIST).on('patched', (patchedList: IShoppingList) => {
