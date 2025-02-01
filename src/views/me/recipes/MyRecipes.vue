@@ -2,7 +2,7 @@
   <div class="ma-auto pt-4" style="max-width: 70rem">
     <transition-group>
       <v-card
-        v-for="recipe in recipesStore.getAll()"
+        v-for="recipe in recipes"
         :key="recipe.id"
         :ripple="true"
         class="mb-2 v-ripple pb-1 pt-1"
@@ -51,6 +51,14 @@
                v-if="!loginStore.loggedIn"
       >
         Log in to create recipes
+      </v-alert>
+    </transition>
+    <transition appear>
+      <v-alert variant="tonal" color="primary" icon="mdi-information-outline"
+               class="mt-2"
+               v-if="!feathersClient.io.connected"
+      >
+        You are offline. Only recipes that you have viewed before are shown!
       </v-alert>
     </transition>
 
@@ -183,6 +191,7 @@ const toast = useToast();
 const loginStore = useLoginStore();
 const recipesStore = useRecipesStore();
 
+const recipes: Ref<IRecipe[]> = ref([]);
 const removeRecipeDialog: Ref<{
   show: boolean;
   id: number | null;
@@ -214,9 +223,12 @@ onMounted(async () => {
 });
 
 async function loadRecipes() {
-  if (!feathersClient.io.connected) return;
+  if (!feathersClient.io.connected) {
+    recipes.value = recipesStore.getAllRecipes();
+    return;
+  }
 
-  recipesStore.$patch(_.keyBy(await feathersClient.service(Service.RECIPE).find(), 'id'));
+  recipes.value = await feathersClient.service(Service.RECIPE).find()
 }
 
 async function openRecipe(recipe: IRecipe) {
@@ -246,10 +258,10 @@ async function createRecipe() {
     title: dialogNewRecipeData.value.title,
     description: dialogNewRecipeData.value.description,
   } as IRecipe) as IRecipe;
-  recipesStore.pushRecipe({
+  recipesStore.pushRecipes([{
     ...recipe,
     owner: _.pick(loginStore.user, ['fullName', 'uuid', 'avatarURI']) as IRecipeOwner
-  });
+  }]);
 
   await openRecipe(recipe);
   loading.value = false;

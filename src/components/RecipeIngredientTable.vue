@@ -38,7 +38,9 @@
           <th class="text-left">
             Amount
           </th>
-          <th class="text-left" style="max-width: 5.5rem;" v-if="addToListAvailable && !props.isEditing">
+          <th class="text-left" style="max-width: 5.5rem;"
+              v-if="addToListAvailable && !props.isEditing"
+          >
             <span>Add to list</span>
           </th>
           <th v-if="props.isEditing" style="max-width: 2rem">
@@ -134,11 +136,14 @@ import { v4 as uuidv4 } from 'uuid';
 import { LibraryEntry } from '@/views/me/list/MyLists.vue';
 import { VNumberInput } from 'vuetify/labs/components';
 import _ from 'lodash';
+import { useRecipesStore } from '@/stores/recipes.store';
 
 const props = defineProps<{
   recipeId: number,
   isEditing: boolean,
 }>();
+
+const recipesStore = useRecipesStore();
 
 const shoppingListLibrary: Ref<LibraryEntry[]> = ref([]);
 
@@ -151,8 +156,13 @@ const addToListAvailable = ref(true);
 
 onMounted(async () => {
   await fetchIngredients();
+
   try {
-    await fetchShoppingListLibrary();
+    if (feathersClient.io.connected) {
+      await fetchShoppingListLibrary();
+    } else {
+      addToListAvailable.value = false;
+    }
   } catch (e) {
     const err = e as FeathersError;
     if (err.code && err.code === 401 /* Unauthorized */) {
@@ -161,6 +171,7 @@ onMounted(async () => {
       addToListAvailable.value = false;
     }
   }
+
   loading.value = false;
 });
 
@@ -169,11 +180,20 @@ watch(() => props.isEditing, () => {
 });
 
 async function fetchIngredients() {
+  if (!feathersClient.io.connected) {
+    baseIngredients.value = recipesStore.get(props.recipeId).ingredients;
+    recalculatePortions();
+    return;
+  }
+
   baseIngredients.value = await feathersClient.service(Service.INGREDIENTS).find({
     query: {
       recipeId: props.recipeId
     }
   });
+  if (baseIngredients.value?.length > 0) {
+    recipesStore.pushOrUpdateIngredients(baseIngredients.value);
+  }
   recalculatePortions();
 }
 

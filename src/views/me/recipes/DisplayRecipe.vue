@@ -43,6 +43,16 @@
         Recipe Properties
       </v-btn>
 
+      <transition appear>
+        <v-alert variant="text" color="primary" icon="mdi-information-outline"
+                 density="compact"
+                 class="mb-2"
+                 v-if="!feathersClient.io.connected"
+        >
+          You are offline. This recipe might be outdated!
+        </v-alert>
+      </transition>
+
       <v-card variant="flat" class="border">
         <div
           v-if="recipe.headerImagePath || isEditing"
@@ -206,10 +216,12 @@ import config from '../../../../config';
 import img from '@/assets/recipe-header-placeholder.jpg';
 import { VTextarea } from 'vuetify/components';
 import { useLoginStore } from '@/stores/login.store';
+import { useRecipesStore } from '@/stores/recipes.store';
 
 const toast = useToast();
 const router = useRouter();
 const loginStore = useLoginStore();
+const recipesStore = useRecipesStore();
 
 const props = defineProps<{
   id: number,
@@ -247,13 +259,31 @@ const resizeObserver = new ResizeObserver(() => {
 });
 
 async function fetchRecipe() {
+  if (!feathersClient.io.connected) {
+    const cached = recipesStore.get(props.id);
+    if (cached === undefined) {
+      toast('Recipe not found!');
+      await router.push({ name: Route.MY_RECIPES });
+      return;
+    }
+
+    recipe.value = cached.recipe;
+    recipeSteps.value = cached.steps;
+    return;
+  }
+
   try {
     recipe.value = await feathersClient.service(Service.RECIPE).get(props.id);
+    recipesStore.pushOrUpdateRecipe(recipe.value!);
+
     recipeSteps.value = (await feathersClient.service(Service.RECIPE_STEPS).find({
       query: {
         recipeId: props.id,
       },
     }) as IRecipeStep[]).sort((a, b) => a.stepNumber - b.stepNumber);
+    if (recipeSteps.value.length > 0) {
+      recipesStore.pushOrUpdateRecipeSteps(recipeSteps.value!);
+    }
   } catch (e) {
     toast('Recipe not found!');
     await router.push({ name: Route.MY_RECIPES });
@@ -281,10 +311,13 @@ async function saveRecipeChangesToServer() {
     title: recipe.value.title,
     description: recipe.value.description,
   });
+
   await ingredientTable.value?.save();
 
   await saveHeaderImage();
 
+  // Since the recipe is fetched here, we don't need to manually update the stores - the fetch will
+  // do it for us!
   await fetchRecipe();
   loading.value = false;
 }
