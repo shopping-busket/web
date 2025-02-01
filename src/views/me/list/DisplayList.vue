@@ -376,18 +376,18 @@ async function loadList(): Promise<void> {
 async function loadListFromRemote(): Promise<ShoppingList | null> {
   if (!loginStore.loggedIn) return null;
 
-  const list: IShoppingList[] | undefined = await feathersClient.service(Service.LIST).find({ query: { listid: props.id } })
+  const lists: IShoppingList[] | undefined = await feathersClient.service(Service.LIST).find({ query: { listid: props.id } })
     .catch(() => {
       listNotFound();
     }) as IShoppingList[] | undefined;
-  if (list == undefined || list.length <= 0) {
+  if (lists === undefined || lists.length <= 0) {
     await listNotFound();
     return null;
   }
-
-  console.log(list);
-
-  return new ShoppingList(list[0].listid, list[0].name, list[0].description, list[0].owner, list[0].entries, list[0].checkedEntries);
+  const list = lists[0];
+  libraryStore.patchById(list.listid, list);
+  console.log('loadListFromRemote(): ', list);
+  return new ShoppingList(list.listid, list.name, list.description, list.owner, list.entries, list.checkedEntries);
 }
 
 async function loadListFromCache(): Promise<ShoppingList> {
