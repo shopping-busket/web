@@ -2,7 +2,7 @@
   <div class="ma-auto pt-4" style="max-width: 70rem">
     <transition-group>
       <v-card
-        v-for="recipe in recipes as IRecipe[]"
+        v-for="recipe in recipesStore.getAll()"
         :key="recipe.id"
         :ripple="true"
         class="mb-2 v-ripple pb-1 pt-1"
@@ -47,7 +47,9 @@
       <v-icon icon="mdi-plus-circle-outline" />
     </v-card>
     <transition appear>
-      <v-alert variant="tonal" color="primary" icon="mdi-information-outline" v-if="!loginStore.loggedIn">
+      <v-alert variant="tonal" color="primary" icon="mdi-information-outline"
+               v-if="!loginStore.loggedIn"
+      >
         Log in to create recipes
       </v-alert>
     </transition>
@@ -167,16 +169,19 @@ import {
   VTextField
 } from 'vuetify/components';
 import { nextTick, onMounted, Ref, ref } from 'vue';
-import { IRecipe } from '@/shoppinglist/recipes/types';
+import { IRecipe, IRecipeOwner } from '@/shoppinglist/recipes/types';
 import { useRouter } from 'vue-router';
 import { Route } from '@/router';
 import { useToast } from 'vue-toastification';
 import defaultUserImg from '@/assets/avatar-placeholder.png';
 import { useLoginStore } from '@/stores/login.store';
+import { useRecipesStore } from '@/stores/recipes.store';
+import _ from 'lodash';
 
 const router = useRouter();
 const toast = useToast();
 const loginStore = useLoginStore();
+const recipesStore = useRecipesStore();
 
 const removeRecipeDialog: Ref<{
   show: boolean;
@@ -197,16 +202,21 @@ const dialogNewRecipeData = ref({
 });
 const dialogNewRecipeForm: Ref<VForm | null> = ref(null);
 const dialogNewRecipeFormValid = ref(false);
-const recipes = ref([]);
 const loading = ref(true);
 
+feathersClient.on('connected', async () => {
+  await loadRecipes();
+});
+
 onMounted(async () => {
-  await fetchRecipes();
+  await loadRecipes();
   loading.value = false;
 });
 
-async function fetchRecipes() {
-  recipes.value = await feathersClient.service(Service.RECIPE).find();
+async function loadRecipes() {
+  if (!feathersClient.io.connected) return;
+
+  recipesStore.$patch(_.keyBy(await feathersClient.service(Service.RECIPE).find(), 'id'));
 }
 
 async function openRecipe(recipe: IRecipe) {
@@ -236,6 +246,10 @@ async function createRecipe() {
     title: dialogNewRecipeData.value.title,
     description: dialogNewRecipeData.value.description,
   } as IRecipe) as IRecipe;
+  recipesStore.pushRecipe({
+    ...recipe,
+    owner: _.pick(loginStore.user, ['fullName', 'uuid', 'avatarURI']) as IRecipeOwner
+  });
 
   await openRecipe(recipe);
   loading.value = false;
@@ -243,8 +257,11 @@ async function createRecipe() {
 
 async function deleteRecipe(id: number) {
   loading.value = true;
+
   await feathersClient.service(Service.RECIPE).remove(id);
-  await fetchRecipes();
+  recipesStore.removeRecipe(id);
+  await loadRecipes();
+
   loading.value = false;
 }
 </script>
