@@ -121,7 +121,7 @@
   <v-dialog v-model="kickUserConfirmationDialog" width="500px">
     <v-card
       title="Confirmation"
-      text="Are you sure that you want to kick this user off your list? They will be unable to access this list!"
+      text="Are you sure that you want to kick this loginStore off your list? They will be unable to access this list!"
     >
       <v-card-actions>
         <v-spacer />
@@ -186,7 +186,7 @@ const kickUserIndex = ref(-1);
 
 export interface UserWhitelist extends DB {
   id: number,
-  user: string,
+  loginStore: string,
   inviteEmail: string,
   inviteSecret?: string,
   listId: string,

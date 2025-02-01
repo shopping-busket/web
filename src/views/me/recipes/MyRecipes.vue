@@ -15,7 +15,7 @@
         >
           <template #append>
             <v-icon
-              v-if="recipe.owner.uuid === user?.uuid"
+              v-if="recipe.owner.uuid === loginStore.user?.uuid"
               color="red"
               icon="mdi-trash-can-outline"
               @click.stop="removeRecipeDialog = {show: true, id: recipe.id}"
@@ -38,7 +38,7 @@
       class="d-flex justify-center flex-column align-center new-recipe-card"
       hover
       variant="outlined"
-      v-if="feathersClient.io.connected && user"
+      v-if="feathersClient.io.connected && loginStore.loggedIn"
       @click="feathersClient.io.connected ? showNewListDialog() : toast('You are offline!')"
     >
       <div class="new-recipe-title">
@@ -47,7 +47,7 @@
       <v-icon icon="mdi-plus-circle-outline" />
     </v-card>
     <transition appear>
-      <v-alert variant="tonal" color="primary" icon="mdi-information-outline" v-if="!user">
+      <v-alert variant="tonal" color="primary" icon="mdi-information-outline" v-if="!loginStore.loggedIn">
         Log in to create recipes
       </v-alert>
     </transition>
@@ -166,17 +166,18 @@ import {
   VTextarea,
   VTextField
 } from 'vuetify/components';
-import { inject, nextTick, onMounted, Ref, ref } from 'vue';
+import { nextTick, onMounted, Ref, ref } from 'vue';
 import { IRecipe } from '@/shoppinglist/recipes/types';
 import { useRouter } from 'vue-router';
 import { Route } from '@/router';
 import { useToast } from 'vue-toastification';
 import defaultUserImg from '@/assets/avatar-placeholder.png';
-import { userInjection } from '@/helpers/injectionKeys';
+import { useLoginStore } from '@/stores/login.store';
 
 const router = useRouter();
 const toast = useToast();
-const user = inject(userInjection);
+const loginStore = useLoginStore();
+
 const removeRecipeDialog: Ref<{
   show: boolean;
   id: number | null;

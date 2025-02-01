@@ -1,6 +1,7 @@
 <template>
   <v-dialog v-model="model" class="pa-2" max-width="850px">
-    <v-card :title="`Log of list '${listName}'`" subtitle="View the log of this list.">
+    <v-card :title="`Log of list '${listName}'`"
+            subtitle="These are events that have not been sent to the server and are waiting in an event-queue!">
       <v-card-text>
         <div class="mb-8 d-flex flex-row flex-wrap checkbox-wrapper">
           <v-checkbox v-model="displayIndexNumber" class="" label="Index" />

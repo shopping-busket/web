@@ -1,6 +1,6 @@
 <template>
   <v-card
-    title="Busket Backend tester" :subtitle="`You are logged in as ${user?.fullName}`"
+    title="Busket Backend tester" :subtitle="`You are logged in as ${loginStore.user?.fullName}`"
     class="mt-16 ma-auto" max-width="800px" variant="outlined" :style="jseThemeCSS"
     :class="getJseTheme"
   >
@@ -158,8 +158,7 @@ import {
   VForm,
   VTextField
 } from 'vuetify/components';
-import { computed, inject, onMounted, Ref, ref } from 'vue';
-import { userInjection } from '@/helpers/injectionKeys';
+import { computed, onMounted, Ref, ref } from 'vue';
 import feathersClient, { Methods, Service } from '@/feathers-client';
 import { useToast } from 'vue-toastification';
 import JsonEditorVue from 'json-editor-vue';
@@ -171,10 +170,11 @@ import { EventData, EventType, LogEvent } from '@/shoppinglist/events';
 import ShoppingList, { ShoppingListItem } from '@/shoppinglist/ShoppingList';
 import { DotNestedKeys, ReverseMap } from '@/helpers/TypeUtils';
 import { v4 as uuidv4 } from 'uuid';
+import { useLoginStore } from '@/stores/login.store';
 
-const user = inject(userInjection);
 const toast = useToast();
 const theme = useTheme();
+const loginStore = useLoginStore();
 
 type Rule = ((value: string) => boolean | string);
 
@@ -402,7 +402,7 @@ async function sendGeneratedEvent() {
 
       // FIXME: Remove once server handles this
       isoDate: new Date().toISOString(),
-      sender: user?.uuid,
+      sender: loginStore.user?.uuid,
     }
   };
 

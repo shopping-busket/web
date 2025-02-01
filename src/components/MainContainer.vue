@@ -17,7 +17,7 @@
             Not logged in
           </span>
           <span v-else>
-            {{ auth.user?.fullName }}
+            {{ auth.loginStore?.fullName }}
           </span>
         </v-list-item-title>
         <template #append>

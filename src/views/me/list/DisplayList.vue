@@ -36,7 +36,7 @@
 
           <div v-if="!editingListInfo">
             <v-btn
-              v-show="shoppingList != null && user != undefined && shoppingList.owner === user.uuid"
+              v-show="shoppingList != null && loginStore.user != undefined && shoppingList.owner === loginStore.user.uuid"
               color="primary" icon="mdi-pencil-outline" size="x-small" variant="text"
               @click="enterListInfoEditState()"
             />
@@ -55,7 +55,7 @@
             />
 
             <v-btn
-              v-show="shoppingList != null && user != undefined && shoppingList.owner === user.uuid"
+              v-show="shoppingList != null && loginStore.user != undefined && shoppingList.owner === loginStore.user.uuid"
               color="primary" icon="mdi-account-group-outline" size="x-small" variant="text"
               @click="openShareDialog = true"
             />
@@ -173,7 +173,7 @@
     />
 
     <ShareDialog
-      v-if="shoppingList != null && user != undefined && shoppingList.owner === user.uuid"
+      v-if="shoppingList != null && loginStore.user != undefined && shoppingList.owner === loginStore.user.uuid"
       v-model="openShareDialog"
       :list-id="(shoppingList as ShoppingList).listid"
     />
@@ -196,16 +196,16 @@ import EventViewer from '@/components/EventViewer.vue';
 import TodoList from '@/components/TodoList.vue';
 import feathersClient, { FeathersError, Service } from '@/feathers-client';
 import ShoppingList, { IShoppingList } from '@/shoppinglist/ShoppingList';
-import { inject, onMounted, reactive, Ref, ref, watch } from 'vue';
+import { onMounted, reactive, Ref, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { Route } from '@/router';
 import { useToast } from 'vue-toastification';
 import { EventData, EventType, LogEvent, LogEventListenerData } from '@/shoppinglist/events';
 import ShareDialog, { UserPermissions, UserWhitelist } from '@/components/ShareDialog.vue';
 import { v4 as uuidv4 } from 'uuid';
-import { userInjection } from '@/helpers/injectionKeys';
 import { useLibraryStore } from '@/stores/library.store';
 import { useEventsStore } from '@/stores/events.store';
+import { useLoginStore } from '@/stores/login.store';
 
 const props = defineProps<{
   id: string | undefined,
@@ -216,6 +216,7 @@ const toast = useToast();
 
 const libraryStore = useLibraryStore();
 const eventsStore = useEventsStore();
+const loginStore = useLoginStore();
 
 const developmentBuild = ref(import.meta.env.DEV);
 const newItemForm: Ref<VForm | null> = ref(null);
@@ -243,7 +244,6 @@ const newItemRules = ref([
 const connected = ref(feathersClient.io.connected);
 
 const sessionId = uuidv4();
-const user = inject(userInjection);
 const whitelistedUserPermissions = ref({
   canEditEntries: true,
   canDeleteEntries: true,
@@ -295,7 +295,7 @@ function registerWhitelistListeners() {
   });
 
   feathersClient.service(Service.WHITELISTED_USERS).on('patched', async (patchedUser: UserWhitelist) => {
-    if (user && user.uuid === shoppingList.value?.owner) return;
+    if (loginStore.user && loginStore.user.uuid === shoppingList.value?.owner) return;
     if (shoppingList.value?.listid !== patchedUser.listId) return;
     await updatePermissions(patchedUser);
     hideViewOnlyInfoAlert(false);
@@ -376,7 +376,7 @@ async function loadList(): Promise<void> {
 }
 
 async function loadListFromRemote(): Promise<ShoppingList | null> {
-  if (!user) return null;
+  if (!loginStore.loggedIn) return null;
 
   const list: IShoppingList[] | undefined = await feathersClient.service(Service.LIST).find({ query: { listid: props.id } })
     .catch(() => {
@@ -625,7 +625,7 @@ function getViewInfoAlertHideStateFromStore() {
 }
 
 async function updatePermissions(whitelistedUser: UserWhitelist | null = null) {
-  if (shoppingList.value && shoppingList.value?.owner === user?.uuid) return;
+  if (shoppingList.value && shoppingList.value?.owner === loginStore.user?.uuid) return;
 
   let whitelisted = [whitelistedUser];
   if (!whitelistedUser) {

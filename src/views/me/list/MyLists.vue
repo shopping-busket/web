@@ -13,7 +13,7 @@
         <template #append>
           <v-icon
             color="red"
-            :icon="item.owner === user?.uuid ? 'mdi-trash-can-outline' : 'mdi-exit-run'"
+            :icon="item.owner === loginStore.user?.uuid ? 'mdi-trash-can-outline' : 'mdi-exit-run'"
             @click.stop="removeListDialog = true; removeList = item"
           />
         </template>
@@ -33,7 +33,7 @@
       <v-icon icon="mdi-plus-circle-outline" />
     </v-card>
     <transition appear v-else>
-      <v-alert variant="tonal" color="primary" icon="mdi-information-outline" v-if="!user">
+      <v-alert variant="tonal" color="primary" icon="mdi-information-outline" v-if="!loginStore.loggedIn">
         Log in to create lists
       </v-alert>
     </transition>
@@ -145,8 +145,8 @@
 
   <v-dialog v-model="removeListDialog" max-width="500px">
     <v-card
-      :title="`Are you sure that you want to ${removeList?.owner === user?.uuid ? 'delete' : 'leave'} this list?`"
-      :subtitle="removeList?.owner === user?.uuid ? 'You won\'t be able to get it back' : 'You will not be able to access it until you get another invite'"
+      :title="`Are you sure that you want to ${removeList?.owner === loginStore.user?.uuid ? 'delete' : 'leave'} this list?`"
+      :subtitle="removeList?.owner === loginStore.user?.uuid ? 'You won\'t be able to get it back' : 'You will not be able to access it until you get another invite'"
     >
       <v-card-actions>
         <v-spacer />
@@ -158,7 +158,7 @@
           v-if="removeList"
           color="primary"
           variant="outlined"
-          @click="removeList?.owner === user?.uuid ? deleteList(removeList.listid) : leaveFromList(removeList.listid); removeListDialog = false"
+          @click="removeList?.owner === loginStore.user?.uuid ? deleteList(removeList.listid) : leaveFromList(removeList.listid); removeListDialog = false"
         >
           Yes, I am sure
         </v-btn>
@@ -186,19 +186,19 @@ import {
 } from 'vuetify/components';
 import feathersClient, { AuthObject, Service } from '@/feathers-client';
 import { IShoppingList, LegacyShoppingListItem } from '@/shoppinglist/ShoppingList';
-import { inject, onMounted, ref, Ref, watch } from 'vue';
+import { onMounted, ref, Ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
-import { userInjection } from '@/helpers/injectionKeys';
 import { UserWhitelist } from '@/components/ShareDialog.vue';
 import { Route } from '@/router';
 import { useLibraryStore } from '@/stores/library.store';
 import { comparatorSortAlphabetically } from '@/helpers/utils';
 import { Params } from '@feathersjs/feathers';
+import { useLoginStore } from '@/stores/login.store';
 
 const router = useRouter();
 const toast = useToast();
-const user = inject(userInjection);
+const loginStore = useLoginStore();
 
 const nameRules = [
   (val: string) => val.length >= 3 || 'Name has to have at least 3 characters.',
@@ -265,7 +265,7 @@ async function leaveFromList(listid: string): Promise<void> {
 
   const { id } = (await feathersClient.service(Service.WHITELISTED_USERS).find({
     query: {
-      user: user?.uuid,
+      user: loginStore.user?.uuid,
       listId: listid,
     }
   } as Params<Partial<UserWhitelist>>) as UserWhitelist[])[0];

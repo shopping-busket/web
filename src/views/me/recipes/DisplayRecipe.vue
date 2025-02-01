@@ -194,7 +194,7 @@
 
 <script lang="ts" setup>
 import { IRecipe, IRecipeStep } from '@/shoppinglist/recipes/types';
-import { inject, onMounted, onUnmounted, ref, Ref, useTemplateRef } from 'vue';
+import { onMounted, onUnmounted, ref, Ref, useTemplateRef } from 'vue';
 import feathersClient, { Service } from '@/feathers-client';
 import { Route } from '@/router';
 import { useToast } from 'vue-toastification';
@@ -202,13 +202,14 @@ import { useRouter } from 'vue-router';
 import RecipeIngredientTable from '@/components/RecipeIngredientTable.vue';
 import RecipeStep from '@/components/RecipeStep.vue';
 import _, { clamp, truncate } from 'lodash';
-import { userInjection } from '@/helpers/injectionKeys';
 import config from '../../../../config';
 import img from '@/assets/recipe-header-placeholder.jpg';
 import { VTextarea } from 'vuetify/components';
+import { useLoginStore } from '@/stores/login.store';
 
 const toast = useToast();
 const router = useRouter();
+const loginStore = useLoginStore();
 
 const props = defineProps<{
   id: number,
@@ -221,7 +222,6 @@ const isEditing = ref(false);
 const dialogPropertiesOpen = ref(false);
 const dialogSaveOpen = ref(false);
 const ingredientTable = useTemplateRef('ingredient-table');
-const user = inject(userInjection);
 const editable = ref(false);
 const headerImageFile: Ref<File | null> = ref(null);
 const headerImageBase64: Ref<string | null> = ref(null);
@@ -230,8 +230,8 @@ const headerImageHeight = ref(300);
 onMounted(async () => {
   await fetchRecipe();
   loading.value = false;
-  if (recipe.value?.owner.uuid == user?.uuid) {
-    console.log('recipe owner is authed user');
+  if (recipe.value?.owner.uuid == loginStore.user?.uuid) {
+    console.log('recipe owner is authed loginStore');
     editable.value = true;
   }
 

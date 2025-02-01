@@ -5,7 +5,7 @@
       max-width="500px"
       class="ma-auto"
       title="Verify Email"
-      :text="`Please verify your email using the link we sent you to ${user?.email ?? 'error'}! You cannot access this page without verifying first.`"
+      :text="`Please verify your email using the link we sent you to ${loginStore.user?.email ?? 'error'}! You cannot access this page without verifying first.`"
     >
       <v-card-actions>
         <v-btn block color="primary" variant="tonal" :to="{ name: Route.HOME }">
@@ -19,8 +19,7 @@
 <script lang="ts" setup>
 import { VBtn, VCard, VCardActions } from 'vuetify/components';
 import { Route } from '@/router';
-import { inject } from 'vue';
-import { userInjection } from '@/helpers/injectionKeys';
+import { useLoginStore } from '@/stores/login.store';
 
-const user = inject(userInjection);
+const loginStore = useLoginStore();
 </script>

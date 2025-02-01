@@ -9,7 +9,7 @@
           Welcome!
         </span>
         <span v-else>
-          Hello, {{ auth.user.fullName }}!
+          Hello, {{ auth.loginStore.fullName }}!
         </span>
       </h1>
 

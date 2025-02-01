@@ -17,12 +17,12 @@
 
 <script lang="ts" setup>
 import { VProgressCircular } from 'vuetify/components';
-import { inject, onMounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import feathersClient, { FeathersError, Service } from '@/feathers-client';
 import { UserWhitelist } from '@/components/ShareDialog.vue';
 import { Route } from '@/router';
 import { useRouter } from 'vue-router';
-import { userInjection } from '@/helpers/injectionKeys';
+import { useLoginStore } from '@/stores/login.store';
 
 const props = defineProps<{
   secret: string,
@@ -31,9 +31,10 @@ const props = defineProps<{
 }>();
 
 const router = useRouter();
+const loginStore = useLoginStore();
+
 const invalidSecret = ref(false);
 const error = ref(false);
-const user = inject(userInjection);
 
 onMounted(async () => {
   try {
@@ -49,7 +50,7 @@ onMounted(async () => {
         },
       }) as UserWhitelist[];
 
-      if (whitelisted.map(w => w.user).includes(user?.uuid)) {
+      if (whitelisted.map(w => w.user).includes(loginStore.user?.uuid)) {
         await routeToList();
         return;
       }

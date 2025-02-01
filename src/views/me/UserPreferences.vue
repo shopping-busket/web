@@ -87,9 +87,9 @@ import {
   VSpacer,
 } from 'vuetify/components';
 import feathersClient, { AuthObject, Service } from '@/feathers-client';
-import { inject, onMounted, reactive, Ref, ref, watch } from 'vue';
+import { onMounted, reactive, Ref, ref, watch } from 'vue';
 import { useTheme } from 'vuetify';
-import { userInjection } from '@/helpers/injectionKeys';
+import { useLoginStore } from '@/stores/login.store';
 
 interface SettingsObject {
   prefersDarkMode: boolean,
@@ -98,7 +98,7 @@ interface SettingsObject {
 }
 
 const theme = useTheme();
-const user = inject(userInjection);
+const loginStore = useLoginStore();
 
 const auth: Ref<AuthObject | null> = ref(null);
 const settings: SettingsObject = reactive({
@@ -127,8 +127,8 @@ watch(settings, async () => {
 });
 
 async function deleteUser() {
-  if (!user?.id) return;
-  await feathersClient.service(Service.USERS).remove(user.id);
+  if (!loginStore.user?.id) return;
+  await feathersClient.service(Service.USERS).remove(loginStore.user.id);
   window.location.reload();
 }
 </script>

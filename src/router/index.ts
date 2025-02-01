@@ -150,7 +150,7 @@ const routes: RouteRecordRawWithMeta[] = [
   },
   //endregion
 
-  //region user
+  //region loginStore
   {
     path: '/me/settings',
     redirect: { name: Route.PREFERENCES },
