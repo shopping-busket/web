@@ -20,6 +20,7 @@
       </v-list-item>
     </v-card>
     <v-card
+      v-if="feathersClient.io.connected"
       :ripple="true"
       class="d-flex justify-center flex-column align-center new-list-card"
       hover
@@ -31,6 +32,11 @@
       </div>
       <v-icon icon="mdi-plus-circle-outline" />
     </v-card>
+    <transition appear v-else>
+      <v-alert variant="tonal" color="primary" icon="mdi-information-outline" v-if="!user">
+        Log in to create lists
+      </v-alert>
+    </transition>
 
     <v-dialog v-model="newListDialog" max-width="550px">
       <v-card>
@@ -368,5 +374,19 @@ async function createList(): Promise<void> {
 
 .icon-height {
   height: 24px;
+}
+
+.v-enter-active,
+.v-leave-active {
+  transition: all 0.3s ease;
+}
+
+.v-enter-from {
+  opacity: 0;
+  transform: translateY(-100px);
+}
+
+.v-leave-to {
+  opacity: 0;
 }
 </style>
