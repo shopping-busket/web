@@ -17,7 +17,7 @@
             Not logged in
           </span>
           <span v-else>
-            {{ auth?.user?.fullName }}
+            {{ auth.user?.fullName }}
           </span>
         </v-list-item-title>
         <template #append>
@@ -123,11 +123,11 @@ import {
 
 import { RouteLocationAsRelativeGeneric, useRoute, useRouter } from 'vue-router';
 import feathersClient, { AuthObject } from '@/feathers-client';
-import { inject, onMounted, Ref, ref, watch } from 'vue';
+import { onMounted, Ref, ref } from 'vue';
 import { useToast } from 'vue-toastification';
 import img from '@/assets/avatar-placeholder.png';
-import { authenticationInjection } from '@/helpers/injectionKeys';
 import { Route } from '@/router';
+import emitter from '@/helpers/mitt';
 
 const props = withDefaults(defineProps<{
   appbarColor?: string
@@ -148,7 +148,7 @@ interface BeforeInstallPromptEvent extends Event {
 interface MenuItem {
   title: string,
   icon: string,
-  to?:  RouteLocationAsRelativeGeneric,
+  to?: RouteLocationAsRelativeGeneric,
   click?: () => void | Promise<void>,
   divide?: boolean,
 }
@@ -184,7 +184,7 @@ const menuItems: MenuItem[] = [];
 const drawer = ref(false);
 const mini = ref(false);
 
-const auth: Ref<AuthObject | null> = ref(inject(authenticationInjection, null) as AuthObject);
+const auth: Ref<AuthObject | null> = ref(null);
 let installPrompt: BeforeInstallPromptEvent | null = null;
 let showInstallable = false;
 const SHOW_INSTALL_APP_BANNER_STORE_KEY = 'showInstallAppBanner';
@@ -210,11 +210,14 @@ onMounted(() => {
   menuItems.push({
     title: 'Log in',
     icon: 'mdi-login-variant',
-    to: { name: 'login', query: { redirect: route.path } },
+    to: {
+      name: 'login',
+      query: { redirect: route.path }
+    },
     divide: true,
   });
 
-  if (auth.value) authChangeListener();
+  authChangeListener(feathersClient.get('authentication'))
 });
 
 function getShowInstallBannerStore() {
@@ -266,8 +269,8 @@ async function clickItemAsync(item: MenuItem) {
   if (item.click) await item.click();
 }
 
-function authChangeListener() {
-  console.log('watch', auth, !auth.value, !!auth.value);
+function authChangeListener(nAuth: AuthObject | null) {
+  auth.value = nAuth;
 
   menuItems.length = 0;
   menuItems.push(...baseMenuItems);
@@ -298,7 +301,7 @@ function authChangeListener() {
   });
 }
 
-watch(auth, authChangeListener, { deep: true });
+emitter.on('authenticationChanged', authChangeListener)
 </script>
 
 <style lang="scss" scoped>

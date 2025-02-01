@@ -407,7 +407,7 @@ async function loadListFromCache(): Promise<ShoppingList> {
 }
 
 async function listNotFound() {
-  await router.push({ name: Route.LIST_NOT_FOUND });
+  await router.replace({ name: Route.LIST_NOT_FOUND });
 }
 
 //endregion

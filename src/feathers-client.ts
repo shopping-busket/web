@@ -3,6 +3,10 @@ import socketio from '@feathersjs/socketio-client';
 import { feathers, FeathersService } from '@feathersjs/feathers';
 import auth from '@feathersjs/authentication-client';
 import config from '../config';
+import router, { Route, RouteMeta } from '@/router';
+import app from '@/main';
+import { userInjection } from '@/helpers/injectionKeys';
+import emitter from '@/helpers/mitt';
 
 const socket = io(config.backend, { transports: ['websocket'] });
 
@@ -23,6 +27,39 @@ export enum Service {
 type ServiceTypes = Record<Service, FeathersService> & Record<string, FeathersService>
 
 const feathersClient = feathers<ServiceTypes>();
+
+feathersClient.hooks({
+  before: {
+    all: [
+      async (ctx) => {
+        if (ctx.path == 'authentication') return;
+        if (feathersClient.authentication.authenticated) return;
+
+        try {
+          const auth = await feathersClient.authenticate() as AuthObject;
+          console.log('app.provide.authenticationInjection');
+          emitter.emit('authenticationChanged', auth);
+          app.provide(userInjection, auth.user);
+
+          if (!auth.user.verifiedEmail && !(router.currentRoute.value.meta as RouteMeta).allowUnverified) {
+            await router.replace({ name: Route.EMAIL_VERIFY });
+          }
+        } catch (e) {
+          const err = e as FeathersError;
+          if (err.code === 408) {
+            console.log('[Auth] Timeout while trying to authenticate. You are offline!');
+            return;
+          }
+
+          console.log(`[Auth] Not authenticated.`);
+          if (!Array.isArray(err.data) && !err.data?.reason) {
+            await router.replace({ name: Route.LOGIN });
+          }
+        }
+      }
+    ]
+  }
+});
 
 feathersClient.configure(socketio(socket, { timeout: 5_000 }));
 feathersClient.configure(auth({ storage: process.env.NODE_ENV !== 'development' ? localStorage : sessionStorage }));
@@ -70,36 +107,6 @@ export interface BadRequest {
   keyword: string,
   params: Record<string, unknown>,
   message: string,
-}
-
-export async function isLoggedIn(): Promise<boolean> {
-  return new Promise<boolean>((resolve) => {
-    if (!feathersClient.authentication.authenticated) {
-      feathersClient.authenticate()
-        .then(() => resolve(true))
-        .catch(() => resolve(false));
-    }
-  });
-}
-
-export async function getUser(): Promise<User | null> {
-  return await feathersClient.get('authentication').user ?? null;
-}
-
-export async function requireUser(): Promise<User> {
-  const user = await getUser();
-  if (!user) throw new Error('required type is not allowed to be null. something in the authentication chain went wrong!');
-  return user;
-}
-
-export async function waitForUser(cb: (user: User) => void): Promise<void> {
-  const interval = setInterval(async () => {
-    const user = await getUser();
-    if (user !== null) {
-      clearInterval(interval);
-      cb(user);
-    }
-  }, 50);
 }
 
 export default feathersClient;

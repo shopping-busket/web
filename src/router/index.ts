@@ -1,7 +1,11 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
-import feathersClient, { AuthObject, FeathersError, User, } from '@/feathers-client';
-import app from '@/main';
-import { authenticationInjection, userInjection } from '@/helpers/injectionKeys';
+import {
+  createRouter,
+  createWebHistory,
+  NavigationGuardNext,
+  RouteLocationNormalizedGeneric,
+  RouteRecordRaw
+} from 'vue-router';
+import feathersClient from '@/feathers-client';
 import { useToast } from 'vue-toastification';
 import emitter from '@/helpers/mitt';
 
@@ -199,13 +203,21 @@ const routes: RouteRecordRawWithMeta[] = [
   }
 ];
 
+export async function tryAuth(
+  from: RouteLocationNormalizedGeneric,
+  to: RouteLocationNormalizedGeneric,
+  next: NavigationGuardNext,
+  destinationMeta: RouteMeta | null,
+): Promise<void> {
+  emitter.emit('navGuardLoading', false);
+}
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 });
 
 const toast = useToast();
-let user: User | null = null;
 router.beforeEach(async (to, from, next) => {
   console.log('[Router]', to, from);
   emitter.emit('navGuardLoading', true);
@@ -220,39 +232,24 @@ router.beforeEach(async (to, from, next) => {
 
   // Authentication
   if (!feathersClient.authentication.authenticated) {
-    await feathersClient.authenticate().then((authentication) => {
-      const auth = authentication as AuthObject;
+    if (!destinationMeta.requireConnection) {
+      if (!feathersClient.io.connected) {
+        console.log('[Auth] destinationMeta.requireConnection = false & feathersClient.io.connected = false');
 
-      app.provide(authenticationInjection, auth);
-      app.provide(userInjection, auth.user);
-      user = auth.user;
-
-      if (from.name === undefined && to.name === Route.HOME) {
-        next({ name: Route.MY_LISTS });
-        emitter.emit('navGuardLoading', false);
-      }
-    }).catch((err: FeathersError) => {
-      if (err.code === 408) {
-        console.log('[Auth] Timeout while trying to authenticate. You are offline!');
-        toast('You\'re offline!');
+        next();
+        setTimeout(async () => {
+          console.log('Trying lazy login ...');
+          await tryAuth(from, to, next, destinationMeta);
+        }, 200);
         return;
       }
-      console.log(`[Auth] Not authenticated. This page requires auth: ${destinationMeta?.requiresAuth ? 'yes' : 'no'}`);
-      if (!Array.isArray(err.data) && !err.data?.reason && destinationMeta?.requiresAuth) {
-        router.replace({
-          name: 'login',
-          query: { redirect: to.path },
-        });
-        emitter.emit('navGuardLoading', false);
-        return;
-      }
-    });
+    }
+
+    await tryAuth(from, to, next, destinationMeta);
   }
 
-  // if (destinationMeta?.requireConnection && !feathersClient.io.connected) await router.replace({ name: Route.NO_CONNECTION })
-
   emitter.emit('navGuardLoading', false);
-  if (feathersClient.authentication.authenticated && destinationMeta?.requiresAuth && !user?.verifiedEmail && !destinationMeta.allowUnverified) await router.replace({ name: Route.EMAIL_VERIFY });
+  // if (feathersClient.authentication.authenticated && destinationMeta?.requiresAuth && !destinationMeta.allowUnverified) await router.replace({ name: Route.EMAIL_VERIFY });
   next();
 });
 
