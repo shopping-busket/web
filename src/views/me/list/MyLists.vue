@@ -223,9 +223,10 @@ export interface LibraryEntry {
 }
 
 onMounted(async () => {
-  console.log("MyLists.onMounted ", auth);
   if (!feathersClient.io.connected) return;
   auth.value = await feathersClient.get('authentication');
+
+  await populateLists();
 });
 
 async function showNewListDialog() {

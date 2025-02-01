@@ -16,7 +16,18 @@ export const useLibraryStore = defineStore('library', {
     },
     removeById(id: string): IShoppingList {
       return this.$state.splice(this.$state.findIndex((l) => l.listid === id), 1)[0];
+    },
+    clear() {
+      return this.$state.length = 0;
     }
   },
-  persist: true,
+  persist: {
+    beforeHydrate: () => {
+      const jwtKey = 'feathers-jwt';
+      if (localStorage.getItem(jwtKey) === null && sessionStorage.getItem(jwtKey) === null) {
+        localStorage.removeItem('library');
+        useLibraryStore().clear();
+      }
+    }
+  },
 });

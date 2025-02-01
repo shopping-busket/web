@@ -37,7 +37,6 @@ feathersClient.hooks({
 
         try {
           const auth = await feathersClient.authenticate() as AuthObject;
-          console.log('app.provide.authenticationInjection');
           emitter.emit('authenticationChanged', auth);
           app.provide(userInjection, auth.user);
 

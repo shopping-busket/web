@@ -37,6 +37,7 @@ import MainContainer from '@/components/MainContainer.vue';
 import AuthenticationLoading from '@/views/auth/AuthenticationLoading.vue';
 import emitter from '@/helpers/mitt';
 import { useRoute, useRouter } from 'vue-router';
+import { useLibraryStore } from '@/stores/library.store';
 
 const showUpdateUI = ref(true);
 const theme = useTheme();
@@ -46,6 +47,7 @@ const wb = inject('wb') as Workbox;
 const routeLoading = ref(false);
 
 let auth: AuthObject | null = null;
+const libraryStore = useLibraryStore();
 
 onMounted(async () => {
   emitter.on('navGuardLoading', (loading) => {
