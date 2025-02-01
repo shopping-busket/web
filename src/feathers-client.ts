@@ -25,6 +25,8 @@ export enum Service {
 
 type ServiceTypes = Record<Service, FeathersService> & Record<string, FeathersService>
 
+// Services in this list will not redirect to the login page when jwt auth fails!
+const loginServiceExceptions: Service[] = [Service.RECIPE, Service.RECIPE_STEPS, Service.INGREDIENTS];
 const feathersClient = feathers<ServiceTypes>();
 
 feathersClient.hooks({
@@ -54,6 +56,8 @@ feathersClient.hooks({
 
           console.log(`[Auth] Not authenticated.`);
           if (!Array.isArray(err.data) && !err.data?.reason) {
+            console.log('[Auth] check loginServiceExceptions', loginServiceExceptions, ctx.path);
+            if ((loginServiceExceptions as string[]).includes(ctx.path)) return;
             await router.replace({ name: Route.LOGIN });
           }
         }

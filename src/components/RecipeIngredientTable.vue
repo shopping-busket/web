@@ -129,7 +129,7 @@
 <script lang="ts" setup>
 import { onMounted, ref, Ref, watch } from 'vue';
 import { CrudFlag, IIngredient } from '@/shoppinglist/recipes/types';
-import feathersClient, { FeathersError, Service } from '@/feathers-client';
+import feathersClient, { Service } from '@/feathers-client';
 import { comparatorSortAlphabetically } from '@/helpers/utils';
 import { EventType, LogEvent } from '@/shoppinglist/events';
 import { v4 as uuidv4 } from 'uuid';
@@ -137,12 +137,14 @@ import { LibraryEntry } from '@/views/me/list/MyLists.vue';
 import { VNumberInput } from 'vuetify/labs/components';
 import _ from 'lodash';
 import { useRecipesStore } from '@/stores/recipes.store';
+import { useLoginStore } from '@/stores/login.store';
 
 const props = defineProps<{
   recipeId: number,
   isEditing: boolean,
 }>();
 
+const loginStore = useLoginStore();
 const recipesStore = useRecipesStore();
 
 const shoppingListLibrary: Ref<LibraryEntry[]> = ref([]);
@@ -157,19 +159,10 @@ const addToListAvailable = ref(true);
 onMounted(async () => {
   await fetchIngredients();
 
-  try {
-    if (feathersClient.io.connected) {
-      await fetchShoppingListLibrary();
-    } else {
-      addToListAvailable.value = false;
-    }
-  } catch (e) {
-    const err = e as FeathersError;
-    if (err.code && err.code === 401 /* Unauthorized */) {
-      // User is not logged in, we skip fetching "library"
-      // and instead show an alert that "add to basket" is not available
-      addToListAvailable.value = false;
-    }
+  if (feathersClient.io.connected && loginStore.loggedIn) {
+    await fetchShoppingListLibrary();
+  } else {
+    addToListAvailable.value = false;
   }
 
   loading.value = false;
