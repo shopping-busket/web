@@ -168,7 +168,7 @@
       v-if="shoppingList !== null"
       id="eventViewer"
       v-model="openLogDialog"
-      :events="historicalEvents"
+      :events="eventsStore.getByListId(props.id!)"
       :list-name="shoppingList.name"
     />
 
@@ -205,6 +205,7 @@ import ShareDialog, { UserPermissions, UserWhitelist } from '@/components/ShareD
 import { v4 as uuidv4 } from 'uuid';
 import { userInjection } from '@/helpers/injectionKeys';
 import { useLibraryStore } from '@/stores/library.store';
+import { useEventsStore } from '@/stores/events.store';
 
 const props = defineProps<{
   id: string | undefined,
@@ -214,6 +215,7 @@ const router = useRouter();
 const toast = useToast();
 
 const libraryStore = useLibraryStore();
+const eventsStore = useEventsStore();
 
 const developmentBuild = ref(import.meta.env.DEV);
 const newItemForm: Ref<VForm | null> = ref(null);
@@ -240,8 +242,6 @@ const newItemRules = ref([
 
 const connected = ref(feathersClient.io.connected);
 
-const events: Ref<EventData[]> = ref([]);
-const historicalEvents: Ref<EventData[]> = ref([]);
 const sessionId = uuidv4();
 const user = inject(userInjection);
 const whitelistedUserPermissions = ref({
@@ -261,7 +261,6 @@ onMounted(async () => {
   registerWhitelistListeners();
   registerSearch();
 
-  events.value = loadStoredEvents();
   await loadList();
 
   // Reload list from remote every 5 minutes to sync everything again
@@ -310,8 +309,6 @@ function registerEventListener() {
       console.log('ignoring event because it was sent from this client');
       return;
     }
-
-    historicalEvents.value.push(data.eventData);
 
     if (!shoppingList.value) return;
     if (shoppingList.value?.listid !== data.listid) return;
@@ -524,65 +521,40 @@ async function checkEntry(id: string, check = true, _recordEvent = true): Promis
 //endregion
 
 //region event service
-function loadStoredEvents(): Array<EventData> {
-  let ls: string | null = localStorage.getItem(`events.value-${props.id}`);
-  if (!ls) return [];
-
-  ls = JSON.parse(ls || '');
-
-  return ls as unknown as Array<EventData>;
-}
-
 async function recordEvent(event: EventData): Promise<unknown> {
   if (!props.id) throw new Error('props.id not defined (@ recordEvent)!');
   if (!shoppingList.value) throw new Error('shoppingList is not defined (@ recordEvent)!)');
   libraryStore.patchById(props.id, shoppingList.value.toInterface());
 
-  console.log('[LOG]', event);
-  events.value.push(event);
-  historicalEvents.value.push(event);
-
-  localStorage.setItem(`events.value-${props.id}`, JSON.stringify(events.value));
-
+  console.log('[EventService]', event);
+  eventsStore.pushEvent(props.id, event);
   return sendEventsToServer();
 }
 
 async function sendEventsToServer(): Promise<unknown> {
   console.log('Sending events.value to server.');
 
-  const data: LogEvent[] = events.value.map((e) => ({
-    listid: props.id,
-    eventData: {
-      ...e,
-      sender: sessionId,
-    },
-  } as LogEvent));
-
-  console.log(data);
-
-  const removeQueueEvent = (d: LogEvent[]) => {
-    events.value.splice(0, d.length);
-    localStorage.setItem(`events.value-${props.id}`, JSON.stringify(events.value));
-  };
+  const data: LogEvent[] = eventsStore.getAsLogEvents(props.id!, sessionId);
+  console.log('[EventService] ', data);
 
   return feathersClient.service(Service.EVENT).create(data)
     .then(async (d) => {
-      console.log('[LOG] Sent event to server');
-      removeQueueEvent(d);
+      console.log('[EventService] Sent event to server');
+      eventsStore.getByListId(props.id!).splice(0, d.length);
     })
     .catch(async (e) => {
-      console.log('[LOG] Error sending events.value to server!');
+      console.log('[EventService] Error sending events.value to server!');
       switch ((e as FeathersError).code) {
         case 403:
           console.log('Not permitted to send this type of event!');
           toast.warning('You are not permitted to do this action!');
-          removeQueueEvent(data);
+          eventsStore.getByListId(props.id!).splice(0, data.length);
           await loadList();
           break;
 
         case 404:
           console.log('Unable to find entry. This can probably be ignored and does not affect normal usage.', e);
-          removeQueueEvent(data);
+          eventsStore.getByListId(props.id!).splice(0, data.length);
           await loadList(); // just to be sure
           break;
 
