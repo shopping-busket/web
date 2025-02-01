@@ -1,7 +1,7 @@
 <template>
   <div class="ma-auto pt-4" style="max-width: 70rem">
     <v-card
-      v-for="item in lists as Array<IShoppingList>"
+      v-for="item in libraryStore.$state"
       :key="item.listid"
       :ripple="true"
       class="mb-2 v-ripple pb-1 pt-1"
@@ -186,7 +186,9 @@ import { useToast } from 'vue-toastification';
 import { userInjection } from '@/helpers/injectionKeys';
 import { UserWhitelist } from '@/components/ShareDialog.vue';
 import { Route } from '@/router';
+import { useLibraryStore } from '@/stores/library.store';
 import { comparatorSortAlphabetically } from '@/helpers/utils';
+import { Params } from '@feathersjs/feathers';
 
 const router = useRouter();
 const toast = useToast();
@@ -207,11 +209,12 @@ const newList = ref({
   description: '',
 });
 const auth: Ref<null | AuthObject> = ref(null);
-const lists: Ref<IShoppingList[] | null> = ref(null);
 const importFile: Ref<File[] | null> = ref([]);
 const newListForm: Ref<VForm | null> = ref(null);
 const removeListDialog = ref(false);
 const removeList: Ref<IShoppingList | null> = ref(null);
+
+const libraryStore = useLibraryStore();
 
 export interface LibraryEntry {
   user: string,
@@ -220,20 +223,8 @@ export interface LibraryEntry {
 }
 
 onMounted(async () => {
-  if (!feathersClient.io.connected) {
-    console.log('Not connected to server! Loading lists from storage...');
-    const stored = localStorage.getItem('lists');
-    console.log(stored);
-    if (!stored) {
-      localStorage.setItem('lists', JSON.stringify([]));
-      console.log('No lists found in storage. Offline will not work!');
-      return;
-    }
-
-    lists.value = JSON.parse(stored);
-    return;
-  }
-
+  console.log("MyLists.onMounted ", auth);
+  if (!feathersClient.io.connected) return;
   auth.value = await feathersClient.get('authentication');
 });
 
@@ -248,39 +239,36 @@ async function showNewListDialog() {
 
 async function populateLists(): Promise<void> {
   const library = await feathersClient.service(Service.LIBRARY).find() as LibraryEntry[];
-
-  lists.value = library.map((entry) => {
-    return {
-      ...entry.list,
-      additional: {
-        loading: false,
-      },
-    };
-  }).sort((a,b) => comparatorSortAlphabetically(a.name, b.name));
-
-  localStorage.setItem('lists', JSON.stringify(lists.value));
+  libraryStore.updateLibrary(
+    library.map((entry) => {
+      return {
+        ...entry.list,
+        additional: {
+          loading: false,
+        },
+      };
+    }).sort((a, b) => comparatorSortAlphabetically(a.name, b.name))
+  );
 }
 
 watch(auth, populateLists);
 
 async function leaveFromList(listid: string): Promise<void> {
-  if (!lists.value) return;
-  lists.value?.splice(lists.value?.findIndex((l) => l.listid === listid), 1);
+  libraryStore.removeById(listid);
 
   const { id } = (await feathersClient.service(Service.WHITELISTED_USERS).find({
     query: {
       user: user?.uuid,
       listId: listid,
     }
-  } as Partial<UserWhitelist>) as UserWhitelist[])[0];
+  } as Params<Partial<UserWhitelist>>) as UserWhitelist[])[0];
 
   await feathersClient.service(Service.WHITELISTED_USERS).remove(id);
 }
 
 async function deleteList(listid: string): Promise<void> {
-  if (!lists.value) return;
-  const removed = lists.value?.splice(lists.value?.findIndex((l) => l.listid === listid), 1);
-  await feathersClient.service(Service.LIST).remove(removed[0].id);
+  const removed = libraryStore.removeById(listid);
+  await feathersClient.service(Service.LIST).remove(removed.id);
 }
 
 async function uploadImportedList(): Promise<void> {
@@ -326,14 +314,14 @@ async function uploadImportedList(): Promise<void> {
 }
 
 async function openList(id: string) {
-  const index = lists.value?.findIndex((i) => i.listid === id) as number;
-  if (index === -1 || !lists.value) return;
+  const index = libraryStore.findIndexById(id);
+  if (index === -1) return;
 
-  lists.value[index].additional.loading = true;
+  libraryStore.$state[index].additional.loading = true;
   await router.push({
     name: Route.DISPLAY_LIST,
     params: {
-      id: lists.value[index].listid,
+      id,
     },
   });
 }
