@@ -37,6 +37,11 @@
         Log in to create lists
       </v-alert>
     </transition>
+    <transition appear>
+      <v-alert variant="text" color="primary" icon="mdi-information-outline" v-if="!feathersClient.io.connected" class="mt-2">
+        You are offline. Some lists might be missing!
+      </v-alert>
+    </transition>
 
     <v-dialog v-model="newListDialog" max-width="550px">
       <v-card>
