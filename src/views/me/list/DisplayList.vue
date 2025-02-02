@@ -530,7 +530,11 @@ async function recordEvent(event: EventData): Promise<unknown> {
 }
 
 async function sendEventsToServer(): Promise<unknown> {
-  console.log('Sending events.value to server.');
+  console.log('Trying to send events.value to server.');
+  if (!feathersClient.io.connected) {
+    console.warn('Cannot send events to server! Offline!');
+    return;
+  }
 
   const data: LogEvent[] = eventsStore.getAsLogEvents(props.id!, sessionId);
   console.log('[EventService] ', data);
