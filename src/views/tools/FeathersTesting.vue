@@ -170,11 +170,11 @@ import { EventData, EventType, LogEvent } from '@/shoppinglist/events';
 import ShoppingList, { ShoppingListItem } from '@/shoppinglist/ShoppingList';
 import { DotNestedKeys, ReverseMap } from '@/helpers/TypeUtils';
 import { v4 as uuidv4 } from 'uuid';
-import { useLoginStore } from '@/stores/login.store';
+import { useAuthStore } from '@/stores/auth.store';
 
 const toast = useToast();
 const theme = useTheme();
-const loginStore = useLoginStore();
+const loginStore = useAuthStore();
 
 type Rule = ((value: string) => boolean | string);
 

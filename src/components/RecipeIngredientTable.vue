@@ -137,14 +137,14 @@ import { LibraryEntry } from '@/views/me/list/MyLists.vue';
 import { VNumberInput } from 'vuetify/labs/components';
 import _ from 'lodash';
 import { useRecipesStore } from '@/stores/recipes.store';
-import { useLoginStore } from '@/stores/login.store';
+import { useAuthStore } from '@/stores/auth.store';
 
 const props = defineProps<{
   recipeId: number,
   isEditing: boolean,
 }>();
 
-const loginStore = useLoginStore();
+const authStore = useAuthStore();
 const recipesStore = useRecipesStore();
 
 const shoppingListLibrary: Ref<LibraryEntry[]> = ref([]);
@@ -159,7 +159,7 @@ const addToListAvailable = ref(true);
 onMounted(async () => {
   await fetchIngredients();
 
-  if (feathersClient.io.connected && loginStore.loggedIn) {
+  if (feathersClient.io.connected && authStore.isLoggedIn) {
     await fetchShoppingListLibrary();
   } else {
     addToListAvailable.value = false;

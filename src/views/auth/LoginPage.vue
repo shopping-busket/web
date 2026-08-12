@@ -83,11 +83,14 @@ import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useTheme } from 'vuetify';
 import { EMAIL_REGEX } from '@/helpers/regex';
+import {useAuthStore} from "@/stores/auth.store";
 
 const toast = useToast();
 const route = useRoute();
 const i18n = useI18n();
 const theme = useTheme();
+const authStore = useAuthStore();
+
 const isDarkTheme = ref(false);
 const primaryColor = theme.global.current.value.colors.primary;
 
@@ -130,12 +133,11 @@ async function submit(): Promise<void> {
 
   btnLoading.value = true;
 
-  feathersClient.authentication.authenticate({
+  authStore.login({
     strategy: 'local',
-    email: email.value,
-    password: password.value,
-  })
-    .then(() => {
+    email: email,
+    password: password,
+  }).then(() => {
       btnLoading.value = false;
       toast.success('Logged in successfully!');
       console.log('%c[Auth]%cLogged in', 'color: green');
@@ -146,7 +148,7 @@ async function submit(): Promise<void> {
       }
       window.location.href = decodeURI(route.query.redirect as string || '/');
     })
-    .catch((err) => {
+    .catch((err: { code: number; }) => {
       if (err.code === 401) {
         toast.warning('Wrong email or password!');
         password.value = '';

@@ -9,15 +9,15 @@
       expand-on-hover
     >
       <v-list-item
-        :prepend-avatar="auth?.user.avatarURI ?? img"
+        :prepend-avatar="authStore?.user?.avatarURI ?? img"
         nav
       >
         <v-list-item-title>
-          <span v-if="auth === null || auth === undefined">
+          <span v-if="!authStore.isLoggedIn">
             Not logged in
           </span>
           <span v-else>
-            {{ auth.loginStore?.fullName }}
+            {{ authStore.user?.fullName }}
           </span>
         </v-list-item-title>
         <template #append>
@@ -121,13 +121,13 @@ import {
   VToolbarTitle,
 } from 'vuetify/components';
 
-import { RouteLocationAsRelativeGeneric, useRoute, useRouter } from 'vue-router';
-import feathersClient, { AuthObject } from '@/feathers-client';
-import { onMounted, Ref, ref } from 'vue';
-import { useToast } from 'vue-toastification';
+import {RouteLocationAsRelativeGeneric, useRoute, useRouter} from 'vue-router';
+import feathersClient from '@/feathers-client';
+import {onMounted, ref} from 'vue';
+import {useToast} from 'vue-toastification';
 import img from '@/assets/avatar-placeholder.png';
-import { Route } from '@/router';
-import emitter from '@/helpers/mitt';
+import {Route} from '@/router';
+import {useAuthStore} from "@/stores/auth.store";
 
 const props = withDefaults(defineProps<{
   appbarColor?: string
@@ -179,12 +179,12 @@ const baseMenuItems: MenuItem[] = [
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
+const authStore = useAuthStore();
 
 const menuItems: MenuItem[] = [];
 const drawer = ref(false);
 const mini = ref(false);
 
-const auth: Ref<AuthObject | null> = ref(null);
 let installPrompt: BeforeInstallPromptEvent | null = null;
 let showInstallable = false;
 const SHOW_INSTALL_APP_BANNER_STORE_KEY = 'showInstallAppBanner';
@@ -217,7 +217,7 @@ onMounted(() => {
     divide: true,
   });
 
-  authChangeListener(feathersClient.get('authentication'))
+  authStore.$subscribe(authChangeListener)
 });
 
 function getShowInstallBannerStore() {
@@ -252,11 +252,9 @@ async function logOut(): Promise<void> {
     toast('Can\'t log out. Not logged in.');
     return;
   }
-  feathersClient.authentication.logout()
-    .then(() => {
-      toast('Logged out successfully.');
-      window.location.reload();
-    });
+  await authStore.logout();
+  toast('Logged out successfully.');
+  window.location.reload();
 }
 
 function tryRouteTo(loc: RouteLocationAsRelativeGeneric): Promise<void> | void {
@@ -269,13 +267,11 @@ async function clickItemAsync(item: MenuItem) {
   if (item.click) await item.click();
 }
 
-function authChangeListener(nAuth: AuthObject | null) {
-  auth.value = nAuth;
-
+function authChangeListener() {
   menuItems.length = 0;
   menuItems.push(...baseMenuItems);
 
-  if (auth.value == null) {
+  if (!authStore.isLoggedIn) {
     menuItems.push({
       title: 'Log in',
       icon: 'mdi-login-variant',
@@ -284,7 +280,7 @@ function authChangeListener(nAuth: AuthObject | null) {
     });
     return;
   }
-  if (auth.value.user.prefersMiniDrawer) {
+  if (authStore.user?.prefersMiniDrawer) {
     mini.value = true;
   }
 
@@ -300,8 +296,6 @@ function authChangeListener(nAuth: AuthObject | null) {
     divide: true,
   });
 }
-
-emitter.on('authenticationChanged', authChangeListener)
 </script>
 
 <style lang="scss" scoped>

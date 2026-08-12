@@ -215,12 +215,12 @@ import _, { clamp, truncate } from 'lodash';
 import config from '../../../../config';
 import img from '@/assets/recipe-header-placeholder.jpg';
 import { VTextarea } from 'vuetify/components';
-import { useLoginStore } from '@/stores/login.store';
+import { useAuthStore } from '@/stores/auth.store';
 import { useRecipesStore } from '@/stores/recipes.store';
 
 const toast = useToast();
 const router = useRouter();
-const loginStore = useLoginStore();
+const loginStore = useAuthStore();
 const recipesStore = useRecipesStore();
 
 const props = defineProps<{

@@ -37,15 +37,17 @@ import MainContainer from '@/components/MainContainer.vue';
 import AuthenticationLoading from '@/views/auth/AuthenticationLoading.vue';
 import emitter from '@/helpers/mitt';
 import { useRoute, useRouter } from 'vue-router';
+import {useAuthStore} from "@/stores/auth.store";
 
-const showUpdateUI = ref(true);
 const theme = useTheme();
 const router = useRouter();
 const route = useRoute();
-const wb = inject('wb') as Workbox;
-const routeLoading = ref(false);
+const authStore = useAuthStore();
 
-let auth: AuthObject | null = null;
+const wb = inject('wb') as Workbox;
+
+const showUpdateUI = ref(true);
+const routeLoading = ref(false);
 
 onMounted(async () => {
   emitter.on('navGuardLoading', (loading) => {
@@ -61,7 +63,7 @@ onMounted(async () => {
 
   app.config.errorHandler = async (e) => {
     (window as unknown as { e: unknown }).e = e;
-    if (Object.prototype.hasOwnProperty.call(e, 'code') && e.code === 401) {
+    if (Object.prototype.hasOwnProperty.call(e, 'code') && (e as { code: number }).code === 401) {
       console.log('Error caught by global App.vue errorhandler: NotAuthenticated. Redirecting to login');
       console.error(e);
       await feathersClient.authenticate().catch(async () => await router.push({ name: 'login', query: { redirect: route.path } }));
@@ -72,15 +74,11 @@ onMounted(async () => {
     useToast().error('Something unexpected just happened!');
   };
 
-  setTimeout(async () => {
-    auth = await feathersClient.get('authentication');
-    if (!auth) return;
-    const usr = auth.user;
-
-    theme.global.name.value = usr.prefersDarkMode ? 'darkTheme' : 'lightTheme';
-  }, 500);
-
   if (process.env.NODE_ENV === 'development') document.title = 'Busket Dev';
+
+  await authStore.login()
+  if (authStore.isLoggedIn)
+    theme.global.name.value = authStore.user?.prefersDarkMode ? 'darkTheme' : 'lightTheme';
 });
 
 async function updateAndRefreshPage(): Promise<void> {

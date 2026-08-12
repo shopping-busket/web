@@ -36,7 +36,7 @@
 
           <div v-if="!editingListInfo">
             <v-btn
-              v-show="shoppingList != null && loginStore.user != undefined && shoppingList.owner === loginStore.user.uuid"
+              v-show="shoppingList != null && authStore.user != undefined && shoppingList.owner === authStore.user.uuid"
               color="primary" icon="mdi-pencil-outline" size="x-small" variant="text"
               @click="enterListInfoEditState()"
             />
@@ -55,7 +55,7 @@
             />
 
             <v-btn
-              v-show="shoppingList != null && loginStore.user != undefined && shoppingList.owner === loginStore.user.uuid"
+              v-show="shoppingList != null && authStore.user != undefined && shoppingList.owner === authStore.user.uuid"
               color="primary" icon="mdi-account-group-outline" size="x-small" variant="text"
               @click="openShareDialog = true"
             />
@@ -173,7 +173,7 @@
     />
 
     <ShareDialog
-      v-if="shoppingList != null && loginStore.user != undefined && shoppingList.owner === loginStore.user.uuid"
+      v-if="shoppingList != null && authStore.user != undefined && shoppingList.owner === authStore.user.uuid"
       v-model="openShareDialog"
       :list-id="(shoppingList as ShoppingList).listid"
     />
@@ -205,7 +205,7 @@ import ShareDialog, { UserPermissions, UserWhitelist } from '@/components/ShareD
 import { v4 as uuidv4 } from 'uuid';
 import { useLibraryStore } from '@/stores/library.store';
 import { useEventsStore } from '@/stores/events.store';
-import { useLoginStore } from '@/stores/login.store';
+import { useAuthStore } from '@/stores/auth.store';
 
 const props = defineProps<{
   id: string | undefined,
@@ -216,7 +216,7 @@ const toast = useToast();
 
 const libraryStore = useLibraryStore();
 const eventsStore = useEventsStore();
-const loginStore = useLoginStore();
+const authStore = useAuthStore();
 
 const developmentBuild = ref(import.meta.env.DEV);
 const newItemForm: Ref<VForm | null> = ref(null);
@@ -293,7 +293,7 @@ function registerWhitelistListeners() {
   });
 
   feathersClient.service(Service.WHITELISTED_USERS).on('patched', async (patchedUser: UserWhitelist) => {
-    if (loginStore.user && loginStore.user.uuid === shoppingList.value?.owner) return;
+    if (authStore.user && authStore.user.uuid === shoppingList.value?.owner) return;
     if (shoppingList.value?.listid !== patchedUser.listId) return;
     await updatePermissions(patchedUser);
     hideViewOnlyInfoAlert(false);
@@ -374,7 +374,7 @@ async function loadList(): Promise<void> {
 }
 
 async function loadListFromRemote(): Promise<ShoppingList | null> {
-  if (!loginStore.loggedIn) return null;
+  if (!authStore.isLoggedIn) return null;
 
   const lists: IShoppingList[] | undefined = await feathersClient.service(Service.LIST).find({ query: { listid: props.id } })
     .catch(() => {
@@ -627,7 +627,7 @@ function getViewInfoAlertHideStateFromStore() {
 }
 
 async function updatePermissions(whitelistedUser: UserWhitelist | null = null) {
-  if (shoppingList.value && shoppingList.value?.owner === loginStore.user?.uuid) return;
+  if (shoppingList.value && shoppingList.value?.owner === authStore.user?.uuid) return;
 
   let whitelisted = [whitelistedUser];
   if (!whitelistedUser) {

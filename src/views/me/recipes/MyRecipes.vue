@@ -15,7 +15,7 @@
         >
           <template #append>
             <v-icon
-              v-if="recipe.owner.uuid === loginStore.user?.uuid"
+              v-if="recipe.owner.uuid === authStore.user?.uuid"
               color="red"
               icon="mdi-trash-can-outline"
               @click.stop="removeRecipeDialog = {show: true, id: recipe.id}"
@@ -38,7 +38,7 @@
       class="d-flex justify-center flex-column align-center new-recipe-card"
       hover
       variant="outlined"
-      v-if="feathersClient.io.connected && loginStore.loggedIn"
+      v-if="feathersClient.io.connected && authStore.isLoggedIn"
       @click="feathersClient.io.connected ? showNewListDialog() : toast('You are offline!')"
     >
       <div class="new-recipe-title">
@@ -48,7 +48,7 @@
     </v-card>
     <transition appear>
       <v-alert variant="tonal" color="primary" icon="mdi-information-outline"
-               v-if="!loginStore.loggedIn"
+               v-if="!authStore.isLoggedIn"
       >
         Log in to create recipes
       </v-alert>
@@ -182,13 +182,13 @@ import { useRouter } from 'vue-router';
 import { Route } from '@/router';
 import { useToast } from 'vue-toastification';
 import defaultUserImg from '@/assets/avatar-placeholder.png';
-import { useLoginStore } from '@/stores/login.store';
+import { useAuthStore } from '@/stores/auth.store';
 import { useRecipesStore } from '@/stores/recipes.store';
 import _ from 'lodash';
 
 const router = useRouter();
 const toast = useToast();
-const loginStore = useLoginStore();
+const authStore = useAuthStore();
 const recipesStore = useRecipesStore();
 
 const recipes: Ref<IRecipe[]> = ref([]);
@@ -260,7 +260,7 @@ async function createRecipe() {
   } as IRecipe) as IRecipe;
   recipesStore.pushRecipes([{
     ...recipe,
-    owner: _.pick(loginStore.user, ['fullName', 'uuid', 'avatarURI']) as IRecipeOwner
+    owner: _.pick(authStore.user, ['fullName', 'uuid', 'avatarURI']) as IRecipeOwner
   }]);
 
   await openRecipe(recipe);

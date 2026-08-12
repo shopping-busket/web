@@ -5,11 +5,11 @@
   >
     <div :class="{'text-grey-darken-1': theme.current.value.dark}">
       <h1 :class="{'text-grey': theme.current.value.dark}">
-        <span v-if="!auth">
+        <span v-if="!authStore.isLoggedIn">
           Welcome!
         </span>
         <span v-else>
-          Hello, {{ auth.loginStore.fullName }}!
+          Hello, {{ authStore.user?.fullName }}!
         </span>
       </h1>
 
@@ -25,16 +25,11 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, Ref, ref } from 'vue';
-import feathersClient, { AuthObject } from '@/feathers-client';
-import { useTheme } from 'vuetify';
+import {useTheme} from 'vuetify';
+import {useAuthStore} from "@/stores/auth.store";
 
-const auth: Ref<AuthObject | null> = ref(null);
 const theme = useTheme();
-
-onMounted(async () => {
-  auth.value = await feathersClient.get('authentication');
-});
+const authStore = useAuthStore();
 </script>
 
 <style scoped>

@@ -22,7 +22,7 @@ import feathersClient, { FeathersError, Service } from '@/feathers-client';
 import { UserWhitelist } from '@/components/ShareDialog.vue';
 import { Route } from '@/router';
 import { useRouter } from 'vue-router';
-import { useLoginStore } from '@/stores/login.store';
+import { useAuthStore } from '@/stores/auth.store';
 
 const props = defineProps<{
   secret: string,
@@ -31,7 +31,7 @@ const props = defineProps<{
 }>();
 
 const router = useRouter();
-const loginStore = useLoginStore();
+const loginStore = useAuthStore();
 
 const invalidSecret = ref(false);
 const error = ref(false);

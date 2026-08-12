@@ -8,7 +8,7 @@
       elevation="0"
       variant="outlined"
     >
-      <v-list lines="three" select-strategy="multiple">
+      <v-list lines="three" select-strategy="leaf">
         <v-list-subheader>General</v-list-subheader>
 
         <v-list-item
@@ -89,7 +89,7 @@ import {
 import feathersClient, { AuthObject, Service } from '@/feathers-client';
 import { onMounted, reactive, Ref, ref, watch } from 'vue';
 import { useTheme } from 'vuetify';
-import { useLoginStore } from '@/stores/login.store';
+import { useAuthStore } from '@/stores/auth.store';
 
 interface SettingsObject {
   prefersDarkMode: boolean,
@@ -98,7 +98,7 @@ interface SettingsObject {
 }
 
 const theme = useTheme();
-const loginStore = useLoginStore();
+const authStore = useAuthStore();
 
 const auth: Ref<AuthObject | null> = ref(null);
 const settings: SettingsObject = reactive({
@@ -127,8 +127,8 @@ watch(settings, async () => {
 });
 
 async function deleteUser() {
-  if (!loginStore.user?.id) return;
-  await feathersClient.service(Service.USERS).remove(loginStore.user.id);
+  if (!authStore.user?.id) return;
+  await feathersClient.service(Service.USERS).remove(authStore.user.id);
   window.location.reload();
 }
 </script>

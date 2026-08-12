@@ -5,7 +5,7 @@ import auth from '@feathersjs/authentication-client';
 import config from '../config';
 import router, { Route, RouteMeta } from '@/router';
 import emitter from '@/helpers/mitt';
-import { useLoginStore } from '@/stores/login.store';
+import { useAuthStore } from '@/stores/auth.store';
 
 const socket = io(config.backend, { transports: ['websocket'] });
 
@@ -38,11 +38,7 @@ feathersClient.hooks({
 
         try {
           const auth = await feathersClient.authenticate() as AuthObject;
-          emitter.emit('authenticationChanged', auth);
-          useLoginStore().$patch({
-            loggedIn: true,
-            user: auth.user,
-          });
+          await useAuthStore().login();
 
           if (!auth.user.verifiedEmail && !(router.currentRoute.value.meta as RouteMeta).allowUnverified) {
             await router.replace({ name: Route.EMAIL_VERIFY });

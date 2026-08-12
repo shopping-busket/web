@@ -19,7 +19,7 @@
 <script lang="ts" setup>
 import { VBtn, VCard, VCardActions } from 'vuetify/components';
 import { Route } from '@/router';
-import { useLoginStore } from '@/stores/login.store';
+import { useAuthStore } from '@/stores/auth.store';
 
-const loginStore = useLoginStore();
+const loginStore = useAuthStore();
 </script>

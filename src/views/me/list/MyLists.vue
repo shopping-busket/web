@@ -13,7 +13,7 @@
         <template #append>
           <v-icon
             color="red"
-            :icon="item.owner === loginStore.user?.uuid ? 'mdi-trash-can-outline' : 'mdi-exit-run'"
+            :icon="item.owner === authStore.user?.uuid ? 'mdi-trash-can-outline' : 'mdi-exit-run'"
             @click.stop="removeListDialog = true; removeList = item"
           />
         </template>
@@ -33,7 +33,7 @@
       <v-icon icon="mdi-plus-circle-outline" />
     </v-card>
     <transition appear v-else>
-      <v-alert variant="tonal" color="primary" icon="mdi-information-outline" v-if="!loginStore.loggedIn">
+      <v-alert variant="tonal" color="primary" icon="mdi-information-outline" v-if="!authStore.isLoggedIn">
         Log in to create lists
       </v-alert>
     </transition>
@@ -150,8 +150,8 @@
 
   <v-dialog v-model="removeListDialog" max-width="500px">
     <v-card
-      :title="`Are you sure that you want to ${removeList?.owner === loginStore.user?.uuid ? 'delete' : 'leave'} this list?`"
-      :subtitle="removeList?.owner === loginStore.user?.uuid ? 'You won\'t be able to get it back' : 'You will not be able to access it until you get another invite'"
+      :title="`Are you sure that you want to ${removeList?.owner === authStore.user?.uuid ? 'delete' : 'leave'} this list?`"
+      :subtitle="removeList?.owner === authStore.user?.uuid ? 'You won\'t be able to get it back' : 'You will not be able to access it until you get another invite'"
     >
       <v-card-actions>
         <v-spacer />
@@ -163,7 +163,7 @@
           v-if="removeList"
           color="primary"
           variant="outlined"
-          @click="removeList?.owner === loginStore.user?.uuid ? deleteList(removeList.listid) : leaveFromList(removeList.listid); removeListDialog = false"
+          @click="removeList?.owner === authStore.user?.uuid ? deleteList(removeList.listid) : leaveFromList(removeList.listid); removeListDialog = false"
         >
           Yes, I am sure
         </v-btn>
@@ -199,11 +199,11 @@ import { Route } from '@/router';
 import { useLibraryStore } from '@/stores/library.store';
 import { comparatorSortAlphabetically } from '@/helpers/utils';
 import { Params } from '@feathersjs/feathers';
-import { useLoginStore } from '@/stores/login.store';
+import { useAuthStore } from '@/stores/auth.store';
 
 const router = useRouter();
 const toast = useToast();
-const loginStore = useLoginStore();
+const authStore = useAuthStore();
 
 const nameRules = [
   (val: string) => val.length >= 3 || 'Name has to have at least 3 characters.',
@@ -270,7 +270,7 @@ async function leaveFromList(listid: string): Promise<void> {
 
   const { id } = (await feathersClient.service(Service.WHITELISTED_USERS).find({
     query: {
-      user: loginStore.user?.uuid,
+      user: authStore.user?.uuid,
       listId: listid,
     }
   } as Params<Partial<UserWhitelist>>) as UserWhitelist[])[0];
