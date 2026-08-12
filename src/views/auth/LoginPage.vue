@@ -1,8 +1,7 @@
 <template>
   <div class="pt-16 ma-auto" style="max-width: 500px">
     <v-card
-      :style="isDarkTheme ? 'border-color: #393939' : 'border-color: #e0e0e0'"
-      title="Login" variant="outlined"
+      title="Login"
     >
       <v-card-subtitle style="margin-top: -12px">
         Login using your Busket account. Don't have one?

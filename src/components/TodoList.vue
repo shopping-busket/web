@@ -1,13 +1,14 @@
 <template>
   <div>
     <div class="d-flex">
-      <div :class="isDarkTheme ? 'text-grey hr-sect-dark': 'hr-sect-light'" class="hr-sect mb-1">
-        {{ label }} {{ getCountString(showCount) }}
+      <div class="mb-1 d-flex items-center hr-sect">
+        <div class="text-no-wrap">{{ label }} {{ getCountString(showCount) }}</div>
+        <div class="pl-2 hr-sect flex-grow-1"
+             :class="{ 'text-grey hr-sect-dark': isDarkTheme, 'hr-sect-light': !isDarkTheme, 'pr-2': isClearable }"/>
       </div>
       <v-btn
         v-if="isClearable && userPermissions.canEditEntries && userPermissions.canDeleteEntries"
-        class="mr-2"
-        color="red"
+        color="error"
         icon="mdi-trash-can-outline"
         size="x-small"
         variant="tonal"
@@ -31,7 +32,8 @@
           :class="{'entry-focus': element.additional.focused}"
           class="pa-2 mt-2 d-flex flex-row"
           style="align-items: center"
-          variant="tonal"
+
+          color="depth-1"
           @click="focusEntry(element.id)"
         >
           <v-checkbox-btn
@@ -59,7 +61,7 @@
             {{ element.name }}
           </div>
 
-          <v-spacer />
+          <v-spacer/>
 
           <v-btn
             v-show="userPermissions.canEditEntries"
@@ -104,13 +106,13 @@
 </template>
 
 <script lang="ts" setup>
-import { VBtn, VCard, VCheckboxBtn, VIcon, VSpacer, VTextField } from 'vuetify/components';
+import {VBtn, VCard, VCheckboxBtn, VIcon, VSpacer, VTextField} from 'vuetify/components';
 import Draggable from 'vuedraggable';
-import { ShoppingListItem } from '@/shoppinglist/ShoppingList';
+import {ShoppingListItem} from '@/shoppinglist/ShoppingList';
 import config from '../../config';
-import { computed, ref, watch } from 'vue';
-import { useTheme } from 'vuetify';
-import { UserPermissions } from '@/components/ShareDialog.vue';
+import {computed, ref, watch} from 'vue';
+import {useTheme} from 'vuetify';
+import {UserPermissions} from '@/components/ShareDialog.vue';
 
 const props = withDefaults(defineProps<{
   modelValue: ShoppingListItem[],
@@ -200,7 +202,6 @@ function focusEntry(id: string): void {
   display: flex;
   flex-basis: 100%;
   align-items: center;
-  margin-left: 5px;
   font-variant: all-small-caps;
 
   &:after {
@@ -209,7 +210,6 @@ function focusEntry(id: string): void {
     height: 1px;
     font-size: 0;
     line-height: 0;
-    margin: 0 8px;
   }
 }
 

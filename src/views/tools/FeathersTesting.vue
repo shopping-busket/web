@@ -1,7 +1,7 @@
 <template>
   <v-card
     title="Busket Backend tester" :subtitle="`You are logged in as ${loginStore.user?.fullName}`"
-    class="mt-16 ma-auto" max-width="800px" variant="outlined" :style="jseThemeCSS"
+    class="mt-16 ma-auto" max-width="800px" :style="jseThemeCSS"
     :class="getJseTheme"
   >
     <v-card-text>

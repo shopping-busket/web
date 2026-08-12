@@ -73,7 +73,7 @@
           <transition appear name="fade">
             <div v-if="isEditing" class="img-overlay d-flex flex-column">
               <div style="text-shadow: 0 0 5px black">Click to upload</div>
-              <v-btn color="red" @click.stop="deleteHeaderImage">Remove Image</v-btn>
+              <v-btn color="error" @click.stop="deleteHeaderImage">Remove Image</v-btn>
             </div>
           </transition>
         </div>
@@ -187,7 +187,7 @@
   <v-dialog v-model="dialogSaveOpen" max-width="400" persistant>
     <v-card title="Save?" text="Do you want to save the changes or discard them?">
       <v-card-actions>
-        <v-btn variant="text" color="red"
+        <v-btn variant="text" color="error"
                @click="dialogSaveOpen = false; discardRecipeChanges()"
         >
           Discard

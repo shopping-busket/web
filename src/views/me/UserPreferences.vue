@@ -4,10 +4,7 @@
       For some settings to apply, you have to refresh the page.
     </v-alert>
 
-    <v-card
-      elevation="0"
-      variant="outlined"
-    >
+    <v-card>
       <v-list lines="three" select-strategy="leaf">
         <v-list-subheader>General</v-list-subheader>
 
@@ -47,7 +44,7 @@
       </v-list>
     </v-card>
 
-    <v-btn variant ="tonal" color="red" class="mt-4" block @click="deleteUserDialog = true">
+    <v-btn variant="text" color="error" class="mt-4" block @click="deleteUserDialog = true">
       Delete my Busket account
     </v-btn>
   </div>

@@ -1,7 +1,6 @@
 <template>
   <div class="w-100 pa-16">
     <v-card
-      variant="outlined"
       max-width="500px"
       class="ma-auto"
       title="Verify Email"

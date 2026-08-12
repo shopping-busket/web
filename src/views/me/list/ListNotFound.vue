@@ -5,7 +5,6 @@
       class="ma-auto"
       max-width="500px"
       title="List not found"
-      variant="outlined"
     >
       <v-card-actions>
         <v-btn variant="elevated" elevation="0" color="primary" block @click="router.push({ name: Route.MY_LISTS })">

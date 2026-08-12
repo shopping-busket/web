@@ -4,11 +4,11 @@
       :model-value="!viewOnlyInfoAlertHidden && !whitelistedUserPermissions.canEditEntries"
       class="mb-4" closable
       density="compact" text="This list is view-only because you are missing permissions!"
-      type="info" variant="outlined"
+      type="info"
       @click:close="hideViewOnlyInfoAlert(true)"
     />
 
-    <v-card variant="outlined">
+    <v-card color="depth-0">
       <v-card-title>
         <div class="d-flex align-center w-100">
           <div v-if="shoppingList !== null" :class="{ 'w-100': editingListInfo }">
@@ -102,10 +102,11 @@
             v-model="newItemName"
             :rules="newItemRules"
             append-inner-icon="mdi-basket-plus-outline"
-            color="primary"
             density="comfortable"
             placeholder="Add item"
-            variant="outlined"
+            variant="solo-filled"
+            class="elevation-0"
+            bg-color="depth-1"
             @blur="newItemName.length === 0 ? newItemForm?.resetValidation() : null"
             @click:append-inner="createEntry()"
           />
@@ -124,7 +125,7 @@
       </v-card-text>
     </v-card>
 
-    <v-card class="mt-3 pa-2" rounded variant="outlined">
+    <v-card class="my-3 pa-4" rounded color="depth-0">
       <div
         v-if="shoppingList === null"
         class="d-flex justify-center align-items"

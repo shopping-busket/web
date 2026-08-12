@@ -72,7 +72,7 @@
             </div>
           </td>
           <td style="max-width: 2rem">
-            <v-btn icon="mdi-trash-can-outline" variant="text" density="compact" color="red"
+            <v-btn icon="mdi-trash-can-outline" variant="text" density="compact" color="error"
                    @click="e_deleteIngredient(ingredient, i)"
             />
           </td>

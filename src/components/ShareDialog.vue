@@ -98,7 +98,7 @@
         <div class="d-flex align-content-space-between">
           <v-btn
             class="flex-grow-1"
-            color="red"
+            color="error"
             variant="tonal"
             size="small"
             @click="kickUserIndex = editUserIndex; kickUserConfirmationDialog = true"

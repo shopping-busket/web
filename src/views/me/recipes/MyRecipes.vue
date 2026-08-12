@@ -5,9 +5,8 @@
         v-for="recipe in recipes"
         :key="recipe.id"
         :ripple="true"
-        class="mb-2 v-ripple pb-1 pt-1"
+        class="mb-2 v-ripple py-2"
         hover
-        variant="outlined"
         @click="openRecipe(recipe)"
       >
         <v-list-item :title="recipe.title" class="pb-2"
@@ -16,7 +15,7 @@
           <template #append>
             <v-icon
               v-if="recipe.owner.uuid === authStore.user?.uuid"
-              color="red"
+              color="error"
               icon="mdi-trash-can-outline"
               @click.stop="removeRecipeDialog = {show: true, id: recipe.id}"
             />
@@ -37,7 +36,6 @@
       :ripple="true"
       class="d-flex justify-center flex-column align-center new-recipe-card"
       hover
-      variant="outlined"
       v-if="feathersClient.io.connected && authStore.isLoggedIn"
       @click="feathersClient.io.connected ? showNewListDialog() : toast('You are offline!')"
     >
@@ -102,7 +100,7 @@
 
           <div class="d-flex flex-row">
             <v-btn
-              color="red"
+              color="error"
               variant="text"
               @click="dialogNewRecipe = false"
             >

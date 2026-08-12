@@ -4,7 +4,6 @@
       :title="route.query.expired ? 'Email verification failed!' : 'Email verification successful!'"
       class="ma-auto"
       max-width="500px"
-      variant="outlined"
     >
       <v-card-text>
         <span v-if="route.query.expired">

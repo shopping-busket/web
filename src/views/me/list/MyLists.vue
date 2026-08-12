@@ -6,13 +6,12 @@
       :ripple="true"
       class="mb-2 v-ripple pb-1 pt-1"
       hover
-      variant="outlined"
       @click="openList(item.listid)"
     >
       <v-list-item :subtitle="item.description" :title="item.name" class="pb-2">
         <template #append>
           <v-icon
-            color="red"
+            color="error"
             :icon="item.owner === authStore.user?.uuid ? 'mdi-trash-can-outline' : 'mdi-exit-run'"
             @click.stop="removeListDialog = true; removeList = item"
           />
@@ -24,10 +23,9 @@
       :ripple="true"
       class="d-flex justify-center flex-column align-center new-list-card"
       hover
-      variant="outlined"
       @click="feathersClient.io.connected ? showNewListDialog() : toast('You are offline!')"
     >
-      <div class="new-list-title">
+      <div class="new-list-title text-on-background">
         New List
       </div>
       <v-icon icon="mdi-plus-circle-outline" />
@@ -65,7 +63,6 @@
               counter="32"
               density="compact"
               label="Name"
-              variant="outlined"
               @keyup.once="newListForm?.validate()"
             />
             <v-textarea
@@ -82,7 +79,7 @@
 
           <div class="d-flex flex-row">
             <v-btn
-              color="red"
+              color="error"
               variant="text"
               @click="newListDialog = false"
             >
@@ -124,7 +121,7 @@
 
           <div class="d-flex flex-row">
             <v-btn
-              color="red"
+              color="error"
               variant="text"
               @click="importDialog = false"
             >

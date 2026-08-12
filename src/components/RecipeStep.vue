@@ -1,5 +1,5 @@
 <template>
-  <v-card :variant="model.frontend?.isEditing ? 'elevated' : 'outlined'">
+  <v-card :variant="model.frontend?.isEditing ? 'elevated' : 'flat'" color="depth-1" class="mb-2">
     <v-card-title class="w-100">
       <div class="d-flex flex-row w-100">
         <v-text-field
