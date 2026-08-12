@@ -196,7 +196,7 @@ import EventViewer from '@/components/EventViewer.vue';
 import TodoList from '@/components/TodoList.vue';
 import feathersClient, {FeathersError, Service} from '@/feathers-client';
 import ShoppingList, {IShoppingList} from '@/shoppinglist/ShoppingList';
-import {onMounted, reactive, Ref, ref, watch} from 'vue';
+import {onMounted, onUnmounted, reactive, Ref, ref, watch} from 'vue';
 import {useRouter} from 'vue-router';
 import {Route} from '@/router';
 import {useToast} from 'vue-toastification';
@@ -275,6 +275,8 @@ onMounted(async () => {
 
   viewOnlyInfoAlertHidden.value = getViewInfoAlertHideStateFromStore();
 });
+
+onUnmounted(() => eventsStore.pruneDeletedParanoidEvents(props.id!));
 
 function registerListInfoChangeListener() {
   feathersClient.service(Service.LIST).on('patched', (patchedList: IShoppingList) => {
@@ -550,7 +552,7 @@ async function sendEventsToServer(): Promise<unknown> {
   return feathersClient.service(Service.EVENT).create(events)
     .then(async (receivedEvents: ReadonlyArray<LogEvent>) => {
       console.log('[EventService] Sent events to server');
-      receivedEvents.forEach((ev) => eventsStore.deleteEvent(props.id!, ev.eventData.entryId));
+      receivedEvents.forEach((ev) => eventsStore.deleteEventParanoid(props.id!, ev.eventData.entryId));
     })
     .catch(async (e) => {
       console.log('[EventService] Error sending events.value to server!');
@@ -558,13 +560,13 @@ async function sendEventsToServer(): Promise<unknown> {
         case 403:
           console.log('Not permitted to send this type of event!');
           toast.warning('You are not permitted to do this action!');
-          events.forEach((ev) => eventsStore.deleteEvent(props.id!, ev.eventData.entryId));
+          events.forEach((ev) => eventsStore.deleteEventParanoid(props.id!, ev.eventData.entryId));
           await loadList();
           break;
 
         case 404:
           console.log('Unable to find entry. This can probably be ignored and does not affect normal usage.', e);
-          events.forEach((ev) => eventsStore.deleteEvent(props.id!, ev.eventData.entryId));
+          events.forEach((ev) => eventsStore.deleteEventParanoid(props.id!, ev.eventData.entryId));
           await loadList(); // just to be sure
           break;
 

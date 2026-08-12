@@ -30,10 +30,16 @@ export const useEventsStore = defineStore('events', () => {
       eventsMap.value[listId].push({ ...eventData, _deleted: false });
     }
 
-    function deleteEvent(listId: string, eventId: string) {
+    function deleteEventParanoid(listId: string, eventId: string) {
       const event = getByListId(listId).find(e => e.entryId === eventId);
       console.log(`deleteEvent:`, event)
       if (event) event!._deleted = true;
+    }
+
+    function pruneDeletedParanoidEvents(listId: string) {
+      const raw = eventsMap.value[listId];
+      if (raw == null) return;
+      eventsMap.value[listId] = raw.filter(e => !e._deleted);
     }
 
     function getAsLogEvents(listId: string, sessionId: string, includeDeleted: boolean = false): LogEvent[] {
@@ -53,7 +59,8 @@ export const useEventsStore = defineStore('events', () => {
       eventsMap,
       getByListId,
       pushEvent,
-      deleteEvent,
+      deleteEventParanoid,
+      pruneDeletedParanoidEvents,
       getAsLogEvents,
     };
   },
