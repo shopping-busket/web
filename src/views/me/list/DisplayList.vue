@@ -168,7 +168,7 @@
       v-if="shoppingList !== null"
       id="eventViewer"
       v-model="openLogDialog"
-      :events="eventsStore.getByListId(props.id!)"
+      :list-id="props.id!"
       :list-name="shoppingList.name"
     />
 
@@ -194,18 +194,18 @@ import {
 } from 'vuetify/components';
 import EventViewer from '@/components/EventViewer.vue';
 import TodoList from '@/components/TodoList.vue';
-import feathersClient, { FeathersError, Service } from '@/feathers-client';
-import ShoppingList, { IShoppingList } from '@/shoppinglist/ShoppingList';
-import { onMounted, reactive, Ref, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
-import { Route } from '@/router';
-import { useToast } from 'vue-toastification';
-import { EventData, EventType, LogEvent, LogEventListenerData } from '@/shoppinglist/events';
-import ShareDialog, { UserPermissions, UserWhitelist } from '@/components/ShareDialog.vue';
-import { v4 as uuidv4 } from 'uuid';
-import { useLibraryStore } from '@/stores/library.store';
-import { useEventsStore } from '@/stores/events.store';
-import { useAuthStore } from '@/stores/auth.store';
+import feathersClient, {FeathersError, Service} from '@/feathers-client';
+import ShoppingList, {IShoppingList} from '@/shoppinglist/ShoppingList';
+import {onMounted, reactive, Ref, ref, watch} from 'vue';
+import {useRouter} from 'vue-router';
+import {Route} from '@/router';
+import {useToast} from 'vue-toastification';
+import {EventData, EventType, LogEvent, LogEventListenerData} from '@/shoppinglist/events';
+import ShareDialog, {UserPermissions, UserWhitelist} from '@/components/ShareDialog.vue';
+import {v4 as uuidv4} from 'uuid';
+import {useLibraryStore} from '@/stores/library.store';
+import {useEventsStore} from '@/stores/events.store';
+import {useAuthStore} from '@/stores/auth.store';
 
 const props = defineProps<{
   id: string | undefined,
@@ -376,7 +376,7 @@ async function loadList(): Promise<void> {
 async function loadListFromRemote(): Promise<ShoppingList | null> {
   if (!authStore.isLoggedIn) return null;
 
-  const lists: IShoppingList[] | undefined = await feathersClient.service(Service.LIST).find({ query: { listid: props.id } })
+  const lists: IShoppingList[] | undefined = await feathersClient.service(Service.LIST).find({query: {listid: props.id}})
     .catch(() => {
       listNotFound();
     }) as IShoppingList[] | undefined;
@@ -399,7 +399,7 @@ async function loadListFromCache(): Promise<ShoppingList> {
 }
 
 async function listNotFound() {
-  await router.replace({ name: Route.LIST_NOT_FOUND });
+  await router.replace({name: Route.LIST_NOT_FOUND});
 }
 
 //endregion
@@ -529,6 +529,8 @@ async function recordEvent(event: EventData): Promise<unknown> {
   return sendEventsToServer();
 }
 
+let isSendingEvents = false;
+
 async function sendEventsToServer(): Promise<unknown> {
   console.log('Trying to send events.value to server.');
   if (!feathersClient.io.connected) {
@@ -536,13 +538,19 @@ async function sendEventsToServer(): Promise<unknown> {
     return;
   }
 
-  const data: LogEvent[] = eventsStore.getAsLogEvents(props.id!, sessionId);
-  console.log('[EventService] ', data);
+  if (isSendingEvents) {
+    console.log('Already sending events.value to server. Skipping...');
+    return;
+  }
+  isSendingEvents = true;
 
-  return feathersClient.service(Service.EVENT).create(data)
-    .then(async (d) => {
-      console.log('[EventService] Sent event to server');
-      eventsStore.getByListId(props.id!).splice(0, d.length);
+  const events: LogEvent[] = eventsStore.getAsLogEvents(props.id!, sessionId);
+  console.log('[EventService] ', events);
+
+  return feathersClient.service(Service.EVENT).create(events)
+    .then(async (receivedEvents: ReadonlyArray<LogEvent>) => {
+      console.log('[EventService] Sent events to server');
+      receivedEvents.forEach((ev) => eventsStore.deleteEvent(props.id!, ev.eventData.entryId));
     })
     .catch(async (e) => {
       console.log('[EventService] Error sending events.value to server!');
@@ -550,19 +558,21 @@ async function sendEventsToServer(): Promise<unknown> {
         case 403:
           console.log('Not permitted to send this type of event!');
           toast.warning('You are not permitted to do this action!');
-          eventsStore.getByListId(props.id!).splice(0, data.length);
+          events.forEach((ev) => eventsStore.deleteEvent(props.id!, ev.eventData.entryId));
           await loadList();
           break;
 
         case 404:
           console.log('Unable to find entry. This can probably be ignored and does not affect normal usage.', e);
-          eventsStore.getByListId(props.id!).splice(0, data.length);
+          events.forEach((ev) => eventsStore.deleteEvent(props.id!, ev.eventData.entryId));
           await loadList(); // just to be sure
           break;
 
         default:
           throw e;
       }
+    }).finally(() => {
+      isSendingEvents = false;
     });
 }
 
@@ -678,7 +688,7 @@ async function sendListInfoChangeToServer() {
 //region download list
 function downloadList(): void {
   if (!shoppingList.value) return;
-  let { name } = shoppingList.value;
+  let {name} = shoppingList.value;
   const fileType = 'json';
 
   name.trim().replaceAll(' ', '_');

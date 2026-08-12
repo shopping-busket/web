@@ -1,35 +1,63 @@
-import { defineStore } from 'pinia';
-import { EventData, LogEvent } from '@/shoppinglist/events';
+import {defineStore} from 'pinia';
+import {EventData, LogEvent} from '@/shoppinglist/events';
+import {ref} from "vue";
 
-export interface StoredEvents {
-  [listId: string]: EventData[];
+export type ParanoidEventData = EventData & {
+  _deleted: boolean,
 }
 
-export const useEventsStore = defineStore('events', {
-  state: (): StoredEvents => ({}),
-  actions: {
+export interface StoredEvents {
+  [listId: string]: ParanoidEventData[];
+}
+
+
+export const useEventsStore = defineStore('events', () => {
+    const eventsMap = ref<StoredEvents>({})
+
     /**
      * Get all events corresponding to the list with id [listId]
      */
-    getByListId(listId: string): EventData[] {
-      return this.$state[listId] ?? [];
-    },
-    pushEvent(listId: string, eventData: EventData) {
-      const state = this.$state[listId];
-      if (state == undefined) {
-        this.$state[listId] = [];
+    function getByListId(listId: string, includeDeleted: boolean = false): ReadonlyArray<ParanoidEventData> {
+      const raw = eventsMap.value[listId];
+      if (raw == null) return [];
+      return raw.filter(e => includeDeleted || !e._deleted) as ParanoidEventData[];
+    }
+
+    function pushEvent(listId: string, eventData: EventData) {
+      if (!eventsMap.value[listId]) {
+        eventsMap.value[listId] = [];
       }
-      this.$state[listId].push(eventData);
-    },
-    getAsLogEvents(listId: string, sessionId: string): LogEvent[] {
-      return this.getByListId(listId).map((e) => ({
-        listid: listId,
-        eventData: {
-          ...e,
-          sender: sessionId,
-        },
-      } as LogEvent));
-    },
+      eventsMap.value[listId].push({ ...eventData, _deleted: false });
+    }
+
+    function deleteEvent(listId: string, eventId: string) {
+      const event = getByListId(listId).find(e => e.entryId === eventId);
+      console.log(`deleteEvent:`, event)
+      if (event) event!._deleted = true;
+    }
+
+    function getAsLogEvents(listId: string, sessionId: string, includeDeleted: boolean = false): LogEvent[] {
+      return getByListId(listId, includeDeleted).map(
+        (e) =>
+          ({
+            listid: listId,
+            eventData: {
+              ...e,
+              sender: sessionId,
+            },
+          }) as LogEvent
+      );
+    }
+
+    return {
+      eventsMap,
+      getByListId,
+      pushEvent,
+      deleteEvent,
+      getAsLogEvents,
+    };
   },
-  persist: true,
-});
+  {
+    persist: true,
+  }
+);

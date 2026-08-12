@@ -1,7 +1,7 @@
 <template>
   <v-dialog v-model="model" class="pa-2" max-width="850px">
     <v-card :title="`Log of list '${listName}'`"
-            subtitle="These are events that have not been sent to the server and are waiting in an event-queue!">
+            subtitle="All of these events have either already been processed by busket or will be once you connect to the internet. This only includes processed events from your current session">
       <v-card-text>
         <div class="mb-8 d-flex flex-row flex-wrap checkbox-wrapper">
           <v-checkbox v-model="displayIndexNumber" class="" label="Index" />
@@ -26,7 +26,7 @@
           >
             No log available. Try reloading or changing something.
           </div>
-          <div v-for="(event, i) in events.slice().reverse() as EventData[]" :key="i">
+          <div v-for="(event, i) in events.slice().reverse()" :key="i" :class="!event._deleted ? 'queued' : ''">
             <span v-if="displayIndexNumber" class="gray mr-1">[{{ events.length - i }}]</span>
             <v-icon
               v-if="displayIcons"
@@ -66,13 +66,14 @@
 import { VCard, VCardText, VCheckbox, VDialog, VDivider, VIcon, VSheet, } from 'vuetify/components';
 import { EventData, EventType } from '@/shoppinglist/events';
 import ColorJson from '@/components/ColorJson.vue';
-import { computed, ref } from 'vue';
+import {computed, onMounted, ref} from 'vue';
 import feathersClient from '@/feathers-client';
+import {ParanoidEventData, useEventsStore} from "@/stores/events.store";
 
 const props = defineProps<{
+  listId: string,
   modelValue: boolean,
   listName: string,
-  events: EventData[],
 }>();
 const emit = defineEmits(['update:modelValue']);
 const model = computed({
@@ -84,6 +85,9 @@ const model = computed({
     return emit('update:modelValue', value);
   }
 });
+
+const eventsStore = useEventsStore();
+const events = ref<ReadonlyArray<ParanoidEventData>>([]);
 
 type EventTypeMap = {
   [eventType in (EventType)]: { icon: string; color: string; };
@@ -136,6 +140,13 @@ const map: EventTypeMap = {
   },
 };
 
+onMounted(async () => {
+  eventsStore.$subscribe(() => {
+    events.value = eventsStore.getByListId(props.listId, true);
+  })
+  events.value = eventsStore.getByListId(props.listId, true);
+})
+
 function formatDate(iso: string): string {
   const fmt = (num: number) => num < 10 ? `0${num}` : num.toString();
   const d = new Date(iso);
@@ -162,6 +173,10 @@ async function getSenderNameById(id: string): Promise<void> {
 
 .arrow, .at, .gray {
   color: #b4b4b4;
+}
+
+.queued {
+  background: rgb(255 105 0 / 0.3);
 }
 
 .state {
