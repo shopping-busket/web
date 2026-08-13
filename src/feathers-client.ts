@@ -54,7 +54,7 @@ feathersClient.hooks({
           if (!Array.isArray(err.data) && !err.data?.reason) {
             console.log('[Auth] check loginServiceExceptions', loginServiceExceptions, ctx.path);
             if ((loginServiceExceptions as string[]).includes(ctx.path)) return;
-            await router.replace({ name: Route.LOGIN });
+            await router.replace({ name: Route.LOGIN, query: { redirect: router.currentRoute.value.fullPath} });
           }
         }
       }

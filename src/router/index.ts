@@ -14,6 +14,7 @@ export interface RouteMeta {
   requireConnection?: boolean,
   allowInProduction?: boolean,
   allowUnverified?: boolean,
+  displayName?: string,
 }
 
 export type RouteRecordRawWithMeta = RouteRecordRaw & {
@@ -50,6 +51,7 @@ const routes: RouteRecordRawWithMeta[] = [
     name: Route.SIGNUP,
     meta: {
       requiresAuth: false,
+      displayName: 'Sign up'
     },
     component: () => import('../views/auth/SignupPage.vue'),
   },
@@ -58,6 +60,7 @@ const routes: RouteRecordRawWithMeta[] = [
     name: Route.LOGIN,
     meta: {
       requiresAuth: false,
+      displayName: 'Login'
     },
     component: () => import('../views/auth/LoginPage.vue'),
   },
@@ -66,6 +69,7 @@ const routes: RouteRecordRawWithMeta[] = [
     name: Route.EMAIL_VERIFICATION,
     meta: {
       requiresAuth: true,
+      displayName: 'E-mail verification'
     },
     component: () => import('../views/auth/EmailVerification.vue'),
   },
@@ -75,6 +79,7 @@ const routes: RouteRecordRawWithMeta[] = [
     meta: {
       requiresAuth: true,
       allowUnverified: true,
+      displayName: 'Verify E-mail'
     },
     component: () => import('../views/auth/VerifyEmail.vue'),
   },
@@ -87,6 +92,7 @@ const routes: RouteRecordRawWithMeta[] = [
     props: true,
     meta: {
       requiresAuth: true,
+      displayName: 'Join list'
     },
     component: () => import('../views/me/list/JoinList.vue'),
   },
@@ -102,6 +108,7 @@ const routes: RouteRecordRawWithMeta[] = [
     props: true,
     meta: {
       requiresAuth: true,
+      displayName: 'View list'
     },
     component: () => import('@/views/me/list/DisplayList.vue'),
   },
@@ -117,6 +124,7 @@ const routes: RouteRecordRawWithMeta[] = [
     name: Route.MY_LISTS,
     meta: {
       requiresAuth: true,
+      displayName: 'My lists'
     },
     component: () => import('../views/me/list/MyLists.vue'),
   },
@@ -132,6 +140,7 @@ const routes: RouteRecordRawWithMeta[] = [
     name: Route.MY_RECIPES,
     meta: {
       requireConnection: true,
+      displayName: 'Recipes'
     },
     component: () => import('../views/me/recipes/MyRecipes.vue'),
   },
@@ -140,6 +149,7 @@ const routes: RouteRecordRawWithMeta[] = [
     name: Route.DISPLAY_RECIPE,
     meta: {
       requireConnection: true,
+      displayName: 'View recipe'
     },
     props(r) {
       return {
@@ -161,6 +171,7 @@ const routes: RouteRecordRawWithMeta[] = [
     meta: {
       requiresAuth: true,
       allowUnverified: true,
+      displayName: 'Preferences'
     },
     component: () => import('../views/me/UserPreferences.vue'),
   },
@@ -193,6 +204,7 @@ const routes: RouteRecordRawWithMeta[] = [
     name: Route.HOME,
     meta: {
       requiresAuth: false,
+      displayName: 'Home'
     },
     component: () => import('../views/WelcomePage.vue'),
   },

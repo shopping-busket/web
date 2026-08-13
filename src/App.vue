@@ -38,6 +38,7 @@ import AuthenticationLoading from '@/views/auth/AuthenticationLoading.vue';
 import emitter from '@/helpers/mitt';
 import { useRoute, useRouter } from 'vue-router';
 import {useAuthStore} from "@/stores/auth.store";
+import {Route} from "@/router";
 
 const theme = useTheme();
 const router = useRouter();
@@ -64,8 +65,12 @@ onMounted(async () => {
   app.config.errorHandler = async (e) => {
     (window as unknown as { e: unknown }).e = e;
     if (Object.prototype.hasOwnProperty.call(e, 'code') && (e as { code: number }).code === 401) {
-      console.log('Error caught by global App.vue errorhandler: NotAuthenticated. Redirecting to login');
-      console.error(e);
+      console.log('Error caught by global App.vue errorhandler: NotAuthenticated.');
+      if (route.name === Route.LOGIN) {
+        console.log('Skipping redirect to login because we are already at login!')
+        return;
+      }
+      console.log('Redirecting to login ...')
       await feathersClient.authenticate().catch(async () => await router.push({ name: 'login', query: { redirect: route.path } }));
       return;
     }

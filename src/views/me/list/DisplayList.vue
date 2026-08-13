@@ -382,8 +382,10 @@ async function loadListFromRemote(): Promise<ShoppingList | null> {
   const lists: IShoppingList[] | undefined = await feathersClient.service(Service.LIST).find({query: {listid: props.id}})
     .catch(() => {
       listNotFound();
+      console.warn('Unable to load list from remote!');
     }) as IShoppingList[] | undefined;
   if (lists === undefined || lists.length <= 0) {
+    console.warn('Fetch from remote worked, but returned no list!');
     await listNotFound();
     return null;
   }
@@ -394,6 +396,7 @@ async function loadListFromRemote(): Promise<ShoppingList | null> {
 }
 
 async function loadListFromCache(): Promise<ShoppingList> {
+  console.log('loadListFromCache()');
   if (!props.id) throw await listNotFound();
 
   const list = libraryStore.getListById(props.id);

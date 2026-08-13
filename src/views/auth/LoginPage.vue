@@ -55,12 +55,12 @@
     </v-card>
 
     <v-alert
-      v-if="route.query.redirect && route.query.redirect.length > 0"
+      v-if="redirectRoute!!"
       class="mt-4"
       type="info"
       variant="tonal"
     >
-      After logging in you will be redirected to {{ route.query.redirect }}
+      After logging in you will be redirected to "{{ redirectRoute?.meta?.displayName ?? redirectRoute.fullPath }}"
     </v-alert>
   </div>
 </template>
@@ -78,7 +78,7 @@ import {
 import feathersClient from '@/feathers-client';
 import { onMounted, Ref, ref, watch } from 'vue';
 import { useToast } from 'vue-toastification';
-import { useRoute } from 'vue-router';
+import {RouteLocationRaw, RouteLocationResolved, useRoute, useRouter} from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useTheme } from 'vuetify';
 import { EMAIL_REGEX } from '@/helpers/regex';
@@ -86,6 +86,7 @@ import {useAuthStore} from "@/stores/auth.store";
 
 const toast = useToast();
 const route = useRoute();
+const router = useRouter();
 const i18n = useI18n();
 const theme = useTheme();
 const authStore = useAuthStore();
@@ -110,9 +111,11 @@ const forgetHint = ref(false);
 const btnLoading = ref(false);
 const form: Ref<VForm | null> = ref(null);
 const isValid: Ref<boolean | null> = ref(false);
+const redirectRoute = ref<RouteLocationResolved | null>(null);
 
 onMounted(() => {
   themeWatcher();
+  if (route.query.redirect) redirectRoute.value = router.resolve(route.query.redirect as string);
 });
 
 watch(theme.global.name, themeWatcher);
