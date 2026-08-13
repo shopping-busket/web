@@ -8,6 +8,7 @@ export const useAuthStore = defineStore('authStore', () => {
   const isLoggedIn = computed(() => user.value !== null);
 
   async function login(params?: AuthenticationRequest) {
+    console.log('login', params)
     const auth = await feathersClient.authentication.authenticate(params) as AuthObject;
     user.value = auth.user
   }

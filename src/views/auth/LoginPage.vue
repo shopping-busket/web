@@ -11,8 +11,8 @@
           Signup
         </router-link>
       </v-card-subtitle>
-      <v-card-text>
-        <v-form ref="form" v-model="isValid" @submit.prevent="submit()">
+      <v-form ref="form" v-model="isValid" @submit.prevent="submit()">
+        <v-card-text>
           <v-text-field
             v-model="email"
             :rules="emailRules"
@@ -34,24 +34,24 @@
             variant="underlined"
             @blur="passwordBlur"
             @click:append-inner="showPsw = !showPsw"
-            @keypress.enter="submit"
           />
           <span v-show="forgetHint" class="pt-1">
             Forgot your password? Contact me at <a href="mailto:busket@bux.at">busket@bux.at</a>!
           </span>
+        </v-card-text>
 
+        <v-card-actions>
           <v-btn
             :loading="btnLoading"
             block
-            class="btn-with-outline mt-4"
             color="primary"
-            variant="tonal"
             type="submit"
+            variant="flat"
           >
             Login using Busket
           </v-btn>
-        </v-form>
-      </v-card-text>
+        </v-card-actions>
+      </v-form>
     </v-card>
 
     <v-alert
@@ -60,28 +60,20 @@
       type="info"
       variant="tonal"
     >
-      After logging in you will be redirected to "{{ redirectRoute?.meta?.displayName ?? redirectRoute.fullPath }}"
+      After logging in you will be redirected to
+      "{{ redirectRoute?.meta?.displayName ?? redirectRoute.fullPath }}"
     </v-alert>
   </div>
 </template>
 
 <script lang="ts" setup>
-import {
-  VAlert,
-  VBtn,
-  VCard,
-  VCardSubtitle,
-  VCardText,
-  VForm,
-  VTextField
-} from 'vuetify/components';
-import feathersClient from '@/feathers-client';
-import { onMounted, Ref, ref, watch } from 'vue';
-import { useToast } from 'vue-toastification';
-import {RouteLocationRaw, RouteLocationResolved, useRoute, useRouter} from 'vue-router';
-import { useI18n } from 'vue-i18n';
-import { useTheme } from 'vuetify';
-import { EMAIL_REGEX } from '@/helpers/regex';
+import {VAlert, VBtn, VCard, VCardSubtitle, VCardText, VForm, VTextField} from 'vuetify/components';
+import {onMounted, Ref, ref, watch} from 'vue';
+import {useToast} from 'vue-toastification';
+import {RouteLocationResolved, useRoute, useRouter} from 'vue-router';
+import {useI18n} from 'vue-i18n';
+import {useTheme} from 'vuetify';
+import {EMAIL_REGEX} from '@/helpers/regex';
 import {useAuthStore} from "@/stores/auth.store";
 
 const toast = useToast();
@@ -96,11 +88,11 @@ const primaryColor = theme.global.current.value.colors.primary;
 
 const passwordRules = [
   (value: string) => !!value || `${i18n.t('auth.Required')}.`,
-  (value: string) => (value && value.length >= 3) || i18n.t('auth.Min x characters', { x: 3 }),
+  (value: string) => (value && value.length >= 3) || i18n.t('auth.Min x characters', {x: 3}),
 ];
 const emailRules = [
   (value: string) => !!value || `${i18n.t('auth.Required')}.`,
-  (value: string) => (value && value.length >= 3) || i18n.t('auth.Min x characters', { x: 3 }),
+  (value: string) => (value && value.length >= 3) || i18n.t('auth.Min x characters', {x: 3}),
   (value: string) => EMAIL_REGEX.test(value) || i18n.t('auth.Must be an email'),
 ];
 const tries = ref(0);
@@ -137,19 +129,19 @@ async function submit(): Promise<void> {
 
   authStore.login({
     strategy: 'local',
-    email: email,
-    password: password,
+    email: email.value,
+    password: password.value,
   }).then(() => {
-      btnLoading.value = false;
-      toast.success('Logged in successfully!');
-      console.log('%c[Auth]%cLogged in', 'color: green');
+    btnLoading.value = false;
+    toast.success('Logged in successfully!');
+    console.log('%c[Auth]%cLogged in', 'color: green');
 
-      if (!route.query.redirect) {
-        window.location.href = '/';
-        return;
-      }
-      window.location.href = decodeURI(route.query.redirect as string || '/');
-    })
+    if (!route.query.redirect) {
+      window.location.href = '/';
+      return;
+    }
+    window.location.href = decodeURI(route.query.redirect as string || '/');
+  })
     .catch((err: { code: number; }) => {
       if (err.code === 401) {
         toast.warning('Wrong email or password!');

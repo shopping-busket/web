@@ -125,7 +125,7 @@
       </v-card-text>
     </v-card>
 
-    <v-card class="my-3 pa-4" rounded color="depth-0">
+    <v-card class="my-3 pa-4" color="depth-0">
       <div
         v-if="shoppingList === null"
         class="d-flex justify-center align-items"
