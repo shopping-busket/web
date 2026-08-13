@@ -99,7 +99,7 @@ onMounted(async () => {
 });
 
 watch(settings, async () => {
-  theme.global.name.value = settings.prefersDarkMode ? 'darkTheme' : 'lightTheme';
+  theme.change(settings.prefersDarkMode ? 'darkTheme' : 'lightTheme');
 
   await feathersClient.service(Service.USERS).patch(auth.value?.user.id || -1, {
     prefersDarkMode: settings.prefersDarkMode,

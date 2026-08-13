@@ -1,9 +1,9 @@
 import mitt from 'mitt';
-import { AuthObject } from '@/feathers-client';
 
 type MittEvents = {
   navGuardLoading: boolean,
-  authenticationChanged: AuthObject | null,
+  connected: void,
+  disconnected: void,
 }
 
 const emitter = mitt<MittEvents>();

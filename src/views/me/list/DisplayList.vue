@@ -207,6 +207,7 @@ import {v4 as uuidv4} from 'uuid';
 import {useLibraryStore} from '@/stores/library.store';
 import {useEventsStore} from '@/stores/events.store';
 import {useAuthStore} from '@/stores/auth.store';
+import emitter from "@/helpers/mitt";
 
 const props = defineProps<{
   id: string | undefined,
@@ -251,17 +252,6 @@ const whitelistedUserPermissions = ref({
 } as UserPermissions);
 const viewOnlyInfoAlertHidden = ref(false);
 
-feathersClient.io.on('disconnect', () => {
-  console.log('[feathersClient] disconnected!');
-  connected.value = false;
-});
-
-feathersClient.io.on('connect', async () => {
-  console.log('[feathersClient] connected!');
-  connected.value = true;
-  await sendEventsToServer();
-})
-
 onMounted(async () => {
   await sendEventsToServer();
   registerEventListener();
@@ -275,6 +265,15 @@ onMounted(async () => {
   setInterval(async () => shoppingList.value = await loadListFromRemote(), 1000 * 60 * 5 /* 5 Minutes */);
 
   viewOnlyInfoAlertHidden.value = getViewInfoAlertHideStateFromStore();
+
+  emitter.on('connected', async () => {
+    connected.value = true;
+    await sendEventsToServer();
+  });
+
+  emitter.on('disconnected', () => {
+    connected.value = false;
+  });
 });
 
 onUnmounted(() => eventsStore.pruneDeletedParanoidEvents(props.id!));

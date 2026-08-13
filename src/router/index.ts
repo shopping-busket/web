@@ -1,24 +1,16 @@
-import {
-  createRouter,
-  createWebHistory,
-  NavigationGuardNext,
-  RouteLocationNormalizedGeneric,
-  RouteRecordRaw
-} from 'vue-router';
+import {createRouter, createWebHistory, RouteLocationNormalized, RouteRecordRaw} from 'vue-router';
 import feathersClient from '@/feathers-client';
-import { useToast } from 'vue-toastification';
 import emitter from '@/helpers/mitt';
+import {useAuthStore} from "@/stores/auth.store";
 
-export interface RouteMeta {
-  requiresAuth?: boolean,
-  requireConnection?: boolean,
-  allowInProduction?: boolean,
-  allowUnverified?: boolean,
-  displayName?: string,
-}
-
-export type RouteRecordRawWithMeta = RouteRecordRaw & {
-  meta?: RouteMeta
+declare module 'vue-router' {
+  interface RouteMeta {
+    requiresAuth?: boolean,
+    requireConnection?: boolean,
+    allowInProduction?: boolean,
+    allowUnverified?: boolean,
+    displayName?: string,
+  }
 }
 
 export enum Route {
@@ -44,7 +36,7 @@ export enum Route {
   NO_CONNECTION = 'no connection',
 }
 
-const routes: RouteRecordRawWithMeta[] = [
+const routes: RouteRecordRaw[] = [
   //region authentication
   {
     path: '/signup',
@@ -130,7 +122,7 @@ const routes: RouteRecordRawWithMeta[] = [
   },
   {
     path: '/me/list',
-    redirect: { name: Route.MY_LISTS },
+    redirect: {name: Route.MY_LISTS},
   },
   //endregion
 
@@ -163,7 +155,7 @@ const routes: RouteRecordRawWithMeta[] = [
   //region loginStore
   {
     path: '/me/settings',
-    redirect: { name: Route.PREFERENCES },
+    redirect: {name: Route.PREFERENCES},
   },
   {
     path: '/me/preferences',
@@ -216,12 +208,11 @@ const routes: RouteRecordRawWithMeta[] = [
 ];
 
 export async function tryAuth(
-  from: RouteLocationNormalizedGeneric,
-  to: RouteLocationNormalizedGeneric,
-  next: NavigationGuardNext,
-  destinationMeta: RouteMeta | null,
+  to: RouteLocationNormalized,
+  from: RouteLocationNormalized,
 ): Promise<void> {
-  emitter.emit('navGuardLoading', false);
+  // Add actual authentication logic here
+  console.log('[Auth] Attempting authentication...', {to, from});
 }
 
 const router = createRouter({
@@ -229,40 +220,31 @@ const router = createRouter({
   routes,
 });
 
-const toast = useToast();
-router.beforeEach(async (to, from, next) => {
-  console.log('[Router]', to, from);
+router.beforeEach(async (to, from) => {
+  console.log('[Router]', to.fullPath, '->', from.fullPath);
   emitter.emit('navGuardLoading', true);
 
-  const destinationMeta: RouteMeta | null = to.meta;
-
-  // Only allow in dev mode
-  if (destinationMeta?.allowInProduction === false && process.env.NODE_ENV !== 'development') {
-    emitter.emit('navGuardLoading', false);
-    await router.replace({ name: Route.NOT_FOUND });
-  }
-
-  // Authentication
-  if (!feathersClient.authentication.authenticated) {
-    if (!destinationMeta.requireConnection) {
-      if (!feathersClient.io.connected) {
-        console.log('[Auth] destinationMeta.requireConnection = false & feathersClient.io.connected = false');
-
-        next();
-        setTimeout(async () => {
-          console.log('Trying lazy login ...');
-          await tryAuth(from, to, next, destinationMeta);
-        }, 200);
-        return;
-      }
+  try {
+    // Environment / Dev-Only Route Check
+    if (to.meta.allowInProduction === false && import.meta.env.PROD) {
+      return {name: Route.NOT_FOUND};
     }
 
-    await tryAuth(from, to, next, destinationMeta);
-  }
+    const authStore = useAuthStore();
 
-  emitter.emit('navGuardLoading', false);
-  // if (feathersClient.authentication.authenticated && destinationMeta?.requiresAuth && !destinationMeta.allowUnverified) await router.replace({ name: Route.EMAIL_VERIFY });
-  next();
+    // Verify E-mail
+    if (authStore.isLoggedIn && !authStore.user?.verifiedEmail && to.meta.requiresAuth && !to.meta.allowUnverified) {
+      return {name: Route.EMAIL_VERIFY};
+    }
+
+    return true;
+  } catch (error) {
+    console.error('[Router Guard Error]:', error);
+    // Return false to cancel navigation
+    return false;
+  } finally {
+    emitter.emit('navGuardLoading', false);
+  }
 });
 
 export default router;

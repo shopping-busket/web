@@ -17,26 +17,26 @@
             Refresh
           </v-btn>
         </v-snackbar>
-        <AuthenticationLoading v-if="routeLoading" />
-        <router-view v-else />
+        <AuthenticationLoading v-if="routeLoading"/>
+        <router-view v-else/>
       </MainContainer>
     </v-main>
   </v-app>
 </template>
 
 <script lang="ts" setup>
-import { VApp, VBtn, VMain, VSnackbar } from 'vuetify/components';
+import {VApp, VBtn, VMain, VSnackbar} from 'vuetify/components';
 
-import { Workbox } from 'workbox-window';
-import feathersClient, { AuthObject } from '@/feathers-client';
-import { inject, onMounted, ref } from 'vue';
-import { useToast } from 'vue-toastification';
-import { useTheme } from 'vuetify';
+import {Workbox} from 'workbox-window';
+import feathersClient from '@/feathers-client';
+import {inject, onMounted, ref} from 'vue';
+import {useToast} from 'vue-toastification';
+import {useTheme} from 'vuetify';
 import app from '@/main';
 import MainContainer from '@/components/MainContainer.vue';
 import AuthenticationLoading from '@/views/auth/AuthenticationLoading.vue';
 import emitter from '@/helpers/mitt';
-import { useRoute, useRouter } from 'vue-router';
+import {useRoute, useRouter} from 'vue-router';
 import {useAuthStore} from "@/stores/auth.store";
 import {Route} from "@/router";
 
@@ -52,7 +52,6 @@ const routeLoading = ref(false);
 
 onMounted(async () => {
   emitter.on('navGuardLoading', (loading) => {
-    console.log(`navGuardLoading: ${loading}`);
     routeLoading.value = loading;
   });
 
@@ -61,6 +60,15 @@ onMounted(async () => {
       showUpdateUI.value = true;
     });
   }
+
+  feathersClient.io.on('connect', () => {
+    console.log('[feathersClient] connected!');
+    emitter.emit('connected');
+  });
+  feathersClient.io.on('disconnect', () => {
+    console.log('[feathersClient] disconnected!');
+    emitter.emit('disconnected');
+  });
 
   app.config.errorHandler = async (e) => {
     (window as unknown as { e: unknown }).e = e;
@@ -71,7 +79,10 @@ onMounted(async () => {
         return;
       }
       console.log('Redirecting to login ...')
-      await feathersClient.authenticate().catch(async () => await router.push({ name: 'login', query: { redirect: route.path } }));
+      await feathersClient.authenticate().catch(async () => await router.push({
+        name: 'login',
+        query: {redirect: route.path}
+      }));
       return;
     }
     console.log(JSON.stringify(e, null, 2));
@@ -82,14 +93,15 @@ onMounted(async () => {
   if (process.env.NODE_ENV === 'development') document.title = 'Busket Dev';
 
   await authStore.login()
-  if (authStore.isLoggedIn)
-    theme.global.name.value = authStore.user?.prefersDarkMode ? 'darkTheme' : 'lightTheme';
+  if (authStore.isLoggedIn) {
+    theme.change(authStore.user?.prefersDarkMode ? 'darkTheme' : 'lightTheme')
+  }
 });
 
 async function updateAndRefreshPage(): Promise<void> {
   if (!wb) return;
 
-  await wb.messageSW({ type: 'SKIP_WAITING' });
+  await wb.messageSW({type: 'SKIP_WAITING'});
   window.location.reload();
 }
 </script>

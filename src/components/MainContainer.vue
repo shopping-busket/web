@@ -29,7 +29,7 @@
         </template>
       </v-list-item>
 
-      <v-divider />
+      <v-divider/>
 
       <v-list nav>
         <v-list-item
@@ -39,7 +39,7 @@
           @click.stop="item.to === undefined ? item.click?.call(null) : tryRouteTo(item.to)"
         >
           <template #prepend>
-            <v-icon :icon="item.icon" />
+            <v-icon :icon="item.icon"/>
           </template>
 
           <v-list-item>
@@ -52,7 +52,7 @@
         v-if="showInstallable"
         class="primary pa-2 white--text d-flex align-center justify-center text-center flex-column"
       >
-        <v-divider class="mb-2 w-100" />
+        <v-divider class="mb-2 w-100"/>
         <span class="pb-4">Want to use Busket offline or without having to open your Browser?</span>
         <v-btn block class="mt-2" color="primary" variant="tonal" rounded small @click="installApp">
           Install Busket
@@ -61,11 +61,11 @@
           class="white--text opacity text-decoration-underline cursor-pointer"
           @click.prevent="dontShowBannerAgain()"
         >Don't show me this again!</a>
-        <v-divider class="mt-2 w-100" />
+        <v-divider class="mt-2 w-100"/>
       </div>
 
       <template #append>
-        <v-divider />
+        <v-divider/>
         <v-list nav>
           <v-list-item
             v-for="item in menuItems.filter((it: MenuItem) => it.divide)"
@@ -74,7 +74,7 @@
             @click.stop="item.to == null ? clickItemAsync(item) : tryRouteTo(item.to)"
           >
             <template #prepend>
-              <v-icon :icon="item.icon" />
+              <v-icon :icon="item.icon"/>
             </template>
 
             <v-list-item-title>{{ item.title }}</v-list-item-title>
@@ -88,20 +88,18 @@
       class="pl-3"
       dark
     >
-      <v-app-bar-nav-icon class="mr-1" @click="drawer = true" />
+      <v-app-bar-nav-icon class="mr-1" @click="drawer = true"/>
 
       <v-toolbar-title>Busket</v-toolbar-title>
-      <v-spacer />
+      <v-spacer/>
       <v-fade-transition>
-        <div v-show="!feathersClient.io.connected" class="mr-3">
-          <div class="fake-btn">
-            Offline
-          </div>
+        <div v-if="!connected" class="mr-3">
+          You're offline
         </div>
       </v-fade-transition>
     </v-app-bar>
 
-    <slot />
+    <slot/>
   </div>
 </template>
 
@@ -128,6 +126,7 @@ import {useToast} from 'vue-toastification';
 import img from '@/assets/avatar-placeholder.png';
 import {Route} from '@/router';
 import {useAuthStore} from "@/stores/auth.store";
+import emitter from "@/helpers/mitt";
 
 const props = withDefaults(defineProps<{
   appbarColor?: string
@@ -157,22 +156,22 @@ const baseMenuItems: MenuItem[] = [
   {
     title: 'Home',
     icon: 'mdi-home-city',
-    to: { name: 'home' }
+    to: {name: 'home'}
   },
   {
     title: 'My lists',
     icon: 'mdi-clipboard-list-outline',
-    to: { name: 'my lists' }
+    to: {name: 'my lists'}
   },
   {
     title: 'Recipes',
     icon: 'mdi-chef-hat',
-    to: { name: Route.MY_RECIPES }
+    to: {name: Route.MY_RECIPES}
   },
   {
     title: 'Github',
     icon: 'mdi-github',
-    to: { name: 'github' }
+    to: {name: 'github'}
   },
 ];
 
@@ -184,6 +183,7 @@ const authStore = useAuthStore();
 const menuItems: MenuItem[] = [];
 const drawer = ref(false);
 const mini = ref(false);
+const connected = ref(feathersClient.io.connected);
 
 let installPrompt: BeforeInstallPromptEvent | null = null;
 let showInstallable = false;
@@ -201,7 +201,7 @@ onMounted(() => {
       {
         icon: 'mdi-api',
         title: 'Backend Tools',
-        to: { name: Route.FEATHERS_TESTING }
+        to: {name: Route.FEATHERS_TESTING}
       },
     );
   }
@@ -212,12 +212,14 @@ onMounted(() => {
     icon: 'mdi-login-variant',
     to: {
       name: 'login',
-      query: { redirect: route.path }
+      query: {redirect: route.path}
     },
     divide: true,
   });
 
   authStore.$subscribe(authChangeListener)
+  emitter.on('connected', () => connected.value = true);
+  emitter.on('disconnected', () => connected.value = false);
 });
 
 function getShowInstallBannerStore() {
@@ -239,7 +241,7 @@ async function installApp(): Promise<void> {
   if (!installPrompt) return;
 
   await installPrompt.prompt();
-  const { outcome } = await installPrompt.userChoice;
+  const {outcome} = await installPrompt.userChoice;
 
   installPrompt = null;
   showInstallable = false;
@@ -275,7 +277,7 @@ function authChangeListener() {
     menuItems.push({
       title: 'Log in',
       icon: 'mdi-login-variant',
-      to: { name: 'login' },
+      to: {name: 'login'},
       divide: true,
     });
     return;
@@ -287,7 +289,7 @@ function authChangeListener() {
   menuItems.push({
     title: 'Preferences',
     icon: 'mdi-account-cog',
-    to: { name: 'preferences' },
+    to: {name: 'preferences'},
     divide: true,
   }, {
     title: 'Logout',
@@ -332,15 +334,5 @@ $white: #e8e8e8;
 
 .opacity {
   opacity: 60%;
-}
-
-.fake-btn {
-  font-weight: 500;
-  letter-spacing: 0.0892857143em;
-  text-indent: 0.0892857143em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  opacity: 45%;
-  user-select: none;
 }
 </style>
