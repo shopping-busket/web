@@ -42,7 +42,7 @@
       <div class="new-recipe-title">
         New Recipe
       </div>
-      <v-icon icon="mdi-plus-circle-outline" />
+      <v-icon icon="mdi-plus-circle-outline"/>
     </v-card>
     <transition appear>
       <v-alert variant="tonal" color="primary" icon="mdi-information-outline"
@@ -107,7 +107,7 @@
               Cancel
             </v-btn>
 
-            <v-spacer />
+            <v-spacer/>
 
             <v-btn
               :disabled="!dialogNewRecipeFormValid"
@@ -128,38 +128,20 @@
   <v-dialog v-model="loading" class="w-100 h-100" fullscreen persistent>
     <div class="d-flex align-center justify-center w-screen h-screen">
       <v-sheet rounded class="d-flex flex-column align-center justify-center pa-2">
-        <v-progress-circular indeterminate color="primary" />
+        <v-progress-circular indeterminate color="primary"/>
         <div class="text-sm-subtitle-1 text-disabled mt-1">Loading</div>
       </v-sheet>
     </div>
   </v-dialog>
 
-  <v-dialog v-model="removeRecipeDialog.show" max-width="500px">
-    <v-card
-      :title="`Are you sure that you want to delete this recipe?`"
-      subtitle="You won't be able to get it back"
-    >
-      <v-card-actions>
-        <v-spacer />
-        <v-btn variant="text" color="primary" @click="removeRecipeDialog = {show: false, id: null}">
-          Cancel
-        </v-btn>
-
-        <v-btn
-          v-if="removeRecipeDialog.id"
-          color="primary"
-          variant="outlined"
-          @click="deleteRecipe(removeRecipeDialog.id); removeRecipeDialog = {show: false, id: null}"
-        >
-          Yes, I am sure
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+  <ConfirmationDialog v-model="removeRecipeDialog.show"
+                      @confirm="deleteRecipe(removeRecipeDialog.id!)"
+                      title="Are you sure that you want to delete this recipe?"
+                      subtitle="You won't be able to get it back"/>
 </template>
 
 <script lang="ts" setup>
-import feathersClient, { Service } from '@/feathers-client';
+import feathersClient, {Service} from '@/feathers-client';
 import {
   VBtn,
   VCard,
@@ -174,15 +156,16 @@ import {
   VTextarea,
   VTextField
 } from 'vuetify/components';
-import { nextTick, onMounted, Ref, ref } from 'vue';
-import { IRecipe, IRecipeOwner } from '@/shoppinglist/recipes/types';
-import { useRouter } from 'vue-router';
-import { Route } from '@/router';
-import { useToast } from 'vue-toastification';
+import {nextTick, onMounted, Ref, ref} from 'vue';
+import {IRecipe, IRecipeOwner} from '@/shoppinglist/recipes/types';
+import {useRouter} from 'vue-router';
+import {Route} from '@/router';
+import {useToast} from 'vue-toastification';
 import defaultUserImg from '@/assets/avatar-placeholder.png';
-import { useAuthStore } from '@/stores/auth.store';
-import { useRecipesStore } from '@/stores/recipes.store';
+import {useAuthStore} from '@/stores/auth.store';
+import {useRecipesStore} from '@/stores/recipes.store';
 import _ from 'lodash';
+import ConfirmationDialog from "@/components/ConfirmationDialog.vue";
 
 const router = useRouter();
 const toast = useToast();

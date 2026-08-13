@@ -243,7 +243,7 @@ onMounted(async () => {
   await fetchRecipe();
   loading.value = false;
   if (recipe.value?.owner.uuid == loginStore.user?.uuid) {
-    console.log('recipe owner is authed loginStore');
+    console.log('recipe owner is authed user');
     editable.value = true;
   }
 

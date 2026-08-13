@@ -14,7 +14,7 @@
         >
           <template #prepend>
             <v-list-item-action start>
-              <v-checkbox-btn v-model="settings.prefersDarkMode" />
+              <v-checkbox-btn v-model="settings.prefersDarkMode"/>
             </v-list-item-action>
           </template>
 
@@ -31,7 +31,7 @@
         >
           <template #prepend>
             <v-list-item-action start>
-              <v-checkbox-btn v-model="settings.prefersMiniDrawer" />
+              <v-checkbox-btn v-model="settings.prefersMiniDrawer"/>
             </v-list-item-action>
           </template>
 
@@ -49,22 +49,9 @@
     </v-btn>
   </div>
 
-  <v-dialog v-model="deleteUserDialog" max-width="500px">
-    <v-card
-      title="Are you sure?" subtitle="This action cannot be undone!"
-      text="Are you sure that you want to delete your Busket account? All lists and other associated information will be deleted with it!"
-    >
-      <v-card-actions>
-        <v-spacer />
-        <v-btn color="primary" variant="text" @click="deleteUserDialog = false">
-          Cancel
-        </v-btn>
-        <v-btn variant="outlined" color="primary" @click="deleteUser">
-          Yes, I am sure
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+  <ConfirmationDialog v-model="deleteUserDialog" @confirm="deleteUser"
+                      title="Are you sure?" subtitle="This action cannot be undone!"
+                      text="Are you sure that you want to delete your Busket account? All lists and other associated information will be deleted with it!"/>
 </template>
 
 <script lang="ts" setup>
@@ -72,21 +59,19 @@ import {
   VAlert,
   VBtn,
   VCard,
-  VCardActions,
   VCheckboxBtn,
-  VDialog,
   VList,
   VListItem,
   VListItemAction,
   VListItemSubtitle,
   VListItemTitle,
   VListSubheader,
-  VSpacer,
 } from 'vuetify/components';
-import feathersClient, { AuthObject, Service } from '@/feathers-client';
-import { onMounted, reactive, Ref, ref, watch } from 'vue';
-import { useTheme } from 'vuetify';
-import { useAuthStore } from '@/stores/auth.store';
+import feathersClient, {AuthObject, Service} from '@/feathers-client';
+import {onMounted, reactive, Ref, ref, watch} from 'vue';
+import {useTheme} from 'vuetify';
+import {useAuthStore} from '@/stores/auth.store';
+import ConfirmationDialog from "@/components/ConfirmationDialog.vue";
 
 interface SettingsObject {
   prefersDarkMode: boolean,

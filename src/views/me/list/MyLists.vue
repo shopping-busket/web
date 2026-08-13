@@ -3,7 +3,6 @@
     <v-card
       v-for="item in libraryStore.$state"
       :key="item.listid"
-      :ripple="true"
       class="mb-2 v-ripple pb-1 pt-1"
       hover
       @click="openList(item.listid)"
@@ -28,15 +27,17 @@
       <div class="new-list-title text-on-background">
         New List
       </div>
-      <v-icon icon="mdi-plus-circle-outline" />
+      <v-icon icon="mdi-plus-circle-outline"/>
     </v-card>
     <transition appear v-else>
-      <v-alert variant="tonal" color="primary" icon="mdi-information-outline" v-if="!authStore.isLoggedIn">
+      <v-alert variant="tonal" color="primary" icon="mdi-information-outline"
+               v-if="!authStore.isLoggedIn">
         Log in to create lists
       </v-alert>
     </transition>
     <transition appear>
-      <v-alert variant="text" color="primary" icon="mdi-information-outline" v-if="!feathersClient.io.connected" class="mt-2">
+      <v-alert variant="text" color="primary" icon="mdi-information-outline"
+               v-if="!feathersClient.io.connected" class="mt-2">
         You are offline. Some lists might be missing!
       </v-alert>
     </transition>
@@ -50,19 +51,20 @@
           Name and title can be edited later.
         </v-card-subtitle>
 
-        <v-card-text class="mt-1">
-          <v-form
-            ref="newListForm" v-model="isNewListNameValid" validate-on="input"
-            @submit.prevent="createList()"
-          >
+        <v-form
+          ref="newListForm" v-model="isNewListNameValid" validate-on="input"
+        >
+          <v-card-text>
             <v-text-field
               v-model="newList.name"
               :rules="nameRules"
               autofocus
+              variant="outlined"
               color="primary"
               counter="32"
               density="compact"
               label="Name"
+              class="mb-1"
               @keyup.once="newListForm?.validate()"
             />
             <v-textarea
@@ -75,31 +77,29 @@
               no-resize
               variant="outlined"
             />
-          </v-form>
+          </v-card-text>
 
-          <div class="d-flex flex-row">
+          <v-card-actions style="margin-top: -1.5em">
             <v-btn
-              color="error"
               variant="text"
-              @click="newListDialog = false"
+              @click.prevent="newListDialog = false"
             >
               Cancel
             </v-btn>
 
-            <v-spacer />
+            <v-spacer/>
 
             <v-btn
               :disabled="!isNewListNameValid"
               color="primary"
-              rounded
-              variant="outlined"
-              width="200px"
-              @click="createList(); newListDialog = false"
+              variant="flat"
+              min-width="10em"
+              @click="createList"
             >
               Create
             </v-btn>
-          </div>
-        </v-card-text>
+          </v-card-actions>
+        </v-form>
       </v-card>
     </v-dialog>
 
@@ -128,7 +128,7 @@
               Cancel
             </v-btn>
 
-            <v-spacer />
+            <v-spacer/>
 
             <v-btn
               color="primary"
@@ -145,28 +145,11 @@
     </v-dialog>
   </div>
 
-  <v-dialog v-model="removeListDialog" max-width="500px">
-    <v-card
-      :title="`Are you sure that you want to ${removeList?.owner === authStore.user?.uuid ? 'delete' : 'leave'} this list?`"
-      :subtitle="removeList?.owner === authStore.user?.uuid ? 'You won\'t be able to get it back' : 'You will not be able to access it until you get another invite'"
-    >
-      <v-card-actions>
-        <v-spacer />
-        <v-btn variant="text" color="primary" @click="removeListDialog = false">
-          Cancel
-        </v-btn>
-
-        <v-btn
-          v-if="removeList"
-          color="primary"
-          variant="outlined"
-          @click="removeList?.owner === authStore.user?.uuid ? deleteList(removeList.listid) : leaveFromList(removeList.listid); removeListDialog = false"
-        >
-          Yes, I am sure
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+  <ConfirmationDialog
+    v-model="removeListDialog"
+    :title="`Are you sure that you want to ${removeList?.owner === authStore.user?.uuid ? 'delete' : 'leave'} this list?`"
+    :subtitle="removeList?.owner === authStore.user?.uuid ? 'You won\'t be able to get it back' : 'You will not be able to access it until you get another invite'"
+    @click="removeList?.owner === authStore.user?.uuid ? deleteList(removeList!.listid) : leaveFromList(removeList!.listid); removeListDialog = false"/>
 </template>
 
 <script lang="ts" setup>
@@ -186,17 +169,18 @@ import {
   VTextarea,
   VTextField,
 } from 'vuetify/components';
-import feathersClient, { AuthObject, Service } from '@/feathers-client';
-import { IShoppingList, LegacyShoppingListItem } from '@/shoppinglist/ShoppingList';
-import { onMounted, ref, Ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
-import { useToast } from 'vue-toastification';
-import { UserWhitelist } from '@/components/ShareDialog.vue';
-import { Route } from '@/router';
-import { useLibraryStore } from '@/stores/library.store';
-import { comparatorSortAlphabetically } from '@/helpers/utils';
-import { Params } from '@feathersjs/feathers';
-import { useAuthStore } from '@/stores/auth.store';
+import feathersClient, {AuthObject, Service} from '@/feathers-client';
+import {IShoppingList, LegacyShoppingListItem} from '@/shoppinglist/ShoppingList';
+import {onMounted, ref, Ref, watch} from 'vue';
+import {useRouter} from 'vue-router';
+import {useToast} from 'vue-toastification';
+import {UserWhitelist} from '@/components/ShareDialog.vue';
+import {Route} from '@/router';
+import {useLibraryStore} from '@/stores/library.store';
+import {comparatorSortAlphabetically} from '@/helpers/utils';
+import {Params} from '@feathersjs/feathers';
+import {useAuthStore} from '@/stores/auth.store';
+import ConfirmationDialog from "@/components/ConfirmationDialog.vue";
 
 const router = useRouter();
 const toast = useToast();
@@ -216,7 +200,6 @@ const newList = ref({
   name: '',
   description: '',
 });
-const auth: Ref<null | AuthObject> = ref(null);
 const importFile: Ref<File[] | null> = ref([]);
 const newListForm: Ref<VForm | null> = ref(null);
 const removeListDialog = ref(false);
@@ -231,9 +214,7 @@ export interface LibraryEntry {
 }
 
 onMounted(async () => {
-  if (!feathersClient.io.connected) return;
-  auth.value = await feathersClient.get('authentication');
-
+  authStore.$subscribe(() => { if (authStore.isLoggedIn) populateLists(); })
   await populateLists();
 });
 
@@ -260,12 +241,10 @@ async function populateLists(): Promise<void> {
   );
 }
 
-watch(auth, populateLists);
-
 async function leaveFromList(listid: string): Promise<void> {
   libraryStore.removeById(listid);
 
-  const { id } = (await feathersClient.service(Service.WHITELISTED_USERS).find({
+  const {id} = (await feathersClient.service(Service.WHITELISTED_USERS).find({
     query: {
       user: authStore.user?.uuid,
       listId: listid,
@@ -336,10 +315,11 @@ async function openList(id: string) {
 }
 
 async function createList(): Promise<void> {
-  if (!auth.value) return;
+  if (!authStore.isLoggedIn) return;
 
   if (isNewListNameValid.value == null) isNewListNameValid.value = (await newListForm.value?.validate())?.valid ?? false;
   if (!isNewListNameValid.value) return;
+  newListDialog.value = false;
 
   const {
     name,

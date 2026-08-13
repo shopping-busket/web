@@ -17,11 +17,11 @@
           >
             <v-list-item-subtitle>
               <div v-if="whitelist.user == null">
-                <v-icon icon="mdi-account-clock-outline" size="small" />
+                <v-icon icon="mdi-account-clock-outline" size="small"/>
                 Invitation Pending...
               </div>
               <div v-else>
-                <v-icon icon="mdi-account-check-outline" size="small" />
+                <v-icon icon="mdi-account-check-outline" size="small"/>
                 Joined
               </div>
             </v-list-item-subtitle>
@@ -118,23 +118,9 @@
     </v-card>
   </v-dialog>
 
-  <v-dialog v-model="kickUserConfirmationDialog" width="500px">
-    <v-card
-      title="Confirmation"
-      text="Are you sure that you want to kick this loginStore off your list? They will be unable to access this list!"
-    >
-      <v-card-actions>
-        <v-spacer />
-        <v-btn color="primary" @click="kickUserConfirmationDialog = false">
-          Cancel
-        </v-btn>
-
-        <v-btn color="primary" @click="kickUser(kickUserIndex); kickUserConfirmationDialog = false">
-          Yes, I am sure
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+  <ConfirmationDialog v-model="kickUserConfirmationDialog" @confirm="kickUser(kickUserIndex)"
+                      title="Are you sure?"
+                      text="Are you sure that you want to kick this user off your list? They will be unable to access this list!"/>
 </template>
 
 <script lang="ts" setup>
@@ -150,14 +136,14 @@ import {
   VListItem,
   VListItemAction,
   VListItemSubtitle,
-  VSpacer,
   VTextField,
 } from 'vuetify/components';
-import { computed, onMounted, Reactive, reactive, Ref, ref } from 'vue';
-import feathersClient, { BadRequest, DB, FeathersError, Service } from '@/feathers-client';
-import { Params } from '@feathersjs/feathers';
+import {computed, onMounted, Reactive, reactive, Ref, ref} from 'vue';
+import feathersClient, {BadRequest, DB, FeathersError, Service} from '@/feathers-client';
+import {Params} from '@feathersjs/feathers';
 import md5 from '@/helpers/md5';
-import { useToast } from 'vue-toastification';
+import {useToast} from 'vue-toastification';
+import ConfirmationDialog from "@/components/ConfirmationDialog.vue";
 
 const props = defineProps<{
   modelValue: boolean,
@@ -186,7 +172,7 @@ const kickUserIndex = ref(-1);
 
 export interface UserWhitelist extends DB {
   id: number,
-  loginStore: string,
+  user: string,
   inviteEmail: string,
   inviteSecret?: string,
   listId: string,
