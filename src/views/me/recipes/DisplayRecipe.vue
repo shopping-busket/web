@@ -47,7 +47,7 @@
         <v-alert variant="text" color="primary" icon="mdi-information-outline"
                  density="compact"
                  class="mb-2"
-                 v-if="!feathersClient.io.connected"
+                 v-if="!connectionStore.isConnected"
         >
           You are offline. This recipe might be outdated!
         </v-alert>
@@ -217,11 +217,14 @@ import img from '@/assets/recipe-header-placeholder.jpg';
 import { VTextarea } from 'vuetify/components';
 import { useAuthStore } from '@/stores/auth.store';
 import { useRecipesStore } from '@/stores/recipes.store';
+import {useConnectionStore} from "@/stores/connection.store";
 
 const toast = useToast();
 const router = useRouter();
+
 const loginStore = useAuthStore();
 const recipesStore = useRecipesStore();
+const connectionStore = useConnectionStore();
 
 const props = defineProps<{
   id: number,
@@ -259,7 +262,7 @@ const resizeObserver = new ResizeObserver(() => {
 });
 
 async function fetchRecipe() {
-  if (!feathersClient.io.connected) {
+  if (!connectionStore.isConnected) {
     const cached = recipesStore.get(props.id);
     if (cached === undefined) {
       toast('Recipe not found!');

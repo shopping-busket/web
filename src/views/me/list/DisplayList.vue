@@ -207,7 +207,7 @@ import {v4 as uuidv4} from 'uuid';
 import {useLibraryStore} from '@/stores/library.store';
 import {useEventsStore} from '@/stores/events.store';
 import {useAuthStore} from '@/stores/auth.store';
-import emitter from "@/helpers/mitt";
+import {useConnectionStore} from "@/stores/connection.store";
 
 const props = defineProps<{
   id: string | undefined,
@@ -219,6 +219,7 @@ const toast = useToast();
 const libraryStore = useLibraryStore();
 const eventsStore = useEventsStore();
 const authStore = useAuthStore();
+const connectionStore = useConnectionStore();
 
 const developmentBuild = ref(import.meta.env.DEV);
 const newItemForm: Ref<VForm | null> = ref(null);
@@ -243,7 +244,6 @@ const newItemRules = ref([
   (val: string) => val.trim().length <= 256 || 'Can\'t exceed 256 character limit!',
 ]);
 
-const connected = ref(feathersClient.io.connected);
 
 const sessionId = uuidv4();
 const whitelistedUserPermissions = ref({
@@ -265,15 +265,6 @@ onMounted(async () => {
   setInterval(async () => shoppingList.value = await loadListFromRemote(), 1000 * 60 * 5 /* 5 Minutes */);
 
   viewOnlyInfoAlertHidden.value = getViewInfoAlertHideStateFromStore();
-
-  emitter.on('connected', async () => {
-    connected.value = true;
-    await sendEventsToServer();
-  });
-
-  emitter.on('disconnected', () => {
-    connected.value = false;
-  });
 });
 
 onUnmounted(() => eventsStore.pruneDeletedParanoidEvents(props.id!));
@@ -366,7 +357,7 @@ function registerSearch() {
 
 //region list loaders
 async function loadList(): Promise<void> {
-  if (connected.value) {
+  if (connectionStore.isConnected) {
     shoppingList.value = await loadListFromRemote();
     if (shoppingList.value != null) await updatePermissions();
     return;
@@ -538,7 +529,7 @@ let isSendingEvents = false;
 
 async function sendEventsToServer(): Promise<unknown> {
   console.log('Trying to send events.value to server.');
-  if (!feathersClient.io.connected) {
+  if (!connectionStore.isConnected) {
     console.warn('Cannot send events to server! Offline!');
     return;
   }

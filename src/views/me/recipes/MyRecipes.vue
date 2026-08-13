@@ -36,8 +36,8 @@
       :ripple="true"
       class="d-flex justify-center flex-column align-center new-recipe-card"
       hover
-      v-if="feathersClient.io.connected && authStore.isLoggedIn"
-      @click="feathersClient.io.connected ? showNewListDialog() : toast('You are offline!')"
+      v-if="connectionStore.isConnected && authStore.isLoggedIn"
+      @click="showNewRecipeDialog()"
     >
       <div class="new-recipe-title">
         New Recipe
@@ -46,7 +46,7 @@
     </v-card>
     <transition appear>
       <v-alert variant="tonal" color="primary" icon="mdi-information-outline"
-               v-if="!authStore.isLoggedIn"
+               v-if="connectionStore.isConnected && !authStore.isLoggedIn"
       >
         Log in to create recipes
       </v-alert>
@@ -54,7 +54,7 @@
     <transition appear>
       <v-alert variant="tonal" color="primary" icon="mdi-information-outline"
                class="mt-2"
-               v-if="!feathersClient.io.connected"
+               v-if="!connectionStore.isConnected"
       >
         You are offline. Only recipes that you have viewed before are shown!
       </v-alert>
@@ -164,11 +164,13 @@ import {useAuthStore} from '@/stores/auth.store';
 import {useRecipesStore} from '@/stores/recipes.store';
 import _ from 'lodash';
 import ConfirmationDialog from "@/components/ConfirmationDialog.vue";
+import {useConnectionStore} from "@/stores/connection.store";
 
 const router = useRouter();
 const toast = useToast();
 const authStore = useAuthStore();
 const recipesStore = useRecipesStore();
+const connectionStore = useConnectionStore();
 
 const recipes: Ref<IRecipe[]> = ref([]);
 const removeRecipeDialog: Ref<{
@@ -192,17 +194,16 @@ const dialogNewRecipeForm: Ref<VForm | null> = ref(null);
 const dialogNewRecipeFormValid = ref(false);
 const loading = ref(true);
 
-feathersClient.on('connected', async () => {
-  await loadRecipes();
-});
-
 onMounted(async () => {
+  connectionStore.$subscribe(() => {
+    if (connectionStore.isConnected) loadRecipes();
+  })
   await loadRecipes();
   loading.value = false;
 });
 
 async function loadRecipes() {
-  if (!feathersClient.io.connected) {
+  if (!connectionStore.isConnected) {
     recipes.value = recipesStore.getAllRecipes();
     return;
   }
@@ -219,7 +220,7 @@ async function openRecipe(recipe: IRecipe) {
   });
 }
 
-async function showNewListDialog() {
+async function showNewRecipeDialog() {
   dialogNewRecipe.value = true;
   if (dialogNewRecipeData.value.title.length === 0) return;
 

@@ -18,11 +18,11 @@
       </v-list-item>
     </v-card>
     <v-card
-      v-if="feathersClient.io.connected"
+      v-if="connectionStore.isConnected"
       :ripple="true"
       class="d-flex justify-center flex-column align-center new-list-card"
       hover
-      @click="feathersClient.io.connected ? showNewListDialog() : toast('You are offline!')"
+      @click="showNewListDialog"
     >
       <div class="new-list-title text-on-background">
         New List
@@ -31,13 +31,7 @@
     </v-card>
     <transition appear v-else>
       <v-alert variant="tonal" color="primary" icon="mdi-information-outline"
-               v-if="!authStore.isLoggedIn">
-        Log in to create lists
-      </v-alert>
-    </transition>
-    <transition appear>
-      <v-alert variant="text" color="primary" icon="mdi-information-outline"
-               v-if="!feathersClient.io.connected" class="mt-2">
+               class="mt-2">
         You are offline. Some lists might be missing!
       </v-alert>
     </transition>
@@ -173,7 +167,6 @@ import feathersClient, {Service} from '@/feathers-client';
 import {IShoppingList, LegacyShoppingListItem} from '@/shoppinglist/ShoppingList';
 import {onMounted, ref, Ref} from 'vue';
 import {useRouter} from 'vue-router';
-import {useToast} from 'vue-toastification';
 import {UserWhitelist} from '@/components/ShareDialog.vue';
 import {Route} from '@/router';
 import {useLibraryStore} from '@/stores/library.store';
@@ -181,10 +174,12 @@ import {comparatorSortAlphabetically} from '@/helpers/utils';
 import {Params} from '@feathersjs/feathers';
 import {useAuthStore} from '@/stores/auth.store';
 import ConfirmationDialog from "@/components/ConfirmationDialog.vue";
+import {useConnectionStore} from "@/stores/connection.store";
 
 const router = useRouter();
-const toast = useToast();
+
 const authStore = useAuthStore();
+const connectionStore = useConnectionStore();
 
 const nameRules = [
   (val: string) => val.length >= 3 || 'Name has to have at least 3 characters.',

@@ -134,10 +134,10 @@ import { comparatorSortAlphabetically } from '@/helpers/utils';
 import { EventType, LogEvent } from '@/shoppinglist/events';
 import { v4 as uuidv4 } from 'uuid';
 import { LibraryEntry } from '@/views/me/list/MyLists.vue';
-import { VNumberInput } from 'vuetify/labs/components';
 import _ from 'lodash';
 import { useRecipesStore } from '@/stores/recipes.store';
 import { useAuthStore } from '@/stores/auth.store';
+import {useConnectionStore} from "@/stores/connection.store";
 
 const props = defineProps<{
   recipeId: number,
@@ -146,6 +146,7 @@ const props = defineProps<{
 
 const authStore = useAuthStore();
 const recipesStore = useRecipesStore();
+const connectionStore = useConnectionStore();
 
 const shoppingListLibrary: Ref<LibraryEntry[]> = ref([]);
 
@@ -159,7 +160,7 @@ const addToListAvailable = ref(true);
 onMounted(async () => {
   await fetchIngredients();
 
-  if (feathersClient.io.connected && authStore.isLoggedIn) {
+  if (connectionStore.isConnected && authStore.isLoggedIn) {
     await fetchShoppingListLibrary();
   } else {
     addToListAvailable.value = false;
@@ -173,7 +174,7 @@ watch(() => props.isEditing, () => {
 });
 
 async function fetchIngredients() {
-  if (!feathersClient.io.connected) {
+  if (!connectionStore.isConnected) {
     baseIngredients.value = recipesStore.get(props.recipeId).ingredients;
     recalculatePortions();
     return;

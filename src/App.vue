@@ -61,15 +61,6 @@ onMounted(async () => {
     });
   }
 
-  feathersClient.io.on('connect', () => {
-    console.log('[feathersClient] connected!');
-    emitter.emit('connected');
-  });
-  feathersClient.io.on('disconnect', () => {
-    console.log('[feathersClient] disconnected!');
-    emitter.emit('disconnected');
-  });
-
   app.config.errorHandler = async (e) => {
     (window as unknown as { e: unknown }).e = e;
     if (Object.prototype.hasOwnProperty.call(e, 'code') && (e as { code: number }).code === 401) {

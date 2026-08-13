@@ -93,7 +93,7 @@
       <v-toolbar-title>Busket</v-toolbar-title>
       <v-spacer/>
       <v-fade-transition>
-        <div v-if="!connected" class="mr-3">
+        <div v-if="!connectionStore.isConnected" class="mr-3">
           You're offline
         </div>
       </v-fade-transition>
@@ -126,7 +126,7 @@ import {useToast} from 'vue-toastification';
 import img from '@/assets/avatar-placeholder.png';
 import {Route} from '@/router';
 import {useAuthStore} from "@/stores/auth.store";
-import emitter from "@/helpers/mitt";
+import {useConnectionStore} from "@/stores/connection.store";
 
 const props = withDefaults(defineProps<{
   appbarColor?: string
@@ -178,12 +178,13 @@ const baseMenuItems: MenuItem[] = [
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
+
 const authStore = useAuthStore();
+const connectionStore = useConnectionStore();
 
 const menuItems: MenuItem[] = [];
 const drawer = ref(false);
 const mini = ref(false);
-const connected = ref(feathersClient.io.connected);
 
 let installPrompt: BeforeInstallPromptEvent | null = null;
 let showInstallable = false;
@@ -218,8 +219,6 @@ onMounted(() => {
   });
 
   authStore.$subscribe(authChangeListener)
-  emitter.on('connected', () => connected.value = true);
-  emitter.on('disconnected', () => connected.value = false);
 });
 
 function getShowInstallBannerStore() {
