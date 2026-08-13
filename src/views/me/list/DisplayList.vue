@@ -140,7 +140,7 @@
         <TodoList
           v-model="shoppingList.entries"
           class="mb-4"
-          is-movable
+          is-movable-and-renamable
           label="Todo"
           show-count
           :user-permissions="whitelistedUserPermissions"

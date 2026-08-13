@@ -57,36 +57,40 @@
             @keydown.enter="emit('rename-entry', element.id); element.additional.edit = false"
             @keydown.esc="element.additional.edit = false; element.additional.editName = element.name"
           />
-          <div v-else @dblclick="element.additional.edit = true" class="overflow-hidden text-truncate">
+          <div v-else @dblclick="element.additional.edit = true"
+               class="overflow-hidden text-truncate">
             {{ element.name }}
           </div>
 
           <v-spacer/>
 
-          <v-icon-btn
-            v-show="userPermissions.canEditEntries"
-            v-if="element.additional.editName === element.name"
-            :icon="element.additional.edit ? 'mdi-pencil-outline' : 'mdi-pencil'"
-            variant="text"
-            size="medium"
-            @click="element.additional.edit = !element.additional.edit"
-          />
-          <div v-else class="d-flex">
+          <template v-if="isMovableAndRenamable">
             <v-icon-btn
+              v-show="userPermissions.canEditEntries"
+              v-if="element.additional.editName === element.name"
+              :icon="element.additional.edit ? 'mdi-pencil-outline' : 'mdi-pencil'"
               variant="text"
               size="medium"
-              icon="mdi-content-save"
-              @click="emit('rename-entry', element.id); element.additional.edit = false"
-              @keydown.enter="emit('rename-entry', element.id)"
+              @click="element.additional.edit = !element.additional.edit"
             />
-            <v-icon-btn
-              icon="mdi-close"
-              variant="text"
-              size="medium"
-              @click="element.additional.edit = false; element.additional.editName = element.name;"
-            />
-          </div>
-          <v-icon-btn v-if="isMovable && userPermissions.canEditEntries" class="handle cursor-move"
+            <div v-else class="d-flex">
+              <v-icon-btn
+                variant="text"
+                size="medium"
+                icon="mdi-content-save"
+                @click="emit('rename-entry', element.id); element.additional.edit = false"
+                @keydown.enter="emit('rename-entry', element.id)"
+              />
+              <v-icon-btn
+                icon="mdi-close"
+                variant="text"
+                size="medium"
+                @click="element.additional.edit = false; element.additional.editName = element.name;"
+              />
+            </div>
+          </template>
+          <v-icon-btn v-if="isMovableAndRenamable && userPermissions.canEditEntries"
+                      class="handle cursor-move"
                       icon="mdi-menu" variant="text" size="medium"/>
         </v-card>
       </template>
@@ -108,13 +112,13 @@ const props = withDefaults(defineProps<{
   label: string,
   showCount?: boolean,
   checkedState?: boolean,
-  isMovable?: boolean,
+  isMovableAndRenamable?: boolean,
   isClearable?: boolean,
   userPermissions: UserPermissions,
 }>(), {
   showCount: false,
   checkedState: false,
-  isMovable: false,
+  isMovableAndRenamable: false,
   isClearable: false,
 });
 
