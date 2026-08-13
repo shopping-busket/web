@@ -53,6 +53,7 @@
 
         <v-form
           ref="newListForm" v-model="isNewListNameValid" validate-on="input"
+          @submit.prevent="createList"
         >
           <v-card-text>
             <v-text-field
@@ -65,7 +66,6 @@
               density="compact"
               label="Name"
               class="mb-1"
-              @keyup.once="newListForm?.validate()"
             />
             <v-textarea
               v-model="newList.description"
@@ -82,7 +82,7 @@
           <v-card-actions style="margin-top: -1.5em">
             <v-btn
               variant="text"
-              @click.prevent="newListDialog = false"
+              @click.stop="newListDialog = false"
             >
               Cancel
             </v-btn>
@@ -94,7 +94,7 @@
               color="primary"
               variant="flat"
               min-width="10em"
-              @click="createList"
+              type="submit"
             >
               Create
             </v-btn>
@@ -169,9 +169,9 @@ import {
   VTextarea,
   VTextField,
 } from 'vuetify/components';
-import feathersClient, {AuthObject, Service} from '@/feathers-client';
+import feathersClient, {Service} from '@/feathers-client';
 import {IShoppingList, LegacyShoppingListItem} from '@/shoppinglist/ShoppingList';
-import {onMounted, ref, Ref, watch} from 'vue';
+import {onMounted, ref, Ref} from 'vue';
 import {useRouter} from 'vue-router';
 import {useToast} from 'vue-toastification';
 import {UserWhitelist} from '@/components/ShareDialog.vue';
@@ -214,7 +214,9 @@ export interface LibraryEntry {
 }
 
 onMounted(async () => {
-  authStore.$subscribe(() => { if (authStore.isLoggedIn) populateLists(); })
+  authStore.$subscribe(() => {
+    if (authStore.isLoggedIn) populateLists();
+  })
   await populateLists();
 });
 

@@ -63,19 +63,19 @@
     <v-dialog v-model="dialogNewRecipe" max-width="550px">
       <v-card>
         <v-card-title>
-          Create a new recipe.
+          Create a new recipe
         </v-card-title>
         <v-card-subtitle>
           Name and title can be edited later.
         </v-card-subtitle>
 
-        <v-card-text class="mt-1">
-          <v-form
-            ref="dialogNewRecipeForm"
-            v-model="dialogNewRecipeFormValid"
-            validate-on="input"
-            @submit.prevent="createRecipe()"
-          >
+        <v-form
+          ref="dialogNewRecipeForm"
+          v-model="dialogNewRecipeFormValid"
+          validate-on="input"
+          @submit.prevent="createRecipe()"
+        >
+          <v-card-text>
             <v-text-field
               v-model.trim="dialogNewRecipeData.title"
               :rules="rulesRecipeTitle"
@@ -96,13 +96,12 @@
               no-resize
               variant="outlined"
             />
-          </v-form>
+          </v-card-text>
 
-          <div class="d-flex flex-row">
+          <v-card-actions>
             <v-btn
-              color="error"
               variant="text"
-              @click="dialogNewRecipe = false"
+              @click.stop="dialogNewRecipe = false"
             >
               Cancel
             </v-btn>
@@ -112,15 +111,14 @@
             <v-btn
               :disabled="!dialogNewRecipeFormValid"
               color="primary"
-              rounded
-              variant="outlined"
-              width="200px"
-              @click="createRecipe(); dialogNewRecipe = false"
+              variant="flat"
+              width="10em"
+              type="submit"
             >
               Create
             </v-btn>
-          </div>
-        </v-card-text>
+          </v-card-actions>
+        </v-form>
       </v-card>
     </v-dialog>
   </div>
