@@ -19,6 +19,12 @@
         </v-snackbar>
         <AuthenticationLoading v-if="routeLoading"/>
         <router-view v-else/>
+
+        <v-snackbar-queue
+          v-model="snacksStore.snacks"
+          :total-visible="10"
+          closable
+        />
       </MainContainer>
     </v-main>
   </v-app>

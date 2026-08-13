@@ -245,11 +245,11 @@ async function installApp(): Promise<void> {
   installPrompt = null;
   showInstallable = false;
 
-  if (outcome) toast('Thanks for installing Busket!');
+  if (outcome) snacksStore.info('Thanks for installing Busket!');
 }
 
 async function logOut(): Promise<void> {
-  if (await feathersClient.get('authentication') === null) {
+  if (!authStore.isLoggedIn) {
     snacksStore.info('Can\'t log out. Not logged in.');
     return;
   }
