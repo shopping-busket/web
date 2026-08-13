@@ -57,7 +57,7 @@
             @keydown.enter="emit('rename-entry', element.id); element.additional.edit = false"
             @keydown.esc="element.additional.edit = false; element.additional.editName = element.name"
           />
-          <div v-else @dblclick="element.additional.edit = true">
+          <div v-else @dblclick="element.additional.edit = true" class="overflow-hidden text-truncate">
             {{ element.name }}
           </div>
 
