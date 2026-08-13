@@ -30,7 +30,6 @@ import {VApp, VBtn, VMain, VSnackbar} from 'vuetify/components';
 import {Workbox} from 'workbox-window';
 import feathersClient from '@/feathers-client';
 import {inject, onMounted, ref} from 'vue';
-import {useToast} from 'vue-toastification';
 import {useTheme} from 'vuetify';
 import app from '@/main';
 import MainContainer from '@/components/MainContainer.vue';
@@ -39,10 +38,13 @@ import emitter from '@/helpers/mitt';
 import {useRoute, useRouter} from 'vue-router';
 import {useAuthStore} from "@/stores/auth.store";
 import {Route} from "@/router";
+import {useSnacksStore} from "@/stores/snacks.store";
 
 const theme = useTheme();
 const router = useRouter();
 const route = useRoute();
+
+const snacksStore = useSnacksStore();
 const authStore = useAuthStore();
 
 const wb = inject('wb') as Workbox;
@@ -78,14 +80,14 @@ onMounted(async () => {
     }
     console.log(JSON.stringify(e, null, 2));
     console.error(e);
-    useToast().error('Something unexpected just happened!');
+    snacksStore.error('Something unexpected just happened!');
   };
 
   if (process.env.NODE_ENV === 'development') document.title = 'Busket Dev';
 
   await authStore.login()
   if (authStore.isLoggedIn) {
-    theme.change(authStore.user?.prefersDarkMode ? 'darkTheme' : 'lightTheme')
+    await theme.change(authStore.user?.prefersDarkMode ? 'darkTheme' : 'lightTheme')
   }
 });
 

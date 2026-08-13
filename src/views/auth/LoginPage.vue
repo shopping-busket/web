@@ -69,18 +69,19 @@
 <script lang="ts" setup>
 import {VAlert, VBtn, VCard, VCardSubtitle, VCardText, VForm, VTextField} from 'vuetify/components';
 import {onMounted, Ref, ref, watch} from 'vue';
-import {useToast} from 'vue-toastification';
 import {RouteLocationResolved, useRoute, useRouter} from 'vue-router';
 import {useI18n} from 'vue-i18n';
 import {useTheme} from 'vuetify';
 import {EMAIL_REGEX} from '@/helpers/regex';
 import {useAuthStore} from "@/stores/auth.store";
+import {useSnacksStore} from "@/stores/snacks.store";
 
-const toast = useToast();
 const route = useRoute();
 const router = useRouter();
 const i18n = useI18n();
 const theme = useTheme();
+
+const snacksStore = useSnacksStore();
 const authStore = useAuthStore();
 
 const isDarkTheme = ref(false);
@@ -133,7 +134,7 @@ async function submit(): Promise<void> {
     password: password.value,
   }).then(() => {
     btnLoading.value = false;
-    toast.success('Logged in successfully!');
+    snacksStore.success('Logged in successfully!');
     console.log('%c[Auth]%cLogged in', 'color: green');
 
     if (!route.query.redirect) {
@@ -144,12 +145,12 @@ async function submit(): Promise<void> {
   })
     .catch((err: { code: number; }) => {
       if (err.code === 401) {
-        toast.warning('Wrong email or password!');
+        snacksStore.warning('Wrong email or password!');
         password.value = '';
         return;
       }
       console.warn('[ERROR] Error while trying to authenticate/login:', err);
-      toast.error('Something went wrong Please try again later!');
+      snacksStore.error('Something went wrong Please try again later!');
     })
     .finally(() => {
       tries.value++;

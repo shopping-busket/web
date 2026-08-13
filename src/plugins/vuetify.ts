@@ -84,6 +84,10 @@ export default createVuetify({
       variant: 'flat',
       color: 'on-surface'
     },
+    VIconBtn: {
+      variant: 'text',
+      'icon-size': '28px'
+    },
     VSheet: {
       color: 'depth-1', // Generic containers default to depth-1
     },

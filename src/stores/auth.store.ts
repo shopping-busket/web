@@ -15,6 +15,7 @@ export const useAuthStore = defineStore('authStore', () => {
 
   async function logout() {
     await feathersClient.authentication.logout()
+    user.value = null
   }
 
   return { user, isLoggedIn, login, logout }

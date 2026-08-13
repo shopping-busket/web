@@ -35,34 +35,34 @@
           </div>
 
           <div v-if="!editingListInfo">
-            <v-btn
+            <v-icon-btn
               v-show="shoppingList != null && authStore.user != undefined && shoppingList.owner === authStore.user.uuid"
-              color="primary" icon="mdi-pencil-outline" size="x-small" variant="text"
+              color="primary" icon="mdi-pencil-outline" variant="text"
               @click="enterListInfoEditState()"
             />
 
-            <v-btn
-              color="primary" icon="mdi-text-box-outline" size="x-small" variant="text"
+            <v-icon-btn
+              color="primary" icon="mdi-text-box-outline"
               @click="openLogDialog = true"
             />
-            <v-btn
-              color="primary" icon="mdi-download-outline" size="x-small" variant="text"
+            <v-icon-btn
+              color="primary" icon="mdi-download-outline"
               @click="downloadList"
             />
-            <v-btn
-              color="primary" icon="mdi-refresh" size="x-small" variant="text"
+            <v-icon-btn
+              color="primary" icon="mdi-refresh"
               @click="loadList"
             />
 
-            <v-btn
+            <v-icon-btn
               v-show="shoppingList != null && authStore.user != undefined && shoppingList.owner === authStore.user.uuid"
-              color="primary" icon="mdi-account-group-outline" size="x-small" variant="text"
+              color="primary" icon="mdi-account-group-outline"
               @click="openShareDialog = true"
             />
 
-            <v-btn
+            <v-icon-btn
               v-if="developmentBuild"
-              color="primary" icon="mdi-test-tube" size="x-small" variant="text"
+              color="primary" icon="mdi-test-tube"
               @click="dummyFill"
             />
           </div>
@@ -200,7 +200,6 @@ import ShoppingList, {IShoppingList} from '@/shoppinglist/ShoppingList';
 import {onMounted, onUnmounted, reactive, Ref, ref, watch} from 'vue';
 import {useRouter} from 'vue-router';
 import {Route} from '@/router';
-import {useToast} from 'vue-toastification';
 import {EventData, EventType, LogEvent, LogEventListenerData} from '@/shoppinglist/events';
 import ShareDialog, {UserPermissions, UserWhitelist} from '@/components/ShareDialog.vue';
 import {v4 as uuidv4} from 'uuid';
@@ -208,14 +207,15 @@ import {useLibraryStore} from '@/stores/library.store';
 import {useEventsStore} from '@/stores/events.store';
 import {useAuthStore} from '@/stores/auth.store';
 import {useConnectionStore} from "@/stores/connection.store";
+import {useSnacksStore} from "@/stores/snacks.store";
 
 const props = defineProps<{
   id: string | undefined,
 }>();
 
 const router = useRouter();
-const toast = useToast();
 
+const snacksStore = useSnacksStore();
 const libraryStore = useLibraryStore();
 const eventsStore = useEventsStore();
 const authStore = useAuthStore();
@@ -286,7 +286,7 @@ function registerWhitelistListeners() {
   });
 
   feathersClient.service(Service.WHITELISTED_USERS).on('patched', async (patchedUser: UserWhitelist) => {
-    if (authStore.user && authStore.user.uuid === shoppingList.value?.owner) return;
+    if (authStore.user && authStore.user?.uuid === shoppingList.value?.owner) return;
     if (shoppingList.value?.listid !== patchedUser.listId) return;
     await updatePermissions(patchedUser);
     hideViewOnlyInfoAlert(false);
@@ -553,7 +553,7 @@ async function sendEventsToServer(): Promise<unknown> {
       switch ((e as FeathersError).code) {
         case 403:
           console.log('Not permitted to send this type of event!');
-          toast.warning('You are not permitted to do this action!');
+          snacksStore.warning('You are not permitted to do this action!');
           events.forEach((ev) => eventsStore.deleteEventParanoid(props.id!, ev.eventData.entryId));
           await loadList();
           break;
@@ -609,7 +609,7 @@ function hideViewOnlyInfoAlert(hide = true): ViewOnlyInfoAlertStore {
 
   const insertionState = {
     hidden: hide,
-    listId: shoppingList.value?.listid,
+    listId: shoppingList.value!.listid,
   };
 
   if (index === -1) {
@@ -624,12 +624,12 @@ function hideViewOnlyInfoAlert(hide = true): ViewOnlyInfoAlertStore {
   return insertionState;
 }
 
-function getViewInfoAlertHideStateFromStore() {
+function getViewInfoAlertHideStateFromStore(): boolean {
   const rawState = localStorage.getItem(VIEW_ONLY_INFO_ALERT_STORE);
   if (rawState == null) return hideViewOnlyInfoAlert(false).hidden;
 
   const state: ViewOnlyInfoAlertStore[] = JSON.parse(rawState);
-  return state.find(s => s.listId === shoppingList.value?.listid)?.hidden ?? hideViewOnlyInfoAlert(false)?.hidden;
+  return state.find(s => s.listId === shoppingList.value?.listid)?.hidden ?? hideViewOnlyInfoAlert(false)?.hidden ?? false;
 }
 
 async function updatePermissions(whitelistedUser: UserWhitelist | null = null) {

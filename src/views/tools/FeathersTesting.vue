@@ -160,7 +160,6 @@ import {
 } from 'vuetify/components';
 import { computed, onMounted, Ref, ref } from 'vue';
 import feathersClient, { Methods, Service } from '@/feathers-client';
-import { useToast } from 'vue-toastification';
 import JsonEditorVue from 'json-editor-vue';
 import { useTheme } from 'vuetify';
 import 'vanilla-jsoneditor/themes/jse-theme-dark.css';
@@ -171,9 +170,11 @@ import ShoppingList, { ShoppingListItem } from '@/shoppinglist/ShoppingList';
 import { DotNestedKeys, ReverseMap } from '@/helpers/TypeUtils';
 import { v4 as uuidv4 } from 'uuid';
 import { useAuthStore } from '@/stores/auth.store';
+import {useSnacksStore} from "@/stores/snacks.store";
 
-const toast = useToast();
 const theme = useTheme();
+
+const snacksStore = useSnacksStore();
 const loginStore = useAuthStore();
 
 type Rule = ((value: string) => boolean | string);
@@ -310,18 +311,18 @@ async function send() {
   let promise: Promise<unknown> | null = null;
   switch (selectedMethod.value) {
     case 'create':
-      if (!data) return toast.error('Cannot create without data!');
+      if (!data) return snacksStore.error('Cannot create without data!');
       promise = service.create(data, params);
       break;
 
     case 'find':
-      if (!params) return toast.error('No Params passed! Required!');
+      if (!params) return snacksStore.error('No Params passed! Required!');
       promise = service.find(params);
       break;
 
     case 'remove':
     case 'get':
-      if (!parsedId) return toast.error(`Cannot call ${selectedMethod.value} without id!`);
+      if (!parsedId) return snacksStore.error(`Cannot call ${selectedMethod.value} without id!`);
       promise = service[selectedMethod.value](parsedId, params);
       break;
 
@@ -348,7 +349,7 @@ async function executeAndLogRequest(promise: Promise<unknown>) {
     logResponse(d);
     response.value = d;
   }).catch((e) => {
-    toast.warning('Backend responded with an error! Check Response');
+    snacksStore.warning('Backend responded with an error! Check Response');
     response.value = JSON.parse(JSON.stringify(e)); // or jse won't recognize properties and wont load tree/table view
     logResponse(JSON.stringify(e, null, 2));
     logResponse(e, 'error');
@@ -418,7 +419,7 @@ async function sendGeneratedEvent() {
   if (event.activeFields.includes('state.newIndex')) data.eventData.state.newIndex = parseInt(event.state.newIndex ?? '-1');
   if (event.activeFields.includes('state.oldIndex')) data.eventData.state.oldIndex = parseInt(event.state.oldIndex ?? '-1');
 
-  toast.success('Sent event!');
+  snacksStore.success('Sent event!');
   listEventGeneratorDialog.value = false;
 
   selectedService.value = Service.EVENT;

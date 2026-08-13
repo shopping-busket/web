@@ -122,11 +122,11 @@ import {
 import {RouteLocationAsRelativeGeneric, useRoute, useRouter} from 'vue-router';
 import feathersClient from '@/feathers-client';
 import {onMounted, ref} from 'vue';
-import {useToast} from 'vue-toastification';
 import img from '@/assets/avatar-placeholder.png';
 import {Route} from '@/router';
 import {useAuthStore} from "@/stores/auth.store";
 import {useConnectionStore} from "@/stores/connection.store";
+import {useSnacksStore} from "@/stores/snacks.store";
 
 const props = withDefaults(defineProps<{
   appbarColor?: string
@@ -177,8 +177,8 @@ const baseMenuItems: MenuItem[] = [
 
 const route = useRoute();
 const router = useRouter();
-const toast = useToast();
 
+const snacksStore = useSnacksStore();
 const authStore = useAuthStore();
 const connectionStore = useConnectionStore();
 
@@ -250,11 +250,11 @@ async function installApp(): Promise<void> {
 
 async function logOut(): Promise<void> {
   if (await feathersClient.get('authentication') === null) {
-    toast('Can\'t log out. Not logged in.');
+    snacksStore.info('Can\'t log out. Not logged in.');
     return;
   }
   await authStore.logout();
-  toast('Logged out successfully.');
+  snacksStore.success('Logged out successfully.');
   window.location.reload();
 }
 

@@ -63,42 +63,31 @@
 
           <v-spacer/>
 
-          <v-btn
+          <v-icon-btn
             v-show="userPermissions.canEditEntries"
             v-if="element.additional.editName === element.name"
             :icon="element.additional.edit ? 'mdi-pencil-outline' : 'mdi-pencil'"
-            size="x-small"
             variant="text"
+            size="medium"
             @click="element.additional.edit = !element.additional.edit"
           />
           <div v-else class="d-flex">
-            <v-btn
-              icon
-              size="small"
+            <v-icon-btn
               variant="text"
+              size="medium"
+              icon="mdi-content-save"
               @click="emit('rename-entry', element.id); element.additional.edit = false"
               @keydown.enter="emit('rename-entry', element.id)"
-            >
-              <v-icon small>
-                mdi-content-save
-              </v-icon>
-            </v-btn>
-            <v-btn
-              icon
-              size="small"
+            />
+            <v-icon-btn
+              icon="mdi-close"
               variant="text"
+              size="medium"
               @click="element.additional.edit = false; element.additional.editName = element.name;"
-            >
-              <v-icon small>
-                mdi-close
-              </v-icon>
-            </v-btn>
+            />
           </div>
-          <v-icon v-if="isMovable && userPermissions.canEditEntries" class="handle cursor-move"
-                  size="small"
-          >
-            mdi-menu
-          </v-icon>
+          <v-icon-btn v-if="isMovable && userPermissions.canEditEntries" class="handle cursor-move"
+                      icon="mdi-menu" variant="text" size="medium"/>
         </v-card>
       </template>
     </draggable>
@@ -106,7 +95,7 @@
 </template>
 
 <script lang="ts" setup>
-import {VBtn, VCard, VCheckboxBtn, VIcon, VSpacer, VTextField} from 'vuetify/components';
+import {VBtn, VCard, VCheckboxBtn, VSpacer, VTextField} from 'vuetify/components';
 import Draggable from 'vuedraggable';
 import {ShoppingListItem} from '@/shoppinglist/ShoppingList';
 import config from '../../config';

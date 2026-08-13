@@ -158,7 +158,6 @@ import {nextTick, onMounted, Ref, ref} from 'vue';
 import {IRecipe, IRecipeOwner} from '@/shoppinglist/recipes/types';
 import {useRouter} from 'vue-router';
 import {Route} from '@/router';
-import {useToast} from 'vue-toastification';
 import defaultUserImg from '@/assets/avatar-placeholder.png';
 import {useAuthStore} from '@/stores/auth.store';
 import {useRecipesStore} from '@/stores/recipes.store';
@@ -167,7 +166,7 @@ import ConfirmationDialog from "@/components/ConfirmationDialog.vue";
 import {useConnectionStore} from "@/stores/connection.store";
 
 const router = useRouter();
-const toast = useToast();
+
 const authStore = useAuthStore();
 const recipesStore = useRecipesStore();
 const connectionStore = useConnectionStore();

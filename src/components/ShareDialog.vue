@@ -142,8 +142,8 @@ import {computed, onMounted, Reactive, reactive, Ref, ref} from 'vue';
 import feathersClient, {BadRequest, DB, FeathersError, Service} from '@/feathers-client';
 import {Params} from '@feathersjs/feathers';
 import md5 from '@/helpers/md5';
-import {useToast} from 'vue-toastification';
 import ConfirmationDialog from "@/components/ConfirmationDialog.vue";
+import {useSnacksStore} from "@/stores/snacks.store";
 
 const props = defineProps<{
   modelValue: boolean,
@@ -161,7 +161,7 @@ const openDialog = computed({
   }
 });
 
-const toast = useToast();
+const snacksStore = useSnacksStore();
 
 const inviteButtonLoading = ref(false);
 const email: Ref<string> = ref('');
@@ -212,8 +212,8 @@ async function addToWhitelist() {
     if (Array.isArray(err.data)) emailFormatErr = err.data[0].keyword === 'format';
     else emailFormatErr = err.data.keyword === 'format';
 
-    if (emailFormatErr) toast('Input has to be an email!');
-    else toast.error('Unexpected Error! Try again.')
+    if (emailFormatErr) snacksStore.info('Input has to be an email!');
+    else snacksStore.error('Unexpected Error! Try again.')
   });
 
   inviteButtonLoading.value = false;

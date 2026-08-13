@@ -72,16 +72,18 @@
 import { VBtn, VCard, VCardSubtitle, VCardText, VForm, VTextField } from 'vuetify/components';
 import feathersClient, { BadRequest, FeathersError } from '@/feathers-client';
 import { useI18n } from 'vue-i18n';
-import { useToast } from 'vue-toastification';
 import { useRoute } from 'vue-router';
 import { onMounted, Ref, ref, watch } from 'vue';
 import { useTheme } from 'vuetify';
 import { EMAIL_REGEX } from '@/helpers/regex';
+import {useSnacksStore} from "@/stores/snacks.store";
 
 const i18n = useI18n();
-const toast = useToast();
 const route = useRoute();
 const theme = useTheme();
+
+const snacksStore = useSnacksStore();
+
 const primaryColor = theme.global.current.value.colors.primary;
 const isDarkTheme = ref(false);
 
@@ -138,18 +140,18 @@ async function submit(): Promise<void> {
     .then(async (d) => {
       console.log(d);
       btnLoading.value = false;
-      toast.success(`Created account '${username.value}'. Logging you in...`);
+      snacksStore.success(`Created account '${username.value}'. Logging you in...`);
       await login();
     })
     .catch((err: FeathersError<BadRequest>) => {
       console.warn('[ERROR] Error while trying to signup:', JSON.stringify(err));
       if (err.code === 400) {
-        toast.warning('User with this email already exists!');
+        snacksStore.warning('User with this email already exists!');
         form.value?.reset();
         btnLoading.value = false;
         return;
       }
-      toast.error('Something went wrong!');
+      snacksStore.error('Something went wrong!');
     });
 }
 
@@ -161,7 +163,7 @@ async function login(): Promise<void> {
   })
     .then(() => {
       btnLoading.value = false;
-      toast.success('Logged in successfully!');
+      snacksStore.success('Logged in successfully!');
       console.log('%c[Auth]%cLogged in', 'color: green');
 
       if (!route.query.redirect) {
@@ -172,7 +174,7 @@ async function login(): Promise<void> {
     })
     .catch((err) => {
       console.warn('[ERROR] Error while trying to authenticate/login:', err);
-      toast.error('Something went wrong trying to log you in.\nPlease try again later!');
+      snacksStore.error('Something went wrong trying to log you in.\nPlease try again later!');
     });
 }
 </script>

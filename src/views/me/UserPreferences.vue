@@ -82,7 +82,6 @@ interface SettingsObject {
 const theme = useTheme();
 const authStore = useAuthStore();
 
-const auth: Ref<AuthObject | null> = ref(null);
 const settings: SettingsObject = reactive({
   prefersDarkMode: false,
   prefersMiniDrawer: false,
@@ -91,22 +90,24 @@ const settings: SettingsObject = reactive({
 const deleteUserDialog = ref(false);
 
 onMounted(async () => {
-  auth.value = await feathersClient.get('authentication');
-
-  settings.prefersDarkMode = auth.value?.user.prefersDarkMode || false;
-  settings.prefersMiniDrawer = auth.value?.user.prefersMiniDrawer || false;
-  settings.preferredLanguage = auth.value?.user.preferredLanguage || 'en';
+  authStore.$subscribe(() => updateLocalPrefs())
 });
 
 watch(settings, async () => {
-  theme.change(settings.prefersDarkMode ? 'darkTheme' : 'lightTheme');
+  await theme.change(settings.prefersDarkMode ? 'darkTheme' : 'lightTheme');
 
-  await feathersClient.service(Service.USERS).patch(auth.value?.user.id || -1, {
+  await feathersClient.service(Service.USERS).patch(authStore.user?.id || -1, {
     prefersDarkMode: settings.prefersDarkMode,
     prefersMiniDrawer: settings.prefersMiniDrawer,
     preferredLanguage: settings.preferredLanguage,
   } as SettingsObject);
 });
+
+async function updateLocalPrefs() {
+  settings.prefersDarkMode = authStore.user?.prefersDarkMode || false;
+  settings.prefersMiniDrawer = authStore.user?.prefersMiniDrawer || false;
+  settings.preferredLanguage = authStore.user?.preferredLanguage || 'en';
+}
 
 async function deleteUser() {
   if (!authStore.user?.id) return;

@@ -2,7 +2,7 @@
   <v-dialog v-model="loading" class="w-100 h-100" fullscreen persistent>
     <div class="d-flex align-center justify-center w-screen h-screen">
       <v-sheet rounded class="d-flex flex-column align-center justify-center pa-2">
-        <v-progress-circular indeterminate color="primary" />
+        <v-progress-circular indeterminate color="primary"/>
         <div class="text-sm-subtitle-1 text-disabled mt-1">Searching for the cookbook</div>
       </v-sheet>
     </div>
@@ -39,7 +39,7 @@
       <v-btn v-if="isEditing" block class="mb-2" variant="tonal"
              @click="dialogPropertiesOpen = true"
       >
-        <v-icon icon="mdi-cog" class="mr-2" />
+        <v-icon icon="mdi-cog" class="mr-2"/>
         Recipe Properties
       </v-btn>
 
@@ -91,7 +91,7 @@
           </div>
           <div class="d-flex align-center">
             <div class="font-weight-regular text-sm-body-1 mr-2">{{ recipe.owner.fullName }}</div>
-            <v-avatar :image="recipe.owner.avatarURI" />
+            <v-avatar :image="recipe.owner.avatarURI"/>
           </div>
         </v-card-title>
 
@@ -128,7 +128,7 @@
             <v-btn v-if="editable" @click="recipeStepAdd()"
                    variant="tonal" block color="primary" class="mt-2"
             >
-              <v-icon icon="mdi-format-list-bulleted-type" />
+              <v-icon icon="mdi-format-list-bulleted-type"/>
               Add Step
             </v-btn>
           </transition>
@@ -169,11 +169,11 @@
         <div class="d-flex flex-row align-center">
           <v-btn-toggle density="compact" variant="flat" color="primary">
             <v-btn>
-              <v-icon icon="mdi-pot-steam-outline" />
+              <v-icon icon="mdi-pot-steam-outline"/>
               Cooking
             </v-btn>
             <v-btn>
-              <v-icon icon="mdi-chef-hat" />
+              <v-icon icon="mdi-chef-hat"/>
               Baking
             </v-btn>
           </v-btn-toggle>
@@ -203,25 +203,25 @@
 </template>
 
 <script lang="ts" setup>
-import { IRecipe, IRecipeStep } from '@/shoppinglist/recipes/types';
-import { onMounted, onUnmounted, ref, Ref, useTemplateRef } from 'vue';
-import feathersClient, { Service } from '@/feathers-client';
-import { Route } from '@/router';
-import { useToast } from 'vue-toastification';
-import { useRouter } from 'vue-router';
+import {IRecipe, IRecipeStep} from '@/shoppinglist/recipes/types';
+import {onMounted, onUnmounted, ref, Ref, useTemplateRef} from 'vue';
+import feathersClient, {Service} from '@/feathers-client';
+import {Route} from '@/router';
+import {useRouter} from 'vue-router';
 import RecipeIngredientTable from '@/components/RecipeIngredientTable.vue';
 import RecipeStep from '@/components/RecipeStep.vue';
-import _, { clamp, truncate } from 'lodash';
+import _, {clamp, truncate} from 'lodash';
 import config from '../../../../config';
 import img from '@/assets/recipe-header-placeholder.jpg';
-import { VTextarea } from 'vuetify/components';
-import { useAuthStore } from '@/stores/auth.store';
-import { useRecipesStore } from '@/stores/recipes.store';
+import {VTextarea} from 'vuetify/components';
+import {useAuthStore} from '@/stores/auth.store';
+import {useRecipesStore} from '@/stores/recipes.store';
 import {useConnectionStore} from "@/stores/connection.store";
+import {useSnacksStore} from "@/stores/snacks.store";
 
-const toast = useToast();
 const router = useRouter();
 
+const snacksStore = useSnacksStore();
 const loginStore = useAuthStore();
 const recipesStore = useRecipesStore();
 const connectionStore = useConnectionStore();
@@ -265,8 +265,8 @@ async function fetchRecipe() {
   if (!connectionStore.isConnected) {
     const cached = recipesStore.get(props.id);
     if (cached === undefined) {
-      toast('Recipe not found!');
-      await router.push({ name: Route.MY_RECIPES });
+      snacksStore.warning('Recipe not found!');
+      await router.push({name: Route.MY_RECIPES});
       return;
     }
 
@@ -288,8 +288,8 @@ async function fetchRecipe() {
       recipesStore.pushOrUpdateRecipeSteps(recipeSteps.value!);
     }
   } catch (e) {
-    toast('Recipe not found!');
-    await router.push({ name: Route.MY_RECIPES });
+    snacksStore.warning('Recipe not found!');
+    await router.push({name: Route.MY_RECIPES});
     console.log(e);
     console.error(`Failed to fetch recipe with id ${props.id}`);
   }

@@ -1,13 +1,13 @@
 import io from 'socket.io-client';
 import socketio from '@feathersjs/socketio-client';
-import { feathers, FeathersService } from '@feathersjs/feathers';
+import {feathers, FeathersService} from '@feathersjs/feathers';
 import auth from '@feathersjs/authentication-client';
 import config from '../config';
-import router, { Route, RouteMeta } from '@/router';
-import emitter from '@/helpers/mitt';
-import { useAuthStore } from '@/stores/auth.store';
+import router, {Route} from '@/router';
+import {useAuthStore} from '@/stores/auth.store';
+import {RouteMeta} from "vue-router";
 
-const socket = io(config.backend, { transports: ['websocket'] });
+const socket = io(config.backend, {transports: ['websocket']});
 
 export type Methods = 'create' | 'find' | 'get' | 'update' | 'patch' | 'remove';
 
@@ -41,7 +41,7 @@ feathersClient.hooks({
           await useAuthStore().login();
 
           if (!auth.user.verifiedEmail && !(router.currentRoute.value.meta as RouteMeta).allowUnverified) {
-            await router.replace({ name: Route.EMAIL_VERIFY });
+            await router.replace({name: Route.EMAIL_VERIFY});
           }
         } catch (e) {
           const err = e as FeathersError;
@@ -54,7 +54,10 @@ feathersClient.hooks({
           if (!Array.isArray(err.data) && !err.data?.reason) {
             console.log('[Auth] check loginServiceExceptions', loginServiceExceptions, ctx.path);
             if ((loginServiceExceptions as string[]).includes(ctx.path)) return;
-            await router.replace({ name: Route.LOGIN, query: { redirect: router.currentRoute.value.fullPath} });
+            await router.replace({
+              name: Route.LOGIN,
+              query: {redirect: router.currentRoute.value.fullPath}
+            });
           }
         }
       }
@@ -62,8 +65,8 @@ feathersClient.hooks({
   }
 });
 
-feathersClient.configure(socketio(socket, { timeout: 5_000 }));
-feathersClient.configure(auth({ storage: process.env.NODE_ENV !== 'development' ? localStorage : sessionStorage }));
+feathersClient.configure(socketio(socket, {timeout: 5_000}));
+feathersClient.configure(auth({storage: process.env.NODE_ENV !== 'development' ? localStorage : sessionStorage}));
 
 export interface DB {
   id: number;

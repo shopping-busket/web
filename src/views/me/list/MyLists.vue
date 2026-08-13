@@ -143,7 +143,7 @@
     v-model="removeListDialog"
     :title="`Are you sure that you want to ${removeList?.owner === authStore.user?.uuid ? 'delete' : 'leave'} this list?`"
     :subtitle="removeList?.owner === authStore.user?.uuid ? 'You won\'t be able to get it back' : 'You will not be able to access it until you get another invite'"
-    @click="removeList?.owner === authStore.user?.uuid ? deleteList(removeList!.listid) : leaveFromList(removeList!.listid); removeListDialog = false"/>
+    @confirm="removeList?.owner === authStore.user?.uuid ? deleteList(removeList!.listid) : leaveFromList(removeList!.listid); removeListDialog = false"/>
 </template>
 
 <script lang="ts" setup>
