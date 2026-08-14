@@ -380,7 +380,11 @@ async function loadListFromRemote(): Promise<ShoppingList | null> {
     return null;
   }
   const list = lists[0];
-  libraryStore.patchById(list.listid, list);
+  try {
+    libraryStore.patchById(list.listid, list);
+  } catch (e) {
+    console.warn('Unable to update list in users library. Its probably an invite');
+  }
   console.log('loadListFromRemote(): ', list);
   return new ShoppingList(list.listid, list.name, list.description, list.owner, list.entries, list.checkedEntries);
 }
