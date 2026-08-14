@@ -202,22 +202,30 @@ onMounted(async () => {
 async function addToWhitelist() {
   inviteButtonLoading.value = true;
 
-  await feathersClient.service(Service.WHITELISTED_USERS).create({
-    inviteEmail: email.value,
-    listId: props.listId,
-  } as Partial<UserWhitelist>).then((whitelisted) => {
+  try {
+    console.log('inviting', email.value);
+    const whitelisted = await feathersClient.service(Service.WHITELISTED_USERS).create({
+      inviteEmail: email.value,
+      listId: props.listId,
+    } as Partial<UserWhitelist>)
+    console.log('aftr inv', whitelisted);
+
     whitelistedUsers.push(whitelisted);
-  }).catch((err: FeathersError<BadRequest>) => {
-    let emailFormatErr = false;
-    if (Array.isArray(err.data)) emailFormatErr = err.data[0].keyword === 'format';
-    else emailFormatErr = err.data.keyword === 'format';
+  } catch (err) {
+    console.warn('err occurred during the whitelist process', err);
+    if (Object.hasOwn(err as unknown as FeathersError, 'data')) {
+      const ferr = err as FeathersError<BadRequest>;
+      let emailFormatErr;
+      if (Array.isArray(ferr.data)) emailFormatErr = ferr.data[0].keyword === 'format';
+      else emailFormatErr = ferr.data.keyword === 'format';
 
-    if (emailFormatErr) snacksStore.info('Input has to be an email!');
-    else snacksStore.error('Unexpected Error! Try again.')
-  });
-
-  inviteButtonLoading.value = false;
-  email.value = '';
+      if (emailFormatErr) return snacksStore.info('Input has to be an email!');
+    }
+    snacksStore.error('Unexpected Error! Try again.')
+  } finally {
+    inviteButtonLoading.value = false;
+    email.value = '';
+  }
 }
 
 async function updateUserPermissions(whitelist: UserWhitelist) {
